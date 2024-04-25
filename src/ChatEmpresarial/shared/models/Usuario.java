@@ -10,29 +10,92 @@ import java.util.Date;
  *
  * @author aguil
  */
-//@Entity
-//@Table(name = "usuario")
-public class Usuario {
-  //  @Id
- //   @GeneratedValue(strategy = GenerationType.IDENTITY)
- //   @Column(name = "id_usuario")
-    private Integer idUsuario;
 
-  //  @Column(name = "nombre")
+import java.sql.Timestamp;
+
+public class Usuario {
+
+    
+    //PK
+    private int id_usuario;
+
+    //Propiedades
     private String nombre;
 
-   // @Column(name = "contrasena")
+   
     private String contrasena;
 
-   // @Column(name = "pelicula_favorita")
-    private String peliculaFavorita;
+  
+    private String pelicula_favorita;
 
-   // @Column(name = "comida_favorita")
-    private String comidaFavorita;
+    
+    private String comida_favorita;
 
-   // @Column(name = "estado")
-    private Byte estado;
+    
+    private int estado;
 
-   // @Column(name = "fecha_creacion")
-    private Date fechaCreacion;
+   
+    private Timestamp fecha_creacion;
+    
+    
+    //-------------------
+    //getters y setters
+
+    public int getId_usuario() {
+        return id_usuario;
+    }
+
+    public void setId_usuario(int id_usuario) {
+        this.id_usuario = id_usuario;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getContrasena() {
+        return contrasena;
+    }
+
+    public void setContrasena(String contrasena) {
+        this.contrasena = contrasena;
+    }
+
+    public String getPelicula_favorita() {
+        return pelicula_favorita;
+    }
+
+    public void setPelicula_favorita(String pelicula_favorita) {
+        this.pelicula_favorita = pelicula_favorita;
+    }
+
+    public String getComida_favorita() {
+        return comida_favorita;
+    }
+
+    public void setComida_favorita(String comida_favorita) {
+        this.comida_favorita = comida_favorita;
+    }
+
+    public int getEstado() {
+        return estado;
+    }
+
+    public void setEstado(int estado) {
+        this.estado = estado;
+    }
+
+    public Timestamp getFecha_creacion() {
+        return fecha_creacion;
+    }
+
+    public void setFecha_creacion(Timestamp fecha_creacion) {
+        this.fecha_creacion = fecha_creacion;
+    }
+    
+    
 }

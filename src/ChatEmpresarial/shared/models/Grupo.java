@@ -4,28 +4,65 @@
  */
 package ChatEmpresarial.shared.models;
 
-import java.security.Timestamp;
+import java.util.Date;
+import java.sql.Timestamp;
+
+
 
 /**
  *
  * @author aguil
  */
-//@Entity
-//@Table(name = "grupo")
+
 public class Grupo {
-  //  @Id
-  //  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  //  @Column(name = "id_grupo")
-    private Integer idGrupo;
+  
+    //Llave
+    private int id_grupo;
 
-   // @Column(name = "id_administrador")
-    private Integer idAdministrador;
+  //FK --> Usuario
+    private int id_aministrador;
 
-  //  @Column(name = "id_chat")
-    private Integer idChat;
+  //FK -> Chat
+    private int id_chat;
 
-  //  @Column(name = "fecha_creacion")
+  //Propiedades
+    
     private Timestamp fechaCreacion;
 
     // Getters y setters...
+
+    public int getId_grupo() {
+        return id_grupo;
+    }
+
+    public void setId_grupo(int id_grupo) {
+        this.id_grupo = id_grupo;
+    }
+
+    public int getId_aministrador() {
+        return id_aministrador;
+    }
+
+    public void setId_aministrador(int id_aministrador) {
+        this.id_aministrador = id_aministrador;
+    }
+
+    public int getId_chat() {
+        return id_chat;
+    }
+
+    public void setId_chat(int id_chat) {
+        this.id_chat = id_chat;
+    }
+
+    public Timestamp getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(Timestamp fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+    
+    
+    
 }

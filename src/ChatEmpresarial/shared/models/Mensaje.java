@@ -9,17 +9,59 @@ package ChatEmpresarial.shared.models;
  * @author aguil
  */
 
-//@Entity
-//@Table(name = "mensaje")
+import java.sql.Timestamp;
+
+
 public class Mensaje {
-  //  @Id
-  //  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  //  @Column(name = "id_mensaje")
-    private Integer idMensaje;
+  
+    //PK
+    private int id_mensaje;
 
-   // @ManyToOne
-  //  @JoinColumn(name = "id_chat", referencedColumnName = "id_chat")
-    private Chat chat;
+   //FK --> Chat
+    private int id_chat;
+    
+    
+    //Propiedades
+    private String contenido;
+    
+    private Timestamp fecha_creacion;
 
-    // ... otros campos y getters y setters
+    
+    //------------
+    //getters y setters
+
+    public int getId_mensaje() {
+        return id_mensaje;
+    }
+
+    public void setId_mensaje(int id_mensaje) {
+        this.id_mensaje = id_mensaje;
+    }
+
+    public int getId_chat() {
+        return id_chat;
+    }
+
+    public void setId_chat(int id_chat) {
+        this.id_chat = id_chat;
+    }
+
+    public String getContenido() {
+        return contenido;
+    }
+
+    public void setContenido(String contenido) {
+        this.contenido = contenido;
+    }
+
+    public Timestamp getFecha_creacion() {
+        return fecha_creacion;
+    }
+
+    public void setFecha_creacion(Timestamp fecha_creacion) {
+        this.fecha_creacion = fecha_creacion;
+    }
+    
+    
+   
 }

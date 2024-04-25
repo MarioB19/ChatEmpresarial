@@ -8,21 +8,80 @@ package ChatEmpresarial.shared.models;
  *
  * @author aguil
  */
+
+ import java.sql.Timestamp;
 public class SolicitudGrupo {
    
-  //  @Id
-  //  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  //  @Column(name = "solicitud_id")
-    private Integer solicitudId;
+  //PK
+    private int solicitud_id; //NOTA: en la bae de datos es solicitud_id;
 
-   //@ManyToOne
-   // @JoinColumn(name = "id_receptor", referencedColumnName = "id_usuario")
-    private Usuario receptor;
+  //FK --> grupo
+    private int id_grupo;
+    
+   //FK --> usuario
+    private int id_receptor;
+    
+    //FK --> usuario
+    private int id_remitente;
+    
+    //Propiedades
+    private int estado_solicitud;
+    
+    private Timestamp fecha_creacion;
+ 
+    
+    //------------------------
+    //Getters y setters
 
-   // @ManyToOne
-   // @JoinColumn(name = "id_remitente", referencedColumnName = "id_usuario")
-    private Usuario remitente;
+    public int getId_solicitud() {
+        return solicitud_id;
+    }
 
-    // ... otros campos y getters y setters
+    public void setId_solicitud(int id_solicitud) {
+        this.solicitud_id = id_solicitud;
+    }
+
+    public int getId_grupo() {
+        return id_grupo;
+    }
+
+    public void setId_grupo(int id_grupo) {
+        this.id_grupo = id_grupo;
+    }
+
+    public int getId_receptor() {
+        return id_receptor;
+    }
+
+    public void setId_receptor(int id_receptor) {
+        this.id_receptor = id_receptor;
+    }
+
+    public int getId_remitente() {
+        return id_remitente;
+    }
+
+    public void setId_remitente(int id_remitente) {
+        this.id_remitente = id_remitente;
+    }
+
+    public int getEstado_solicitud() {
+        return estado_solicitud;
+    }
+
+    public void setEstado_solicitud(int estado_solicitud) {
+        this.estado_solicitud = estado_solicitud;
+    }
+
+    public Timestamp getFecha_creacion() {
+        return fecha_creacion;
+    }
+
+    public void setFecha_creacion(Timestamp fecha_creacion) {
+        this.fecha_creacion = fecha_creacion;
+    }
+  
+    
+    
 }
 

@@ -14,7 +14,7 @@ import java.net.*;
 
 
 public class PersistentClient implements Runnable {
-    private final String serverAddress = "localhost"; // Dirección del servidor
+    private final String serverAddress = "192.168.77.157"; // Dirección del servidor
     private final int serverPort = 12345; // Puerto del servidor
 
     @Override

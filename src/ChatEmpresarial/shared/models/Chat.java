@@ -4,6 +4,7 @@
  */
 package ChatEmpresarial.shared.models;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 /**
@@ -13,16 +14,45 @@ import java.util.ArrayList;
 
 public class Chat{
    
-    private int idChat;
+    
+    //Llave
+    private int id_chat;
+    
+    
+    //Propiedades
 
-    // Relaciones
+    private Timestamp fecha_creacion;
+
    
-    private ArrayList<Mensaje> mensajes;
+    private int tipo_chat;
 
-  
-    private Grupo grupo;
+  //getters y setters
 
-  //otros campos y getters y setters
+    public int getId_chat() {
+        return id_chat;
+    }
+
+    public void setId_chat(int id_chat) {
+        this.id_chat = id_chat;
+    }
+
+    public Timestamp getFecha_creacion() {
+        return fecha_creacion;
+    }
+
+    public void setFecha_creacion(Timestamp fecha_creacion) {
+        this.fecha_creacion = fecha_creacion;
+    }
+
+    public int getTipo_chat() {
+        return tipo_chat;
+    }
+
+    public void setTipo_chat(int tipo_chat) {
+        this.tipo_chat = tipo_chat;
+    }
+    
+    
     
     
 }
