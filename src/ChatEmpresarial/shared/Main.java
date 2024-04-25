@@ -20,7 +20,7 @@ public class Main {
        
   
          IndexServer server = new IndexServer();
-            
+                   
     }
         
         

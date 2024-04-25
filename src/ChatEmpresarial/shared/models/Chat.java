@@ -4,10 +4,25 @@
  */
 package ChatEmpresarial.shared.models;
 
+import java.util.ArrayList;
+
 /**
  *
- * @author brand
+ * @author aguil
  */
-public class NewClass {
+
+public class Chat{
+   
+    private int idChat;
+
+    // Relaciones
+   
+    private ArrayList<Mensaje> mensajes;
+
+  
+    private Grupo grupo;
+
+  //otros campos y getters y setters
+    
     
 }

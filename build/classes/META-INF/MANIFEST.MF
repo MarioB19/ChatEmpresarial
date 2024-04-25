@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.10.8
+Created-By: 17.0.2+8-LTS-86 (Oracle Corporation)
+Class-Path: lib/mysql-connector-j-8.3.0.jar
+X-COMMENT: Main-Class will be added automatically by build
+Main-Class: ChatEmpresarial.shared.Main
+
