@@ -8,7 +8,13 @@ package ChatEmpresarial.shared;
 
 import ChatEmpresarial.client.IndexClient;
 import ChatEmpresarial.server.IndexServer;
+import ChatEmpresarial.server.controllers.LogController;
 import ChatEmpresarial.server.db.Conexion;
+import ChatEmpresarial.server.pages.LogPage;
+import ChatEmpresarial.shared.utilities.Enumerators.DescripcionAccion;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -18,11 +24,17 @@ public class Main {
     
         public static void main(String[] args) {
        
-  
+           
+            
+            
+    LogPage logPage = new LogPage();
+    
+    logPage.setVisible(true);
 
-         IndexServer server = new IndexServer();
+
+        // IndexServer server = new IndexServer();
                    
-
+       
       
     }
         

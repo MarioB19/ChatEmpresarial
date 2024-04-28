@@ -33,8 +33,9 @@ public class Conexion {
         }
         
           try {
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/chat_empresarial", "root", "");
-
+        //    con = DriverManager.getConnection("jdbc:mysql://localhost:3306/chat_empresarial", "root", "");
+//BASE DE DATOS DE VICTOR
+ con = DriverManager.getConnection("jdbc:mysql://localhost:3306/chat", "root", "");
 
         } catch (SQLException ex) {
             Logger.getLogger(Conexion.class.getName()).log(Level.SEVERE, null, ex);
