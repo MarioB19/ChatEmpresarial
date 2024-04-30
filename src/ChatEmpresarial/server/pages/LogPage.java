@@ -1,133 +1,116 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package ChatEmpresarial.server.pages;
 
 import ChatEmpresarial.server.controllers.LogController;
-import ChatEmpresarial.shared.models.Log;
+import ChatEmpresarial.shared.utilities.Enumerators.DescripcionAccion;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-
 import javax.swing.JTextArea;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
- *
- * @author aguil
+ * Ventana de la interfaz gráfica que muestra los logs y permite interactuar con ellos.
  */
 public class LogPage extends JFrame {
 
-    private LogController logController = new LogController(); //Controlador de los logs
-      JTextArea logTextArea = new JTextArea(30, 50); // Área grande para los logs
-        private ScheduledExecutorService executor; // Declarar el ScheduledExecutorService
-      
-      //-------------------
-      //Constructor
-      //-------------------
-      
-      
-            public LogPage()
-            {
-                Configuracion();
-              iniciarMonitoreoDeCambios();
-            }
-            
-            
-      //--------------------
-     //Métodos
-     //---------------------
-            
-            
-     //Métodos de configuración inicial de la página
-    private void Configuracion() {
-       
-         setTitle("Log Analysis");
+    private LogController logController = new LogController(); // Controlador de los logs
+    private JTextArea logTextArea = new JTextArea(30, 50); // Área de texto para mostrar los logs
+    private ScheduledExecutorService executor; // Executor para tareas programadas
+
+    /**
+     * Constructor de LogPage que configura la interfaz y comienza el monitoreo de logs.
+     */
+    public LogPage() {
+        configurarUI();
+        iniciarMonitoreoDeCambios();
+    }
+
+    /**
+     * Configura la interfaz de usuario, incluyendo el área de texto y botones.
+     */
+    private void configurarUI() {
+        setTitle("Log Analysis");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainPanel.setBackground(new Color(173, 216, 230)); // Color de fondo del panel
 
-        JPanel mainPanel = new JPanel(); //Generar un panel para asignar los logs
-        mainPanel.setBackground(new Color(173, 216, 230)); // Color de fondo del panel principal
-        mainPanel.setLayout(new GridBagLayout());
-
-      
         logTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        logTextArea.setForeground(Color.WHITE); // Color del texto
-        logTextArea.setBackground(Color.BLACK); // Color del fondo
-        logTextArea.setLineWrap(true);
-        logTextArea.setWrapStyleWord(true);
-        
-        logController.loadLogs(logTextArea); //Cargar datos
+        logTextArea.setForeground(Color.WHITE);
+        logTextArea.setBackground(Color.BLACK);
+        logTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(logTextArea);
 
-        JScrollPane scrollPane = new JScrollPane(logTextArea); // Añadir scroll al área de texto
-
-        JButton saveButton = new JButton("Guardar");
+        JButton saveButton = new JButton("Guardar Logs");
         saveButton.setFont(new Font("Arial", Font.BOLD, 20));
-        saveButton.setBackground(new Color(135, 206, 250)); // Color del botón
-        saveButton.addActionListener(e -> saveLogs()); //Listener para escuchar el momento en que se haga clic en el botón
+        saveButton.setBackground(new Color(135, 206, 250));
+        saveButton.addActionListener(e -> saveLogs());
 
-        GridBagConstraints gbc = new GridBagConstraints(); //configuración del layout
+        GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
-        mainPanel.add(scrollPane, gbc); // Añadir el área de texto con scroll
+        mainPanel.add(scrollPane, gbc);
 
         gbc.gridy = 1;
-        gbc.weighty = 0; // Reducir el peso vertical para el botón
+        gbc.weighty = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        mainPanel.add(saveButton, gbc); // Añadir el botón de guardar
+        mainPanel.add(saveButton, gbc);
 
-        add(mainPanel); // Añadir el panel principal al JFrame
-        
-        
+        add(mainPanel);
+    }
+
+    /**
+     * Guarda los logs actuales en formato JSON.
+     */
+    private void saveLogs() {
+        logController.saveLogsToJson(logTextArea);
     }
     
-    
-    
-    //Método para llamar el método de guardar en json los datos desde el controlador
-    private void saveLogs()
-    {
-      System.out.println("Guardando logs...");
-    logController.saveLogsToJson(logTextArea);
-    System.out.println("Logs guardados.");
+        
+         public void updateLog(DescripcionAccion descripcion, String mensaje) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            logTextArea.append(mensaje + "\n"); // Actualizar UI
+            try {
+                // Insertar el mensaje en la base de datos como un log
+                logController.insertLog(descripcion, mensaje); // Usando la acción específica proporcionada
+            } catch (Exception e) {
+                logTextArea.append("Error al insertar log en la base de datos: " + e.getMessage() + "\n");
+            }
+        });
     }
-    
-    
-    
-    //Método que estará constantemente llamando a la base de datos. Así actualiza la consola cada 5 segundos
-  
+
+    /**
+     * Inicia el monitoreo de cambios en los logs, actualizando la interfaz cada 5 segundos.
+     */
     private void iniciarMonitoreoDeCambios() {
         executor = Executors.newScheduledThreadPool(1);
         Runnable task = () -> {
-            logController.setLogs(new ArrayList<Log>()); //Reiniicar el 
-            logController.loadLogs(logTextArea);
-            
-            System.out.println("Verificando cambios...");
-           
+            // Limpia los logs antiguos y carga los nuevos
+            logController.setLogs(new ArrayList<>()); // Resetear los logs almacenados
+            logController.loadLogs(logTextArea); // Cargar logs nuevos en el área de texto
+            System.out.println("Logs actualizados.");
         };
-        executor.scheduleAtFixedRate(task, 0, 5, TimeUnit.SECONDS); // Ejecutar cada 5 segundos
+        executor.scheduleAtFixedRate(task, 0, 5, TimeUnit.SECONDS);
     }
 
-
-    // Método para detener el monitoreo cuando la ventana se cierra
     @Override
     public void dispose() {
         super.dispose();
         if (executor != null && !executor.isShutdown()) {
-            executor.shutdown(); // Apagar el executor
+            executor.shutdown();
             try {
                 if (!executor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
                     executor.shutdownNow();
@@ -137,14 +120,6 @@ public class LogPage extends JFrame {
             }
         }
     }
-    
-    
-    }
-    
-    
-    
 
 
-
-
-
+}

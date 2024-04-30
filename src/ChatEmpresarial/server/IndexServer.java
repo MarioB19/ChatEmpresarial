@@ -1,3 +1,4 @@
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -17,9 +18,10 @@ public class IndexServer {
     public IndexServer() {
         System.out.println("Iniciando el servidor...");
 
-        int port = 12345; // Puerto en el que el servidor escuchará.
+        int port = 4321; // Puerto en el que el servidor escuchará.
         server = new PersistentServer(port); // Crear el servidor persistente.
         server.start(); // Iniciar el servidor.
+        
     }
 
   

@@ -25,14 +25,16 @@ public class Main {
         public static void main(String[] args) {
        
            
+  
             
-            
-    LogPage logPage = new LogPage();
-    
-    logPage.setVisible(true);
+  
 
-
-        // IndexServer server = new IndexServer();
+        IndexServer server = new IndexServer();
+        
+        
+        
+        
+        
                    
        
       

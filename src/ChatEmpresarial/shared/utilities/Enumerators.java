@@ -17,6 +17,8 @@ public class Enumerators {
     
     //Enumerador para determinar el tipo de Log a registrar
     public enum TipoLog {
+    SERVIDOR_INICIADO,
+    CONEXION_ACEPTADA,
     CREAR_CUENTA,
     INICIAR_SESION,
     MODIFICAR_CONTRASENA,
@@ -35,6 +37,8 @@ public class Enumerators {
 }
 
 public enum DescripcionAccion {
+    SERVIDOR_INICIADO("El servidor ha sido iniciado en el puerto %s"),
+    CONEXION_ACEPTADA("El cliente con ip %s se ha conectado al server"),
     CREAR_CUENTA("El usuario %s ha creado una cuenta"),
     INICIAR_SESION("El usuario %s ha iniciado sesión"),
     MODIFICAR_CONTRASENA("El usuario %s ha modificado su contraseña"),
