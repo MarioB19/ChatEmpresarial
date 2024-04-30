@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.ConnectionBuilder;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -79,7 +80,14 @@ public class LogController extends Conexion {
         Gson gson = new Gson();
        
         String json = gson.toJson(logs);
-        // Aquí podrías guardar el JSON en un archivo o manejarlo según tu necesidad
+        
+        try {
+            //llamar al método para eliminar logs de la BD
+            DeleteAllLogs();
+        } catch (SQLException ex) {
+            Logger.getLogger(LogController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         System.out.println(json);
     }
 
@@ -100,6 +108,37 @@ public class LogController extends Conexion {
         sql.executeUpdate();
     }
 
+   
+    //Método para recibir logs por parte del cliente: se manda a llamar en el servidor el insertlog()
+    
+      public void detectLog(String mensaje)
+      {
+          String[] mensajeDividido = mensaje.split(","); //MEnsaje donde la primera parte es: 
+                                            /* Mensaje, Tipo de log, parametros*/
+           
+          if (mensajeDividido.length > 1) {
+        String tipoAccion = mensajeDividido[1];
+        DescripcionAccion accion = DescripcionAccion.valueOf(tipoAccion); //TIpo de Acción. Realizar casteo
+
+        // Recolectar argumentos adicionales (puede depender del tipo de Log)
+        Object[] args = Arrays.copyOfRange(mensajeDividido, 2, mensajeDividido.length);
+
+              try {
+                  // Llamar al método insertLog con la acción y los argumentos
+                  insertLog(accion, args);
+              } catch (SQLException ex) {
+                  Logger.getLogger(LogController.class.getName()).log(Level.SEVERE, null, ex);
+              }
+    } else {
+        System.out.println("Mensaje mal formado, no se puede procesar.");
+    }
+                                            
+
+         
+      }
+
+    
+    
   
 
     
@@ -137,6 +176,20 @@ public class LogController extends Conexion {
             logs.add(new Log(descripcion, fechaCreacion));
         }
         return logs;
+    }
+    
+    
+    
+     //Método para borrar los logs
+    
+    private void DeleteAllLogs() throws SQLException
+    {
+         PreparedStatement sql;
+        sql = super.getCon().prepareStatement("DELETE FROM log");
+        
+        sql.executeUpdate();
+        
+        
     }
     
 }
