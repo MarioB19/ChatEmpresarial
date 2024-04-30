@@ -60,6 +60,17 @@ public class LoginPage extends JFrame {
                 dispose(); // Cerrar la ventana de login
             }
         });
+        
+         loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+         
+                dispose();
+            ChatList chatList = new ChatList();
+        chatList.setVisible(true); // Mostrar la ventana de login
+           
+            }
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;

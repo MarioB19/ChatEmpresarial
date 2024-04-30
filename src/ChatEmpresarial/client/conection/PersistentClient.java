@@ -1,21 +1,25 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package ChatEmpresarial.client.conection;
 
-/**
- *
- * @author brand
- */
-
+import ChatEmpresarial.client.pages.LoginPage;
 import java.io.*;
 import java.net.*;
-
+import javax.swing.*;
 
 public class PersistentClient implements Runnable {
-    private final String serverAddress = "192.168.77.157"; // Dirección del servidor
-    private final int serverPort = 12345; // Puerto del servidor
+    private final String serverAddress = "192.168.100.20"; // Dirección del servidor
+    private final int serverPort = 5432; // Puerto del servidor
+
+    public static void main(String[] args) {
+        // Separar la creación de la interfaz y la conexión en métodos distintos
+        PersistentClient client = new PersistentClient();
+  
+        client.startClient(); // Iniciar el hilo del cliente
+    }
+
+
+    private void startClient() {
+        new Thread(this).start(); // Iniciar el hilo del cliente
+    }
 
     @Override
     public void run() {
@@ -42,7 +46,7 @@ public class PersistentClient implements Runnable {
                 }
             }
         } catch (IOException e) {
-            
+            e.printStackTrace();
         }
     }
 }
