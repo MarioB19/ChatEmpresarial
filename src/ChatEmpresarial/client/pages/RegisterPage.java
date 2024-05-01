@@ -1,8 +1,11 @@
 package ChatEmpresarial.client.pages;
 
+import ChatEmpresarial.client.conection.PersistentClient;
+import ChatEmpresarial.shared.utilities.Functions;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import org.json.JSONObject;
 
 public class RegisterPage extends JFrame {
     private JTextField userName;
@@ -173,10 +176,46 @@ public class RegisterPage extends JFrame {
     } else {
         favFoodError.setText("");
     }
+    
+    
+    
+    
 
     if (isValid) {
-         openLoginPage(); 
+      
+        
+ 
+        // Crear el objeto JSON manualmente
+        JSONObject json = new JSONObject();
+        json.put("username", username);
+        json.put("password", Functions.toSHA256(passwordStr));
+        json.put("favoriteMovie", Functions.toSHA256(favoriteMovie));
+        json.put("favoriteFood",  Functions.toSHA256(favoriteFood));
+        json.put("action", "register"); // Agregar un campo de acción para indicar el tipo de solicitud
+
+        //PersistentClient client = PersistentClient.getInstance();
+        //client.sendMessage(json.toString());  // Envía el objeto JSON como un string al servidor
+         
+     
+         System.out.println("JSON to be sent:");
+          System.out.println(json.toString(4)); // El número indica el factor de indentación para una impresión más legible
+
+          
+          /*
+          
+        // Recibe la respuesta del servidor
+        String response = (String) client.receiveMessage();
+        if (response.equals("Registro exitoso")) {
+            JOptionPane.showMessageDialog(this, "Registro exitoso");
+            openLoginPage();
             dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Error en el registro");
+        }
+
+*/
+
+    
     }
 }
      

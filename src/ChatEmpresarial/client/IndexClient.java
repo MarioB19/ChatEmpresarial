@@ -9,9 +9,10 @@ public class IndexClient {
     public IndexClient() {
         System.out.println("Iniciando conexión al servidor...");
         
-        // Crear un hilo para manejar la conexión persistente.
-        Thread clientThread = new Thread(new PersistentClient());
-        clientThread.start(); // Iniciar el hilo para la conexión.
+        // Obtener la instancia única del PersistentClient utilizando el método Singleton
+        PersistentClient client = PersistentClient.getInstance();  // Usar el método Singleton
+        
+        // El hilo ya se inicia dentro de getInstance(), por lo que no es necesario iniciar otro hilo aquí.
 
         // Lanzar la interfaz gráfica
         launchGUI();

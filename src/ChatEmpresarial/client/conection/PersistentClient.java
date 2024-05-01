@@ -1,51 +1,87 @@
 package ChatEmpresarial.client.conection;
 
-import ChatEmpresarial.client.pages.LoginPage;
 import java.io.*;
 import java.net.*;
-import javax.swing.*;
 
 public class PersistentClient implements Runnable {
-    private final String serverAddress = "192.168.100.20"; // Dirección del servidor
-    private final int serverPort = 5432; // Puerto del servidor
+    private static PersistentClient instance = null;
 
-    public static void main(String[] args) {
-        // Separar la creación de la interfaz y la conexión en métodos distintos
-        PersistentClient client = new PersistentClient();
-  
-        client.startClient(); // Iniciar el hilo del cliente
-    }
+    private final String serverAddress = "192.168.100.20";  // Dirección IP del servidor
+    private final int serverPort = 5432;                    // Puerto del servidor
+    private Socket socket;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
 
+    // Constructor privado para implementar el patrón Singleton
+    private PersistentClient() {}
 
-    private void startClient() {
-        new Thread(this).start(); // Iniciar el hilo del cliente
+    // Método estático para obtener la instancia única
+    public static PersistentClient getInstance() {
+        if (instance == null) {
+            synchronized (PersistentClient.class) {
+                if (instance == null) {
+                    instance = new PersistentClient();
+                    new Thread(instance).start(); // Iniciar el hilo del cliente
+                }
+            }
+        }
+        return instance;
     }
 
     @Override
     public void run() {
-        try (
-            Socket socket = new Socket(serverAddress, serverPort);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in))
-        ) {
+        try {
+            // Establece la conexión con el servidor
+            socket = new Socket(serverAddress, serverPort);
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
             System.out.println("Conectado al servidor: " + serverAddress + " en el puerto " + serverPort);
 
-            String input;
-            while (true) { // Bucle infinito para mantener la conexión abierta.
-                System.out.println("Escribe un mensaje para enviar al servidor:");
+            // Lugar para agregar manejo de mensajes recibidos si es necesario
 
-                if ((input = userInput.readLine()) != null) {
-                    out.println(input); // Enviar al servidor.
-                    String serverResponse = in.readLine(); // Leer la respuesta.
-                    System.out.println("Respuesta del servidor: " + serverResponse);
-
-                    if ("Adiós, cerrando conexión".equalsIgnoreCase(serverResponse)) {
-                        break; // Salir si el servidor cierra la conexión.
-                    }
-                }
-            }
         } catch (IOException e) {
+            System.out.println("Error conectando al servidor: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Método para enviar mensajes al servidor
+    public void sendMessage(Object message) {
+        try {
+            out.writeObject(message);
+            out.flush();
+        } catch (IOException e) {
+            System.out.println("Error al enviar mensaje: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Método para recibir mensajes del servidor
+    public Object receiveMessage() {
+        try {
+            return in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error al recibir mensaje: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // Método para cerrar la conexión y limpiar los recursos
+    public void closeConnection() {
+        try {
+            if (out != null) {
+                out.close();
+            }
+            if (in != null) {
+                in.close();
+            }
+            if (socket != null) {
+                socket.close();
+            }
+            System.out.println("Conexión cerrada correctamente.");
+        } catch (IOException e) {
+            System.out.println("Error al cerrar la conexión: " + e.getMessage());
             e.printStackTrace();
         }
     }
