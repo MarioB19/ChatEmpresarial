@@ -25,6 +25,7 @@ public class ClientHandler implements Runnable {
             while ((inputLine = in.readLine()) != null) {
                 logPage.updateLog(DescripcionAccion.ENVIAR_MENSAJE, "Mensaje del cliente: " + inputLine);
                 out.println("Servidor responde: " + inputLine);
+                
             }
         } catch (IOException ex) {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);

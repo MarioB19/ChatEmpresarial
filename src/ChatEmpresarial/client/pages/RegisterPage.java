@@ -183,8 +183,7 @@ public class RegisterPage extends JFrame {
 
     if (isValid) {
       
-        
- 
+       
         // Crear el objeto JSON manualmente
         JSONObject json = new JSONObject();
         json.put("username", username);
@@ -193,27 +192,18 @@ public class RegisterPage extends JFrame {
         json.put("favoriteFood",  Functions.toSHA256(favoriteFood));
         json.put("action", "register"); // Agregar un campo de acción para indicar el tipo de solicitud
 
-        //PersistentClient client = PersistentClient.getInstance();
-        //client.sendMessage(json.toString());  // Envía el objeto JSON como un string al servidor
+        PersistentClient client = PersistentClient.getInstance();
+        client.sendMessage(json.toString());  // Envía el objeto JSON como un string al servidor
          
      
          System.out.println("JSON to be sent:");
           System.out.println(json.toString(4)); // El número indica el factor de indentación para una impresión más legible
 
           
-          /*
           
-        // Recibe la respuesta del servidor
-        String response = (String) client.receiveMessage();
-        if (response.equals("Registro exitoso")) {
-            JOptionPane.showMessageDialog(this, "Registro exitoso");
-            openLoginPage();
-            dispose();
-        } else {
-            JOptionPane.showMessageDialog(this, "Error en el registro");
-        }
+          
+     
 
-*/
 
     
     }
