@@ -12,7 +12,7 @@ public class IndexClient {
         // Obtener la instancia única del PersistentClient utilizando el método Singleton
         PersistentClient client = PersistentClient.getInstance();  // Usar el método Singleton
         
-     
+   
 
         // Lanzar la interfaz gráfica
         launchGUI();
