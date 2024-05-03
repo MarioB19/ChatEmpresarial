@@ -32,8 +32,11 @@ public class Enumerators {
 }
 
     
+<<<<<<< HEAD
     
     
+=======
+>>>>>>> 91b8e22e840c1b3cf7e04060f35cf345f17949d9
     //Enumerador para determinar el tipo de Log a registrar
     public enum TipoLog {
     SERVIDOR_INICIADO,

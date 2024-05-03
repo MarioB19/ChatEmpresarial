@@ -1,6 +1,7 @@
 package ChatEmpresarial.client.pages;
 
 import ChatEmpresarial.client.conection.PersistentClient;
+import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
 import ChatEmpresarial.shared.utilities.Functions;
 import javax.swing.*;
 import java.awt.*;
@@ -181,33 +182,39 @@ public class RegisterPage extends JFrame {
     
     
 
-    if (isValid) {
-      
-       
-        // Crear el objeto JSON manualmente
+   if (isValid) {
         JSONObject json = new JSONObject();
         json.put("username", username);
         json.put("password", Functions.toSHA256(passwordStr));
         json.put("favoriteMovie", Functions.toSHA256(favoriteMovie));
-        json.put("favoriteFood",  Functions.toSHA256(favoriteFood));
-        json.put("action", "register"); // Agregar un campo de acción para indicar el tipo de solicitud
+        json.put("favoriteFood", Functions.toSHA256(favoriteFood));
+        json.put("action", TipoRequest.REGISTER.toString());
 
         PersistentClient client = PersistentClient.getInstance();
-        client.sendMessage(json.toString());  // Envía el objeto JSON como un string al servidor
-         
-     
-         System.out.println("JSON to be sent:");
-          System.out.println(json.toString(4)); // El número indica el factor de indentación para una impresión más legible
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
-          
-          
-          
-     
-
-
-    
+        // Mostrar la respuesta en un diálogo según el código
+        switch (serverResponse) {
+            case "0":  // Éxito
+                JOptionPane.showMessageDialog(null, "Registration successful! Redirecting to login.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+                openLoginPage();
+                
+                break;
+            case "1":  // Nombre de usuario ya registrado
+                JOptionPane.showMessageDialog(null, "The username is already registered. Please try another.", "Registration Failed", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-1":  // Error desconocido
+                JOptionPane.showMessageDialog(null, "An unknown error occurred during registration.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            default:  // Cualquier otra respuesta
+                JOptionPane.showMessageDialog(null, "Unexpected server response: " + serverResponse, "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
     }
-}
+   
+   
+   }
      
      private void openLoginPage() {
         LoginPage loginPage = new LoginPage();
