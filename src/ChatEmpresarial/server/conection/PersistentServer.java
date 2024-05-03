@@ -37,25 +37,25 @@ public class PersistentServer {
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            // Asegúrate que logPage no sea null después de inicializar la UI
             if (logPage == null) {
                 throw new IllegalStateException("LogPage has not been initialized properly.");
             }
 
             logPage.updateLog(DescripcionAccion.SERVIDOR_INICIADO, "Servidor escuchando en el puerto " + port);
 
-           while (true) {
-    Socket clientSocket = serverSocket.accept();  // Aceptar la conexión entrante
-    logPage.updateLog(DescripcionAccion.CONEXION_ACEPTADA, "Cliente conectado desde: " + clientSocket.getInetAddress());
+            while (true) {
+                Socket clientSocket = serverSocket.accept();  // Aceptar la conexión entrante
+                logPage.updateLog(DescripcionAccion.CONEXION_ACEPTADA, "Cliente conectado desde: " + clientSocket.getInetAddress());
 
-    // Crear una nueva instancia de ClientHandler y enviarla al ExecutorService para manejarla en un hilo separado
-    ClientHandler handler = new ClientHandler(clientSocket, logPage);
-    executor.submit(handler);  // Asumiendo que 'executor' es un ExecutorService inicializado previamente
-}
+                // Crear una nueva instancia de ClientHandler y enviarla al ExecutorService para manejarla en un hilo separado
+                ClientHandler handler = new ClientHandler(clientSocket, logPage);
+                executor.submit(handler);
+            }
 
         } catch (IOException e) {
             Logger.getLogger(PersistentServer.class.getName()).log(Level.SEVERE, null, e);
             if (logPage != null) {
+                   System.out.println("Error al iniciar el servidor: " + e.getMessage());
                // logPage.updateLog(DescripcionAccion.ERROR_SERVIDOR, "Error al iniciar el servidor: " + e.getMessage());
             } else {
                 System.out.println("Error al iniciar el servidor: " + e.getMessage());

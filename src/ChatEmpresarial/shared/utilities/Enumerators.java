@@ -15,6 +15,25 @@ package ChatEmpresarial.shared.utilities;
 
 public class Enumerators {
     
+    public enum TipoRequest {
+    REGISTER("register"),
+    LOGIN("login");
+
+    private final String actionString;
+
+    TipoRequest(String actionString) {
+        this.actionString = actionString;
+    }
+
+    @Override
+    public String toString() {
+        return this.actionString;
+    }
+}
+
+    
+    
+    
     //Enumerador para determinar el tipo de Log a registrar
     public enum TipoLog {
     SERVIDOR_INICIADO,
