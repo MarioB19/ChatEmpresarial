@@ -1,10 +1,19 @@
 package ChatEmpresarial.client.pages;
 
+import ChatEmpresarial.client.conection.PersistentClient;
+import ChatEmpresarial.client.utilities.SessionManager;
+import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
+import ChatEmpresarial.shared.utilities.Functions;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import org.json.JSONObject;
 
 public class LoginPage extends JFrame {
+    
+    //Propiedades globales
+    int Attempts = 0;
+    
     public LoginPage() {
         setTitle("Login");
         setSize(800, 600);
@@ -65,9 +74,16 @@ public class LoginPage extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
          
-                dispose();
-            ChatList chatList = new ChatList();
-        chatList.setVisible(true); // Mostrar la ventana de login
+                
+                //Realizar solicitud del login
+                String username = userText.getText();
+                String password = new String(passwordText.getPassword());
+                
+                handleLogin(username, password);
+           
+                //-----------------------------------//
+                
+           
            
             }
         });
@@ -110,4 +126,74 @@ public class LoginPage extends JFrame {
 
         add(backgroundPanel);
     }
+    
+    
+    
+    //_-------------------------------------
+    //Métodos privados
+    
+    
+            private boolean handleLogin(String username, String password) {
+           
+    boolean isValid = true;
+
+ 
+    if (username.length() < 2 || username.length() > 15) {
+        
+        isValid = false;
+    }
+
+    // Validación de contraseña
+    if (password.length() < 4 || password.length() > 20) {
+       
+        isValid = false;
+    }
+
+    if (isValid) {
+        JSONObject json = new JSONObject();
+        json.put("username", username);
+        json.put("password", Functions.toSHA256(password));
+        json.put("action", TipoRequest.LOGIN.toString());
+
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+   
+        switch (serverResponse) {
+        
+            case "-1":  // Usuario no encontrado
+                  JOptionPane.showMessageDialog(null, "Fail!! Try again.", "Success", JOptionPane.ERROR_MESSAGE);
+               Attempts++;
+               
+               if(Attempts==3); // Lo redirige a otra pantalla (creación de cuenta)
+                 JOptionPane.showMessageDialog(null, "WHAT THE HELLl!! THREE ATTEMPTS. GO TO CREATE AND ACCOUNT.", "Create", JOptionPane.ERROR_MESSAGE);
+                 dispose();
+                   RegisterPage registerPage = new RegisterPage();
+        registerPage.setVisible(true);
+                  
+                break;
+               
+            case "0": //Usuario identificado
+                 JOptionPane.showMessageDialog(null, "WHAT THE HELLl!! THREE ATTEMPTS. GO TO CREATE AND ACCOUNT.", "Create", JOptionPane.INFORMATION_MESSAGE);
+                   
+                 
+                 dispose();
+            ChatList chatList = new ChatList();
+        chatList.setVisible(true); // Mostrar la ventana de login
+        
+            default:
+              JOptionPane.showMessageDialog(null, "IDK!! Try again. I guess", "Fail?", JOptionPane.ERROR_MESSAGE);
+                
+                break;
+                
+
+           
+                
+        }
+        
+      
+    }
+    return false;
+    
+            }
 }

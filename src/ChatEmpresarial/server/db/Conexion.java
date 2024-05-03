@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 public class Conexion {
     
-    private Connection con;
+    private static Connection con;
     
     public Conexion()
     {
@@ -43,7 +43,7 @@ public class Conexion {
         
     }
     
-      public Connection getCon() {
+      public static Connection getCon() {
         return con;
     }
                 
