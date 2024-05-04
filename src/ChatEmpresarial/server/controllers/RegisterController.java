@@ -23,7 +23,7 @@ public class RegisterController {
     public static String insertUser(String username, String password, String favoriteMovie, String favoriteFood) throws SQLException {
         Conexion conexion = new Conexion(); // Create a new instance to use the connection
         Connection con = conexion.getCon();
-
+        
         // First, check if the username already exists
         String checkUserSql = "SELECT COUNT(*) FROM usuario WHERE nombre = ?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkUserSql)) {

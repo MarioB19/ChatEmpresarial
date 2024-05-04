@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,7 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTextArea;
 
-public class LogController extends Conexion {
+public class LogController {
 
     private ArrayList<Log> logs = new ArrayList<>();
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -49,10 +50,10 @@ public class LogController extends Conexion {
         Gson gson = new Gson();
         String json = gson.toJson(logs);
         try {
-            FileWriter writer = new FileWriter("logs.json");  // Crea o sobrescribe el archivo logs.json en el directorio actual
-            writer.write(json);  // Escribe el JSON en el archivo
-            writer.close();      // Cierra el archivo para asegurar que los cambios se guarden
-            deleteAllLogs();     // Borra los logs de la base de datos si es necesario
+            FileWriter writer = new FileWriter("logs.json");
+            writer.write(json);
+            writer.close();
+            deleteAllLogs();
             System.out.println("Logs guardados en formato JSON: " + json);
         } catch (IOException | SQLException ex) {
             Logger.getLogger(LogController.class.getName()).log(Level.SEVERE, null, ex);
@@ -60,8 +61,10 @@ public class LogController extends Conexion {
     }
 
     public void insertLog(DescripcionAccion accion, Object... args) throws SQLException {
+           Conexion conexion = new Conexion(); // Create a new instance to use the connection
+      
         String descripcion = String.format(accion.getDescripcion(), args);
-        PreparedStatement sql = getCon().prepareStatement("INSERT INTO log (descripcion, fecha_creacion) VALUES (?, NOW())");
+        PreparedStatement sql = conexion.getCon().prepareStatement("INSERT INTO log (descripcion, fecha_creacion) VALUES (?, NOW())");
         sql.setString(1, descripcion);
         sql.executeUpdate();
     }
@@ -82,7 +85,9 @@ public class LogController extends Conexion {
     }
 
     private ArrayList<Log> selectAllLogs() throws SQLException {
-        PreparedStatement sql = getCon().prepareStatement("SELECT descripcion, fecha_creacion FROM log");
+           Conexion conexion = new Conexion(); // Create a new instance to use the connection
+ 
+        PreparedStatement sql = conexion.getCon().prepareStatement("SELECT descripcion, fecha_creacion FROM log");
         ResultSet resultSet = sql.executeQuery();
         logs.clear();
         while (resultSet.next()) {
@@ -94,7 +99,9 @@ public class LogController extends Conexion {
     }
 
     private void deleteAllLogs() throws SQLException {
-        PreparedStatement sql = getCon().prepareStatement("DELETE FROM log");
+           Conexion conexion = new Conexion(); // Create a new instance to use the connection
+    
+        PreparedStatement sql = conexion.getCon().prepareStatement("DELETE FROM log");
         sql.executeUpdate();
     }
 }
