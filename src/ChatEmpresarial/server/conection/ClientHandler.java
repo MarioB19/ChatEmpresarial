@@ -1,6 +1,8 @@
 package ChatEmpresarial.server.conection;
 
 import ChatEmpresarial.server.controllers.LoginController;
+import ChatEmpresarial.server.controllers.RecoveryPasswordController;
+import ChatEmpresarial.server.controllers.RecoveryPassword2Controller;
 import ChatEmpresarial.server.controllers.RegisterController;
 import java.io.*;
 import java.net.Socket;
@@ -62,7 +64,14 @@ public class ClientHandler implements Runnable {
                         }
 
                         break;
-
+                        
+                    case FORGOTPSW1: 
+                        response = handleRecoveryPassword (jsonObject);
+                        break;
+                    case FORGOTPSW2:
+                        response = handleRecoveryPassword2 (jsonObject);
+                        break;
+                        
                     default:
                         response = handleUnknownAction();
 
@@ -116,7 +125,28 @@ public class ClientHandler implements Runnable {
 
         return LoginController.Logging(username, password);
     }
+  public String handleRecoveryPassword(JSONObject data) throws SQLException {
+        System.out.println("Handling recovery password with data: " + data.toString());
 
+        // Extracción de datos del JSON
+        String username = data.optString("username");
+        String favoriteMovie = data.optString("favoriteMovie");
+        String favoriteFood = data.optString("favoriteFood");
+
+        return RecoveryPasswordController.verifyUserDetails(username, favoriteMovie, favoriteFood);
+
+    }
+  
+  public String handleRecoveryPassword2(JSONObject data) throws SQLException {
+        System.out.println("Handling recovery password with data: " + data.toString());
+
+        // Extracción de datos del JSON
+        String username = data.optString("username");
+        String password = data.optString("password");
+
+        return RecoveryPassword2Controller.updatePassword(username,password);
+
+    }
     //Método que maneja el cierre de sesión
     private void removeClientBySocket(Socket socket) {
         String keyToRemove = null;
