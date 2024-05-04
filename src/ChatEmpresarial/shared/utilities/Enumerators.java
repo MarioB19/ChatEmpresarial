@@ -17,7 +17,9 @@ public class Enumerators {
     
     public enum TipoRequest {
     REGISTER("register"),
-    LOGIN("login");
+    LOGIN("login"),
+    FORGOTPSW1("forgotpsw1"),
+    FORGOTPSW2("forgotpsw2");
 
     private final String actionString;
 

@@ -18,7 +18,7 @@ public class IndexServer {
     public IndexServer() {
         System.out.println("Iniciando el servidor...");
 
-        int port = 4567; // Puerto en el que el servidor escuchará.
+        int port = 1234; // Puerto en el que el servidor escuchará.
         server = new PersistentServer(port); // Crear el servidor persistente.
         server.start(); // Iniciar el servidor.
         

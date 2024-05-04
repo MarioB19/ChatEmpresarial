@@ -1,10 +1,18 @@
 package ChatEmpresarial.client.pages;
 
+import ChatEmpresarial.client.conection.PersistentClient;
+import ChatEmpresarial.shared.utilities.Enumerators;
+import ChatEmpresarial.shared.utilities.Functions;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import org.json.JSONObject;
 
 public class ForgotPasswordPage extends JFrame {
+    private JTextField userName;
+    private JTextField favMovie;
+    private JTextField favFood;
+    
     public ForgotPasswordPage() {
         setTitle("Recuperar Contraseña");
         setSize(800, 600);
@@ -23,17 +31,18 @@ public class ForgotPasswordPage extends JFrame {
         instructions.setFont(new Font("Arial", Font.ITALIC, 14));
         instructions.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JTextField userName = new JTextField(20);
+        userName = new JTextField(20);
         userName.setBorder(BorderFactory.createLineBorder(new Color(0, 191, 255)));
 
-        JTextField favFood = new JTextField(20);
+        favFood = new JTextField(20);
         favFood.setBorder(BorderFactory.createLineBorder(new Color(0, 191, 255)));
 
-        JTextField favMovie = new JTextField(20);
+        favMovie = new JTextField(20);
         favMovie.setBorder(BorderFactory.createLineBorder(new Color(0, 191, 255)));
 
         JButton recoverButton = new JButton("Recuperar Contraseña");
         recoverButton.setBackground(new Color(135, 206, 250)); 
+        recoverButton.addActionListener(e -> handleRecoveryPassword());
 
         JLabel backToLogin = new JLabel("Regresar al Login");
         backToLogin.setFont(new Font("Arial", Font.PLAIN, 16));
@@ -48,17 +57,7 @@ public class ForgotPasswordPage extends JFrame {
                 loginPage.setVisible(true); // Regresar a la ventana de login
                 dispose(); // Cerrar la ventana de recuperación
             }
-        });
-
-          // Acción para abrir ForgotPasswordPage2
-        recoverButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                ForgotPasswordPage2 forgotPasswordPage2 = new ForgotPasswordPage2(); 
-                forgotPasswordPage2.setVisible(true);
-                dispose(); // Cerrar esta ventana
-            }
-        });
+        });     
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -99,5 +98,45 @@ public class ForgotPasswordPage extends JFrame {
         backgroundPanel.add(forgotPasswordPanel, gbc);
 
         add(backgroundPanel);
+        
     }
+    
+    private void handleRecoveryPassword(){
+      String username = userName.getText();
+         String favoriteMovie = favMovie.getText();
+         String favoriteFood = favFood.getText();
+    
+         JSONObject json = new JSONObject();
+        json.put("username", username);
+        json.put("favoriteMovie", Functions.toSHA256(favoriteMovie));
+        json.put("favoriteFood", Functions.toSHA256(favoriteFood));
+        json.put("action", Enumerators.TipoRequest.FORGOTPSW1.toString());
+
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+        
+            switch (serverResponse) {
+            case "0":  // Todos los campos coinciden
+                JOptionPane.showMessageDialog(null, "Datos correctos, avanza a la siguiente pagina", "Exitoso", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+                OpenForgotPsw2Page();
+                
+                break;
+            case "1":  // Alguno de los campos no coincide
+                JOptionPane.showMessageDialog(null, "Alguno de los datos no coincide con el usuario", "Fallido", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-1":  // Error desconocido
+                JOptionPane.showMessageDialog(null, "An unknown error occurred during RecoveryPassword.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            default:  // Cualquier otra respuesta
+                JOptionPane.showMessageDialog(null, "Unexpected server response: " + serverResponse, "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
+    }
+    
+     private void OpenForgotPsw2Page() {
+        String username = userName.getText();
+        ForgotPasswordPage2 forgotpasswordPage2 = new ForgotPasswordPage2(username);
+        forgotpasswordPage2.setVisible(true);
+      }
 }

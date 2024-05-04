@@ -130,7 +130,7 @@ public class ClientHandler implements Runnable {
             DictionaryClients.remove(keyToRemove); // Elimina la entrada del diccionario una vez encontrado
         }
     }
-
+    
     //Método que identifica la llave del Cliente ( su nombre de usuario)
     private String IdentifyUserName(Socket socket) {
         String Username = null;

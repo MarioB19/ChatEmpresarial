@@ -1,14 +1,20 @@
 package ChatEmpresarial.client.pages;
 
+import ChatEmpresarial.client.conection.PersistentClient;
+import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
+import ChatEmpresarial.shared.utilities.Functions;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import org.json.JSONObject;
 
 public class ForgotPasswordPage2 extends JFrame {
     private JPasswordField newPassword;
     private JLabel newPasswordError;
-
-    public ForgotPasswordPage2() {
+    private String username;
+    
+    public ForgotPasswordPage2(String username) {
+         this.username = username;
         setTitle("Restablecer Contraseña");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -81,15 +87,46 @@ public class ForgotPasswordPage2 extends JFrame {
         add(backgroundPanel);
     }
 
+
+
     private void handleResetPassword() {
-        String passwordStr = new String(newPassword.getPassword());
+        boolean isValid=true;
+        String newPasswordStr = new String(newPassword.getPassword());
         
-        if (passwordStr.length() < 4 || passwordStr.length() > 20) {
+        if (newPasswordStr.length() < 4 || newPasswordStr.length() > 20) {
             newPasswordError.setText("La contraseña debe tener entre 4 y 20 caracteres.");
+            isValid = false;
         } else {
             newPasswordError.setText("");
-            openLoginPage(); 
-            dispose(); 
+       
+        }
+        
+        
+        if (isValid) {
+        JSONObject json = new JSONObject();
+        json.put("username", username);
+        json.put("password", Functions.toSHA256(newPasswordStr));
+        json.put("action", TipoRequest.FORGOTPSW2.toString());
+        
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+        // Mostrar la respuesta en un diálogo según el código
+        switch (serverResponse) {
+            case "0":  // Éxito
+                JOptionPane.showMessageDialog(null, "Cambio de contraseña exitoso", "Exitoso", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+                openLoginPage();
+                
+                break;
+                
+            case "-1":  // Error desconocido
+                JOptionPane.showMessageDialog(null, "An unknown error occurred during recover password.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            default:  // Cualquier otra respuesta
+                JOptionPane.showMessageDialog(null, "Unexpected server response: " + serverResponse, "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
         }
     }
 
