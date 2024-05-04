@@ -7,7 +7,7 @@ import javax.swing.SwingUtilities;
 public class IndexClient {
     // Constructor que se ejecuta al instanciar esta clase.
     public IndexClient() {
-        System.out.println("Iniciando conexión al servidor...");
+       
         
         // Obtener la instancia única del PersistentClient utilizando el método Singleton
         PersistentClient client = PersistentClient.getInstance();  // Usar el método Singleton

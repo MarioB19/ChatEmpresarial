@@ -7,10 +7,11 @@ import org.json.JSONObject;
 public class PersistentClient {
     private static volatile PersistentClient instance = null;
     private final String serverAddress = "192.168.100.20";
-    private final int serverPort = 4321;
+    private final int serverPort = 4567;
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
+    
 
     private PersistentClient() {
         // Constructor privado para el patrón Singleton

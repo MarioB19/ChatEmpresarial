@@ -12,7 +12,7 @@ import org.json.JSONObject;
 public class LoginPage extends JFrame {
     
     //Propiedades globales
-    int Attempts = 0;
+    int attempts = 0;
     
     public LoginPage() {
         setTitle("Login");
@@ -133,23 +133,7 @@ public class LoginPage extends JFrame {
     //Métodos privados
     
     
-            private boolean handleLogin(String username, String password) {
-           
-    boolean isValid = true;
-
- 
-    if (username.length() < 2 || username.length() > 15) {
-        
-        isValid = false;
-    }
-
-    // Validación de contraseña
-    if (password.length() < 4 || password.length() > 20) {
-       
-        isValid = false;
-    }
-
-    if (isValid) {
+               private void handleLogin(String username, String password) {
         JSONObject json = new JSONObject();
         json.put("username", username);
         json.put("password", Functions.toSHA256(password));
@@ -158,42 +142,26 @@ public class LoginPage extends JFrame {
         PersistentClient client = PersistentClient.getInstance();
         String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
-   
         switch (serverResponse) {
-        
-            case "-1":  // Usuario no encontrado
-                  JOptionPane.showMessageDialog(null, "Fail!! Try again.", "Success", JOptionPane.ERROR_MESSAGE);
-               Attempts++;
-               
-               if(Attempts==3); // Lo redirige a otra pantalla (creación de cuenta)
-                 JOptionPane.showMessageDialog(null, "WHAT THE HELLl!! THREE ATTEMPTS. GO TO CREATE AND ACCOUNT.", "Create", JOptionPane.ERROR_MESSAGE);
-                 dispose();
-                   RegisterPage registerPage = new RegisterPage();
-        registerPage.setVisible(true);
-                  
+            case "-1":
+                JOptionPane.showMessageDialog(null, "Usuario o contraseña incorrecta. Intenta nuevamente.", "Error", JOptionPane.ERROR_MESSAGE);
+                attempts++;
+                if (attempts == 3) {
+                    JOptionPane.showMessageDialog(null, "Has alcanzado el máximo de intentos. Por favor, registra una cuenta.", "Máximo de Intentos", JOptionPane.ERROR_MESSAGE);
+                    RegisterPage registerPage = new RegisterPage();
+                    registerPage.setVisible(true);
+                    dispose();
+                }
                 break;
-               
-            case "0": //Usuario identificado
-                 JOptionPane.showMessageDialog(null, "WHAT THE HELLl!! THREE ATTEMPTS. GO TO CREATE AND ACCOUNT.", "Create", JOptionPane.INFORMATION_MESSAGE);
-                   
-                 
-                 dispose();
-            ChatList chatList = new ChatList();
-        chatList.setVisible(true); // Mostrar la ventana de login
-        
+            case "0":
+                JOptionPane.showMessageDialog(null, "Inicio de sesión exitoso.", "Bienvenido", JOptionPane.INFORMATION_MESSAGE);
+                ChatList chatList = new ChatList();
+                chatList.setVisible(true);
+                dispose();
+                break;
             default:
-              JOptionPane.showMessageDialog(null, "IDK!! Try again. I guess", "Fail?", JOptionPane.ERROR_MESSAGE);
-                
+                JOptionPane.showMessageDialog(null, "Error desconocido. Intenta nuevamente.", "Error", JOptionPane.ERROR_MESSAGE);
                 break;
-                
-
-           
-                
         }
-        
-      
     }
-    return false;
-    
-            }
 }
