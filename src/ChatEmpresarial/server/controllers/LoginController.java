@@ -5,6 +5,7 @@
 package ChatEmpresarial.server.controllers;
 
 import ChatEmpresarial.server.db.Conexion;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -25,10 +26,19 @@ public class LoginController extends Conexion {
     
     public static String Logging(String username, String password)
     {   
+        
+          Conexion conexion = new Conexion(); // Create a new instance to use the connection
+        Connection con = conexion.getCon();
+        
+        if(username.length() == 0 || username == null){
+            return "-1";
+            
+        }
+        
          PreparedStatement sql;
         //Realizar query para obtener el nombre de usuairo
         try {
-            sql = getCon().prepareStatement("SELECT nombre FROM usuario WHERE(nombre=? && contrasena=?)");
+            sql = con.prepareStatement("SELECT nombre FROM usuario WHERE(nombre=? && contrasena=?)");
         
         
         sql.setString(1, username);
