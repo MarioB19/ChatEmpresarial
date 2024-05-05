@@ -377,7 +377,7 @@ public class ChatList extends JFrame {
     String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
     // Expresión regular para capturar status y friends
-    Pattern pattern = Pattern.compile("\"status\":\\s*\"(-?\\d+)\",\\s*\"friends\":\\s*(\\[.*\\])");
+    Pattern pattern = Pattern.compile("\"status\":\\s*\"(-?\\d+)\",\\s*\"message\":\\s*(\\[.*\\])");
     Matcher matcher = pattern.matcher(serverResponse);
 
     if (matcher.find()) {

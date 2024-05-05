@@ -262,12 +262,8 @@ public class ChatFriendController {
         // Convertir la lista de amigos en un JSONArray
         JSONArray friendsArray = new JSONArray(friendsList);
 
-        // Crear un JSONObject con el estado y el arreglo de amigos
-        JSONObject respuesta = new JSONObject();
-        respuesta.put("status", "success");
-        respuesta.put("friends", friendsArray);
-
-        return respuesta.toString(); // Devuelve el JSON como un String
+        
+        return friendsArray.toString(); // Devuelve el JSON como un String
     }
    
 }
