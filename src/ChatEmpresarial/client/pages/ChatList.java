@@ -1,16 +1,24 @@
 package ChatEmpresarial.client.pages;
 
+import ChatEmpresarial.client.conection.PersistentClient;
 import ChatEmpresarial.shared.models.Grupo;
 import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
+import ChatEmpresarial.shared.utilities.Enumerators;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class ChatList extends JFrame {
+
+    
     private ArrayList<Usuario> usuariosConectados = new ArrayList<>();
     private ArrayList<Usuario> usuariosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
@@ -39,12 +47,26 @@ public class ChatList extends JFrame {
     }
 
     private void inicializarDatosDePrueba() {
+        
+        
+        //Inicializar amigos
+        
+          // Obtener amigos de la respuesta del servidor
+        ArrayList<String> amigosNombres = handleListFriends();
+
+        // Convertir nombres a objetos `Usuario`
+        for (String nombre : amigosNombres) {
+            Usuario usuario = new Usuario();
+            usuario.setNombre(nombre);
+            amigosConectados.add(usuario);
+        }
+        
         for (int i = 1; i <= 3; i++) {
             Usuario usuario = new Usuario();
             usuario.setNombre("User" + i);
             usuariosConectados.add(usuario);
             usuariosDesconectados.add(usuario);
-            amigosConectados.add(usuario);
+          //  amigosConectados.add(usuario);
             amigosDesconectados.add(usuario);
             solicitudesAmigos.add(usuario);
 
@@ -195,6 +217,7 @@ public class ChatList extends JFrame {
     }
 
     class UsuarioCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
+
         private JLabel lblNombre = new JLabel();
         private JButton btnEnviarSolicitud = new JButton("+");
 
@@ -220,6 +243,7 @@ public class ChatList extends JFrame {
     }
 
     class AmigoCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
+
         private JLabel lblNombre = new JLabel();
         private JButton btnEliminarAmigo = new JButton("-");
 
@@ -245,6 +269,7 @@ public class ChatList extends JFrame {
     }
 
     class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
+
         private JLabel lblNombre = new JLabel();
         private JButton btnEliminarGrupo = new JButton("-");
 
@@ -270,6 +295,7 @@ public class ChatList extends JFrame {
     }
 
     class SolicitudesCellRenderer extends JPanel implements ListCellRenderer<Object> {
+
         private JLabel lblNombre = new JLabel();
         private JButton btnAceptar = new JButton("Aceptar");
         private JButton btnRechazar = new JButton("Rechazar");
@@ -305,5 +331,88 @@ public class ChatList extends JFrame {
         }
     }
 
+    //---------------------
+    //Métodos privados
+    //-------------------
+    //Método para acceder al chat de un amigo
+    private void handleChatFriendRequest(String friendUsername) {
+        JSONObject json = new JSONObject();
+        json.put("friend_username", friendUsername);
+        json.put("action", "REQUEST_CHAT_FRIEND"); // Ajusta este campo con el tipo de acción correcto
 
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+        switch (serverResponse) {
+            case "-1":
+                JOptionPane.showMessageDialog(null, "No se pudo encontrar al amigo o iniciar el chat.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+
+            case "-2":
+                JOptionPane.showMessageDialog(null, "Error desconocido. Intenta nuevamente.", "Error", JOptionPane.ERROR_MESSAGE);
+
+                break;
+            default:
+                JOptionPane.showMessageDialog(null, "Chat iniciado exitosamente.", "Información", JOptionPane.INFORMATION_MESSAGE);
+                ChatAmigosPage amigos = new ChatAmigosPage();
+                amigos.setVisible(true);
+                break;
+
+        }
+    }
+
+    
+    
+    
+    
+    
+    
+ private ArrayList<String> handleListFriends() {
+    ArrayList<String> resultado = new ArrayList<>();
+
+    JSONObject json = new JSONObject();
+    json.put("action", "FIND_FRIENDS");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    // Expresión regular para capturar status y friends
+    Pattern pattern = Pattern.compile("\"status\":\\s*\"(-?\\d+)\",\\s*\"friends\":\\s*(\\[.*\\])");
+    Matcher matcher = pattern.matcher(serverResponse);
+
+    if (matcher.find()) {
+        // Extraer el valor de `status`
+        String statusStr = matcher.group(1).trim();
+        int status = Integer.parseInt(statusStr);
+
+        // Solo procesar si el estado es exitoso (status 0)
+        if (status == 0) {
+            // Extraer el valor de `friends`
+            String jsonFriends = matcher.group(2).trim();
+
+            // Procesar el JSON en `friends`
+            JSONArray amigosArray = new JSONArray(jsonFriends);
+            for (int i = 0; i < amigosArray.length(); i++) {
+                String amigo = amigosArray.getString(i);
+                resultado.add(amigo); // Añadir cada amigo a la lista de resultado
+            }
+        } else {
+            // Gestionar estados de error
+            if (status == -1) {
+                System.err.println("Error: no se pudo identificar al usuario remitente.");
+            } else if (status == -2) {
+                System.err.println("Error: ocurrió un error interno del servidor.");
+            } else {
+                System.err.println("Error desconocido con el estado: " + status);
+            }
+        }
+    } else {
+        System.err.println("Formato incorrecto o datos no encontrados.");
+    }
+
+    return resultado; // Devuelve la lista con los nombres de amigos
 }
+    
+  
+}
+        

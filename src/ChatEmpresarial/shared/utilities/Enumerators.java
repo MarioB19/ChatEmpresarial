@@ -19,7 +19,12 @@ public class Enumerators {
     REGISTER("register"),
     LOGIN("login"),
     FORGOTPSW1("forgotpsw1"),
-    FORGOTPSW2("forgotpsw2");
+    FORGOTPSW2("forgotpsw2"),
+    REQUEST_CHAT_FRIEND("chatfriend"),
+    SEND_MESSAGE_FRIEND("messageFriend"),
+    FIND_FRIENDS("findFriends"),
+    FIND_FRIENDS_DISC("findFriendsDisconnected"),
+    DELETE_CHAT_FRIEND("deletefriend");
 
     private final String actionString;
 
@@ -84,6 +89,16 @@ public enum DescripcionAccion {
     public String getDescripcion() {
         return descripcion;
     }
+    
+    
+    //Enumerador para determinar el tipo de chat
+    
+    public enum TipoChat{
+        
+        
+    }
+    
+    
 }
     
     

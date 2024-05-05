@@ -29,15 +29,7 @@ public class Main {
             
 
         IndexClient cliente = new IndexClient();
-        
-
-        
-        
-        
-        
-        
-                   
-       
+              
       
     }
         

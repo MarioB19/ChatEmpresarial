@@ -1,5 +1,6 @@
 package ChatEmpresarial.server.conection;
 
+import ChatEmpresarial.server.controllers.ChatFriendController;
 import ChatEmpresarial.server.controllers.LoginController;
 import ChatEmpresarial.server.controllers.RecoveryPasswordController;
 import ChatEmpresarial.server.controllers.RecoveryPassword2Controller;
@@ -15,6 +16,7 @@ import ChatEmpresarial.shared.utilities.Enumerators.DescripcionAccion;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 
 public class ClientHandler implements Runnable {
 
@@ -70,6 +72,22 @@ public class ClientHandler implements Runnable {
                         break;
                     case FORGOTPSW2:
                         response = handleRecoveryPassword2 (jsonObject);
+                        break;
+                        
+                        
+                    case REQUEST_CHAT_FRIEND:
+                        response = handleChatFriend(jsonObject);
+                        
+                        break;
+                    case SEND_MESSAGE_FRIEND:
+                        response = handleSendMessageFriend(jsonObject);
+                        
+                    case DELETE_CHAT_FRIEND:
+                        response = handleDeleteChatFriend(jsonObject);
+                        
+                    case FIND_FRIENDS:
+                        response = handleFindFriends(clientSocket, jsonObject );
+                        
                         break;
                         
                     default:
@@ -174,6 +192,105 @@ public class ClientHandler implements Runnable {
           return Username;
     }
 
+    
+    
+    //Método que maneja la creación de un chat de amigos
+    private String handleChatFriend(JSONObject jsonObject) {
+    try {
+        // Extrae los nombres del remitente y receptor desde el JSON
+        String remitente = jsonObject.getString("remitente");
+        String receptor = jsonObject.getString("receptor");
+
+        // Llama al método que obtiene los mensajes
+        String mensajesJson = ChatFriendController.obtainAllMessages(remitente, receptor);
+
+        // Devuelve la respuesta JSON completa que incluye todos los mensajes
+        return mensajesJson;
+
+    } catch (Exception e) {
+        // Maneja cualquier excepción y retorna un error estándar
+        e.printStackTrace();
+        return "-1";
+    }
+        
+}
+    
+    //Método para guardar un mensaje
+    private String handleSendMessageFriend(JSONObject jsonObject) {
+    try {
+        // Extrae el remitente, receptor y contenido del mensaje desde el JSON
+        String remitente = jsonObject.getString("remitente");
+        String receptor = jsonObject.getString("receptor");
+        String contenido = jsonObject.getString("contenido");
+
+        // Llama al método que envía el mensaje y obtiene el resultado como un número
+        String resultado = ChatFriendController (remitente, receptor, contenido);
+
+        // Devuelve el número tal como lo proporciona el controlador
+        return resultado;
+
+    } catch (Exception e) {
+        // Maneja cualquier excepción y retorna un error estándar
+        e.printStackTrace();
+        return "-1";
+    }
+}
+    
+    //Método para eliminar los mensajes así como el chat y la amistad
+    private String handleDeleteChatFriend(JSONObject jsonObject) {
+    try {
+        // Extrae los nombres del remitente y receptor desde el JSON
+        String remitente = jsonObject.getString("remitente");
+        String receptor = jsonObject.getString("receptor");
+
+        // Llama al método que elimina el chat y obtiene el resultado como un número
+        String resultado = ChatFriendController.DeleteAllMessagesAndFriendship(remitente, receptor);
+
+        // Devuelve el número tal como lo proporciona el controlador
+        return resultado;
+
+    } catch (Exception e) {
+        // Maneja cualquier excepción y retorna un error estándar
+        e.printStackTrace();
+        return "-1";
+    }
+    
+   
+   
+    
+}
+    
+    //Método para encontrar a todos los amigos 
+     private String handleFindFriends(Socket clientSocket, JSONObject jsonObject) {
+    try {
+        // Obtener el nombre de usuario del remitente usando el socket
+        String remitenteUsername = IdentifyUserName(clientSocket);
+        
+        if (remitenteUsername == null) {
+            return "{\"status\":\"error\", \"message\":\"Usuario no encontrado\"}";
+        }
+
+        // Llamar al método en `ChatFriendController` para obtener la lista de amigos
+        String friendsList = ChatFriendController.findFriends(remitenteUsername);
+
+        // Preparar la respuesta JSON
+        JSONObject respuesta = new JSONObject();
+        respuesta.put("status", "success");
+        respuesta.put("friends", friendsList);
+
+        return respuesta.toString();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return "{\"status\":\"error\", \"message\":\"Error al procesar la solicitud de amigos\"}";
+    }
+}
+    
+    
+    
+    
+    
+    
 //Método que maneja cosas raras
     private String handleUnknownAction() {
         System.out.println("Received unknown action.");
