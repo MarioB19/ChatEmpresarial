@@ -26,9 +26,19 @@ public class Mensaje {
     
     private Timestamp fecha_creacion;
 
-    
+    private String nombre;
     //------------
     //getters y setters
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+    
+    
 
     public int getId_mensaje() {
         return id_mensaje;

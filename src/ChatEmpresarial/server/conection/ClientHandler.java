@@ -224,7 +224,7 @@ public class ClientHandler implements Runnable {
         String contenido = jsonObject.getString("contenido");
 
         // Llama al método que envía el mensaje y obtiene el resultado como un número
-        String resultado = ChatFriendController (remitente, receptor, contenido);
+        String resultado = ChatFriendController.SendMessage(remitente, receptor, contenido);
 
         // Devuelve el número tal como lo proporciona el controlador
         return resultado;
@@ -262,27 +262,31 @@ public class ClientHandler implements Runnable {
     
     //Método para encontrar a todos los amigos 
      private String handleFindFriends(Socket clientSocket, JSONObject jsonObject) {
+           JSONObject respuesta = new JSONObject();
     try {
         // Obtener el nombre de usuario del remitente usando el socket
+            // Preparar la respuesta JSON
+      
         String remitenteUsername = IdentifyUserName(clientSocket);
         
         if (remitenteUsername == null) {
-            return "{\"status\":\"error\", \"message\":\"Usuario no encontrado\"}";
+           respuesta.put("status","-1");
+           return respuesta.toString();
         }
 
         // Llamar al método en `ChatFriendController` para obtener la lista de amigos
         String friendsList = ChatFriendController.findFriends(remitenteUsername);
 
-        // Preparar la respuesta JSON
-        JSONObject respuesta = new JSONObject();
-        respuesta.put("status", "success");
-        respuesta.put("friends", friendsList);
+    
+        respuesta.put("status", "0");
+        respuesta.put("message", friendsList);
 
         return respuesta.toString();
 
     } catch (Exception e) {
         e.printStackTrace();
-        return "{\"status\":\"error\", \"message\":\"Error al procesar la solicitud de amigos\"}";
+       respuesta.put("status", "-2");
+        return respuesta.toString();
     }
 }
     
