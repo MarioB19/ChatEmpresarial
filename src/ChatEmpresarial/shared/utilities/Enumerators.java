@@ -19,7 +19,9 @@ public class Enumerators {
     REGISTER("register"),
     LOGIN("login"),
     FORGOTPSW1("forgotpsw1"),
-    FORGOTPSW2("forgotpsw2");
+    FORGOTPSW2("forgotpsw2"),  
+    CREATEGROUP("creategroup");
+
 
     private final String actionString;
 

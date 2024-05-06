@@ -18,7 +18,7 @@ public class Grupo {
   
     //Llave
     private int id_grupo;
-
+    
   //FK --> Usuario
     private int id_aministrador;
 

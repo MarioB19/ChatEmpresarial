@@ -6,8 +6,8 @@ import org.json.JSONObject;
 
 public class PersistentClient {
     private static volatile PersistentClient instance = null;
-    private final String serverAddress = "192.168.100.20";
-    private final int serverPort = 4567;
+    private final String serverAddress = "192.168.100.18";
+    private final int serverPort = 1234;
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;

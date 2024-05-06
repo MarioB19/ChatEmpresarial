@@ -1,16 +1,21 @@
 package ChatEmpresarial.client.pages;
 
+import ChatEmpresarial.client.conection.PersistentClient;
 import ChatEmpresarial.shared.models.Grupo;
 import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
+import ChatEmpresarial.shared.utilities.Enumerators;
+import ChatEmpresarial.shared.utilities.Functions;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import org.json.JSONObject;
 
 public class ChatList extends JFrame {
+
     private ArrayList<Usuario> usuariosConectados = new ArrayList<>();
     private ArrayList<Usuario> usuariosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
@@ -70,6 +75,7 @@ public class ChatList extends JFrame {
         JButton btnUsuarios = new JButton("Usuarios");
         JButton btnAmigos = new JButton("Amigos");
         JButton btnGrupos = new JButton("Grupos");
+        JButton btnCrearGrupo = new JButton("PanelCrearGrupo");
 
         // Panel principal con CardLayout
         panelPrincipal = new JPanel();
@@ -78,10 +84,12 @@ public class ChatList extends JFrame {
         panelPrincipal.add(crearPanelUsuarios(), "Usuarios");
         panelPrincipal.add(crearPanelAmigos(), "Amigos");
         panelPrincipal.add(crearPanelGrupos(), "Grupos");
+        panelPrincipal.add(crearPanelCrearGrupo(), "PanelCrearGrupo");
 
         btnUsuarios.addActionListener(e -> cardLayout.show(panelPrincipal, "Usuarios"));
         btnAmigos.addActionListener(e -> cardLayout.show(panelPrincipal, "Amigos"));
         btnGrupos.addActionListener(e -> cardLayout.show(panelPrincipal, "Grupos"));
+        btnCrearGrupo.addActionListener(e -> cardLayout.show(panelPrincipal, "PanelCrearGrupo"));
 
         estiloBoton(btnUsuarios);
         estiloBoton(btnAmigos);
@@ -145,10 +153,75 @@ public class ChatList extends JFrame {
     }
 
     private JPanel crearPanelGrupos() {
-        JPanel panel = new JPanel(new GridLayout(2, 1));
-        panel.add(crearListaGrupos("Grupos", grupos, false));
-        panel.add(crearListaSolicitudes("Solicitudes de Grupos", solicitudesGrupos, false));
+        JPanel panel = new JPanel(new BorderLayout());
+
+        // Botón para crear un nuevo grupo
+        JButton btnCrearGrupo = new JButton("Crear Grupo");
+        estiloBoton(btnCrearGrupo);
+        btnCrearGrupo.addActionListener(e -> cardLayout.show(panelPrincipal, "PanelCrearGrupo"));
+
+        // Panel para la lista de grupos y solicitudes
+        JPanel panelListas = new JPanel(new GridLayout(2, 1));
+        panelListas.add(crearListaGrupos("Grupos", grupos, false));
+        panelListas.add(crearListaSolicitudes("Solicitudes de Grupos", solicitudesGrupos, false));
+
+        panel.add(btnCrearGrupo, BorderLayout.NORTH);
+        panel.add(panelListas, BorderLayout.CENTER);
+
         return panel;
+    }
+
+    private JPanel crearPanelCrearGrupo() {
+        JPanel panelCrearGrupo = new JPanel(new GridLayout(3, 2));
+
+        // Añade los campos y botones necesarios para crear un grupo
+        JLabel lblNombreGrupo = new JLabel("Nombre:");
+        JTextField txtNombreGrupo = new JTextField();
+        JButton btnCrear = new JButton("Crear");
+        JButton btnCancelar = new JButton("Cancelar");
+
+        panelCrearGrupo.add(lblNombreGrupo);
+        panelCrearGrupo.add(txtNombreGrupo);
+        panelCrearGrupo.add(btnCrear);
+        panelCrearGrupo.add(btnCancelar);
+
+
+        // Acción para el botón crear grupo
+        btnCrear.addActionListener(e -> {
+        String groupname = txtNombreGrupo.getText();
+        
+        JSONObject json = new JSONObject();
+        json.put("username", groupname);
+        json.put("adminId", 1);
+        json.put("action", Enumerators.TipoRequest.CREATEGROUP.toString());
+        
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+        
+                // Mostrar la respuesta en un diálogo según el código
+        switch (serverResponse) {
+            case "0":  // Éxito
+                JOptionPane.showMessageDialog(null, "Cretion successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                cardLayout.show(panelPrincipal, "Grupos");
+                break;
+            case "1":  // Nombre de usuario ya registrado
+                JOptionPane.showMessageDialog(null, "Could'nt create group.", "Creation Failed", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-1":  // Error desconocido
+                JOptionPane.showMessageDialog(null, "An unknown error occurred during creation.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            default:  // Cualquier otra respuesta
+                JOptionPane.showMessageDialog(null, "Unexpected server response: " + serverResponse, "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
+
+            System.out.println("Crear grupo: " + txtNombreGrupo.getText());
+        });
+
+        // Acción para el botón cancelar
+        btnCancelar.addActionListener(e -> cardLayout.show(panelPrincipal, "Grupos"));
+
+        return panelCrearGrupo;
     }
 
     private JScrollPane crearListaGrupos(String titulo, ArrayList<Grupo> grupos, boolean estaConectado) {
@@ -195,6 +268,7 @@ public class ChatList extends JFrame {
     }
 
     class UsuarioCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
+
         private JLabel lblNombre = new JLabel();
         private JButton btnEnviarSolicitud = new JButton("+");
 
@@ -220,6 +294,7 @@ public class ChatList extends JFrame {
     }
 
     class AmigoCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
+
         private JLabel lblNombre = new JLabel();
         private JButton btnEliminarAmigo = new JButton("-");
 
@@ -245,6 +320,7 @@ public class ChatList extends JFrame {
     }
 
     class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
+
         private JLabel lblNombre = new JLabel();
         private JButton btnEliminarGrupo = new JButton("-");
 
@@ -270,6 +346,7 @@ public class ChatList extends JFrame {
     }
 
     class SolicitudesCellRenderer extends JPanel implements ListCellRenderer<Object> {
+
         private JLabel lblNombre = new JLabel();
         private JButton btnAceptar = new JButton("Aceptar");
         private JButton btnRechazar = new JButton("Rechazar");
@@ -304,6 +381,5 @@ public class ChatList extends JFrame {
             return this;
         }
     }
-
 
 }
