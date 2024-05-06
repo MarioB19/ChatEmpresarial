@@ -24,8 +24,14 @@ public class ChatList extends JFrame {
     
        private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
     private DefaultListModel<Usuario> modeloUsuariosDesconectados = new DefaultListModel<>();
+    
+    private DefaultListModel<Usuario> modeloAmigosConectados = new DefaultListModel<>();
+    private DefaultListModel<Usuario> modeloAmigosDesconectados = new DefaultListModel<>();
+    
     private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
     private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
+    
+    
     
     
     private String nombreUserActive;
@@ -100,48 +106,61 @@ private void configurarTimer() {
     }
 
     // Actualizar la UI después de obtener los datos
-    actualizarListasUsuarios();
+   
     
         
           // Obtener amigos de la respuesta del servidor
-    ArrayList<String> amigosNombres = handleListFriends();
-        
+    ArrayList<String> amigosConectadosNombre = handleListFriendsConnected();
+    ArrayList<String> amigosDesconectadosNombre = handleListFriendsDisconnected();
 
 
-        // Convertir nombres a objetos `Usuario`
-        for (String nombre : amigosNombres) {
+            
+        for (String nombre : amigosConectadosNombre) {
             Usuario usuario = new Usuario();
             usuario.setNombre(nombre);
             amigosConectados.add(usuario);
         }
         
    
-        for (int i = 1; i <= 3; i++) {
+        for (String nombre: amigosDesconectadosNombre) {
             Usuario usuario = new Usuario();
-            usuario.setNombre("User" + i);
-   
+            usuario.setNombre(nombre);
+            amigosDesconectados.add(usuario);
+            
+     }
       
             
-            
+             actualizarListasUsuarios();
           //  amigosConectados.add(usuario);
-            amigosDesconectados.add(usuario);
-            solicitudesAmigosEnviadas.add(usuario);
-            solicitudesAmigosRecibidas.add(usuario);
+           
 
-            Grupo grupo = new Grupo();
-            grupo.setId_grupo(i);
-            grupos.add(grupo);
-            solicitudesGrupos.add(grupo);
-        }
+           // Grupo grupo = new Grupo();
+           // grupo.setId_grupo(i);
+           // grupos.add(grupo);
+           // solicitudesGrupos.add(grupo);
+      
     }
     
     private void actualizarListasUsuarios() {
     SwingUtilities.invokeLater(() -> {
+        
+        
         modeloUsuariosConectados.clear();
         usuariosConectados.forEach(modeloUsuariosConectados::addElement);
         
         modeloUsuariosDesconectados.clear();
         usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
+        
+        //Amigos
+        modeloAmigosConectados.clear();
+       amigosConectados.forEach(modeloAmigosConectados::addElement);
+       
+       
+       modeloAmigosDesconectados.clear();
+      amigosDesconectados.forEach(modeloAmigosDesconectados::addElement);
+       
+        
+        
     });
 }
 
@@ -522,57 +541,81 @@ private void configurarTimer() {
     }
 
     
-    
-    
-    
-    
-    
- private ArrayList<String> handleListFriends() {
+    //Método para solicitar el listado de amigos conectados
+    private ArrayList<String> handleListFriendsConnected() {
     ArrayList<String> resultado = new ArrayList<>();
 
+    // Crear la solicitud JSON con la acción para encontrar amigos conectados
     JSONObject json = new JSONObject();
-    json.put("action", "FIND_FRIENDS");
+    json.put("action", "FIND_FRIENDS_CONNECTED");
 
+    // Usar el cliente persistente para enviar el mensaje
     PersistentClient client = PersistentClient.getInstance();
     String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
-    // Expresión regular para capturar status y friends
-    Pattern pattern = Pattern.compile("\"status\":\\s*\"(-?\\d+)\",\\s*\"message\":\\s*(\\[.*\\])");
-    Matcher matcher = pattern.matcher(serverResponse);
+    try {
+        // Parsea la respuesta directamente como un objeto JSON
+        JSONObject responseJson = new JSONObject(serverResponse);
+        int status = responseJson.getInt("status");
 
-    if (matcher.find()) {
-        // Extraer el valor de `status`
-        String statusStr = matcher.group(1).trim();
-        int status = Integer.parseInt(statusStr);
-
-        // Solo procesar si el estado es exitoso (status 0)
+        // Si el estado es 0, el resultado fue exitoso
         if (status == 0) {
-            // Extraer el valor de `friends`
-            String jsonFriends = matcher.group(2).trim();
-
-            // Procesar el JSON en `friends`
-            JSONArray amigosArray = new JSONArray(jsonFriends);
+            // Acceder directamente al array JSON
+            JSONArray amigosArray = responseJson.getJSONArray("connectedFriends");
             for (int i = 0; i < amigosArray.length(); i++) {
                 String amigo = amigosArray.getString(i);
-                resultado.add(amigo); // Añadir cada amigo a la lista de resultado
+                resultado.add(amigo); // Añadir a la lista de resultado
             }
         } else {
-            // Gestionar estados de error
-            if (status == -1) {
-                System.err.println("Error: no se pudo identificar al usuario remitente.");
-            } else if (status == -2) {
-                System.err.println("Error: ocurrió un error interno del servidor.");
-            } else {
-                System.err.println("Error desconocido con el estado: " + status);
-            }
+            System.err.println("Error al obtener amigos conectados: estado " + status);
         }
-    } else {
-        System.err.println("Formato incorrecto o datos no encontrados.");
+    } catch (JSONException e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
     }
 
-    return resultado; // Devuelve la lista con los nombres de amigos
+    return resultado; // Devuelve la lista de amigos conectados
 }
- 
+    
+    
+    
+    //Método para obtener los métodos de amigos disconectados
+    private ArrayList<String> handleListFriendsDisconnected() {
+    ArrayList<String> resultado = new ArrayList<>();
+
+    // Crear la solicitud JSON con la acción para encontrar amigos desconectados
+    JSONObject json = new JSONObject();
+    json.put("action", "FIND_FRIENDS_DISCONNECTED");
+
+    // Usar el cliente persistente para enviar el mensaje
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    try {
+        // Parsea la respuesta directamente como un objeto JSON
+        JSONObject responseJson = new JSONObject(serverResponse);
+        int status = responseJson.getInt("status");
+
+        // Si el estado es 0, el resultado fue exitoso
+        if (status == 0) {
+            // Acceder directamente al array JSON
+            JSONArray amigosArray = responseJson.getJSONArray("disconnectedFriends");
+            for (int i = 0; i < amigosArray.length(); i++) {
+                String amigo = amigosArray.getString(i);
+                resultado.add(amigo); // Añadir a la lista de resultado
+            }
+        } else {
+            System.err.println("Error al obtener amigos desconectados: estado " + status);
+        }
+    } catch (JSONException e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+    }
+
+    return resultado; // Devuelve la lista de amigos desconectados
+}
+
+    
+    
+    
  
  private ArrayList<String> handleListUsersConectados() {
     ArrayList<String> resultado = new ArrayList<>();

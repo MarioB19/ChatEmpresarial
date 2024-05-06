@@ -21,15 +21,19 @@ public class Enumerators {
     FORGOTPSW1("forgotpsw1"),
     FORGOTPSW2("forgotpsw2"),
     REQUEST_CHAT_FRIEND("chatfriend"),
-    SEND_MESSAGE_FRIEND("messageFriend"),
-    FIND_FRIENDS("findFriends"),
-    FIND_FRIENDS_DISC("findFriendsDisconnected"),
+    SEND_MESSAGE_FRIEND("sentMessageFriend"),
+    GET_MESSAGE_FRIEND("getMessageFriends"),
+    FIND_FRIENDS_CONNECTED("findFriends"),
+    FIND_FRIENDS_DISCONNECTED("findFriendsDisconnected"),
     DELETE_CHAT_FRIEND("deletefriend"),
     FIND_USERS_DISCONNECTED("findUsersDisconnected"),
     FIND_USERS_CONNECTED("findUsersConnected"),
     CREATE_CHAT_USERS("createChatUsers"),
     SEND_MESSAGE_CHAT_USERS("sendMessageChatUsers"),
-    GET_MESSAGES_CHAT_USERS("getMessagesChatUsers");
+    GET_MESSAGES_CHAT_USERS("getMessagesChatUsers"),
+    SENT_INVITATION_FRIEND("sentFriendInvitation"),
+    REFUSE_INVITATION_FRIEND("refFriendInvitation"),
+    GET_INVITATION_FRIEND("getFriendInvitation");
 
     private final String actionString;
 
@@ -62,6 +66,8 @@ public class Enumerators {
     ELIMINAR_AMISTAD,
     SALIR_GRUPO,
     ELIMINAR_GRUPO,
+    OBTENER_SOLICITUDES,
+    ERROR;
     
     // Agrega más acciones según sea necesario
 }
@@ -81,7 +87,10 @@ public enum DescripcionAccion {
     ENVIAR_SOLICITUD_GRUPO("El usuario %s ha invitado al grupo %s a los usuarios: %s"),
     ELIMINAR_AMISTAD("El %s ha eliminado a %s de sus amigos "),
     SALIR_GRUPO("El %s ha abandonado el grupo %s"),
-    ELIMINAR_GRUPO("El grupo %s ha sido eliminado");
+    ELIMINAR_GRUPO("El grupo %s ha sido eliminado"),
+    OBTENER_SOLICITUDES("El usuario &s  ha recibido sus solicitudes de amistad :V"),
+    CONSULTAR_MENSAJES("El usuario %s ha consultado los mensajes de %s"),
+    ERROR("Ocurrio un error al: %s");
     
  
     //Necesario para acceder al formato del log

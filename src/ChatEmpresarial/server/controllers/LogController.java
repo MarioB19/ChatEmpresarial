@@ -68,6 +68,15 @@ public class LogController {
         sql.setString(1, descripcion);
         sql.executeUpdate();
     }
+    
+    
+       public static void insertLogStatic(DescripcionAccion accion, Object... args) throws SQLException {
+    Conexion conexion = new Conexion(); // Crear una instancia para obtener la conexión
+    String descripcion = String.format(accion.getDescripcion(), args);
+    PreparedStatement sql = conexion.getCon().prepareStatement("INSERT INTO log (descripcion, fecha_creacion) VALUES (?, NOW())");
+    sql.setString(1, descripcion);
+    sql.executeUpdate();
+}
 
     public void detectLog(String mensaje) {
         String[] mensajeDividido = mensaje.split(",");

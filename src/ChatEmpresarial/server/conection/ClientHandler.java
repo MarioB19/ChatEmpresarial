@@ -1,6 +1,8 @@
 package ChatEmpresarial.server.conection;
 
 import ChatEmpresarial.server.controllers.ChatFriendController;
+import ChatEmpresarial.server.controllers.FriendInvitationController;
+import ChatEmpresarial.server.controllers.LogController;
 import ChatEmpresarial.server.controllers.LoginController;
 import ChatEmpresarial.server.controllers.RecoveryPasswordController;
 import ChatEmpresarial.server.controllers.RecoveryPassword2Controller;
@@ -38,7 +40,7 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-        try (ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream()); ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream())) {
+        try ( ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());  ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream())) {
             out.flush(); // Asegúrate de que la cabecera de ObjectOutputStream se envíe.
 
             Object inputObject;
@@ -48,12 +50,11 @@ public class ClientHandler implements Runnable {
 
                 JSONObject jsonObject = new JSONObject(json); // Parse the string to a JSONObject
                 String action = jsonObject.getString("action"); // Extract the 'action' field
-           
 
                 TipoRequest requestType = TipoRequest.valueOf(action.toUpperCase()); // Convertir string a enum
-                  System.out.println("request type" + requestType);
-                  System.out.println("Accion recibida " + action);
-                String response;
+                System.out.println("request type" + requestType);
+                System.out.println("Accion recibida " + action);
+                String response = "";
 
                 switch (requestType) {
                     case REGISTER:
@@ -87,25 +88,60 @@ public class ClientHandler implements Runnable {
                         response = handleRecoveryPassword2(jsonObject);
                         break;
 
-                    case REQUEST_CHAT_FRIEND:
-                        response = handleChatFriend(jsonObject);
+             
 
                         break;
                     case SEND_MESSAGE_FRIEND:
-                        response = handleSendMessageFriend(jsonObject);
+                        response = handleSendMessageFriend(clientSocket,jsonObject);
                         break;
 
                     case DELETE_CHAT_FRIEND:
-                        response = handleDeleteChatFriend(jsonObject);
+                          response = handleDeleteAllMessagesAndFriendship(clientSocket, jsonObject);
                         break;
 
-                    case FIND_FRIENDS:
-                        response = handleFindFriends(clientSocket, jsonObject);
+                    case FIND_FRIENDS_CONNECTED:
+                        response = handleFindFriendsConnected(clientSocket);
 
                         break;
+
+                    // Encontrar amigos desconectados
+                    case FIND_FRIENDS_DISCONNECTED:
+                        response = handleFindFriendsDisconnected(clientSocket);
+                        break;
+
+                    // Obtener todos los mensajes entre amigos
+                    case GET_MESSAGE_FRIEND:
+                        response = handleObtainAllMessages(clientSocket, jsonObject);
+                        break;
+
+                    // Enviar una solicitud de amistad
+                    case SENT_INVITATION_FRIEND:
+                        response = handleSentFriendInvitation(clientSocket, jsonObject);
+                        break;
+
+                    // Rechazar una solicitud de amistad
+                    case REFUSE_INVITATION_FRIEND:
+                        response = handleCancelFriendInvitation(clientSocket, jsonObject);
+                        break;
+
+                    // Obtener las solicitudes de amistad recibidas
+                    case GET_INVITATION_FRIEND:
+                        response = handleGetReceivedInvitations(clientSocket, jsonObject);
+                        break;
+
+                    // Aceptar una solicitud de amistad
+                    case ACCEPT_INVITATION_FRIEND:
+                        response = handleAcceptFriendInvitation(clientSocket, jsonObject);
+                        break;
+
+               
+
+                    // Encontrar amigos conectados
+                   
 
                     case FIND_USERS_CONNECTED:
                         response = handleFindUsersConnected();
+
                         break;
 
                     case FIND_USERS_DISCONNECTED:
@@ -115,7 +151,7 @@ public class ClientHandler implements Runnable {
                     case CREATE_CHAT_USERS:
                         response = ChatManager.createChat(jsonObject.getString("user1"), jsonObject.getString("user2"));
                         break;
-                        
+
                     case SEND_MESSAGE_CHAT_USERS:
                         System.out.println("Entra aqui");
                         response = ChatManager.sendMessage(
@@ -242,76 +278,14 @@ public class ClientHandler implements Runnable {
         return Username;
     }
 
-    //Método que maneja la creación de un chat de amigos
-    private String handleChatFriend(JSONObject jsonObject) {
-        try {
-            // Extrae los nombres del remitente y receptor desde el JSON
-            String remitente = jsonObject.getString("remitente");
-            String receptor = jsonObject.getString("receptor");
+   
+    
 
-            // Llama al método que obtiene los mensajes
-            String mensajesJson = ChatFriendController.obtainAllMessages(remitente, receptor);
-
-            // Devuelve la respuesta JSON completa que incluye todos los mensajes
-            return mensajesJson;
-
-        } catch (Exception e) {
-            // Maneja cualquier excepción y retorna un error estándar
-            e.printStackTrace();
-            return "-1";
-        }
-
-    }
-
-    //Método para guardar un mensaje
-    private String handleSendMessageFriend(JSONObject jsonObject) {
-        try {
-            // Extrae el remitente, receptor y contenido del mensaje desde el JSON
-            String remitente = jsonObject.getString("remitente");
-            String receptor = jsonObject.getString("receptor");
-            String contenido = jsonObject.getString("contenido");
-
-            // Llama al método que envía el mensaje y obtiene el resultado como un número
-            String resultado = ChatFriendController.SendMessage(remitente, receptor, contenido);
-
-            // Devuelve el número tal como lo proporciona el controlador
-            return resultado;
-
-        } catch (Exception e) {
-            // Maneja cualquier excepción y retorna un error estándar
-            e.printStackTrace();
-            return "-1";
-        }
-    }
-
-    //Método para eliminar los mensajes así como el chat y la amistad
-    private String handleDeleteChatFriend(JSONObject jsonObject) {
-        try {
-            // Extrae los nombres del remitente y receptor desde el JSON
-            String remitente = jsonObject.getString("remitente");
-            String receptor = jsonObject.getString("receptor");
-
-            // Llama al método que elimina el chat y obtiene el resultado como un número
-            String resultado = ChatFriendController.DeleteAllMessagesAndFriendship(remitente, receptor);
-
-            // Devuelve el número tal como lo proporciona el controlador
-            return resultado;
-
-        } catch (Exception e) {
-            // Maneja cualquier excepción y retorna un error estándar
-            e.printStackTrace();
-            return "-1";
-        }
-
-    }
-
-    //Método para encontrar a todos los amigos 
-    private String handleFindFriends(Socket clientSocket, JSONObject jsonObject) {
+    //Método para encontrar a todos los amigos conectados
+    private String handleFindFriendsConnected(Socket clientSocket) {
         JSONObject respuesta = new JSONObject();
         try {
-            // Obtener el nombre de usuario del remitente usando el socket
-            // Preparar la respuesta JSON
-
+            // Identifica el nombre del remitente
             String remitenteUsername = IdentifyUserName(clientSocket);
 
             if (remitenteUsername == null) {
@@ -319,11 +293,24 @@ public class ClientHandler implements Runnable {
                 return respuesta.toString();
             }
 
-            // Llamar al método en `ChatFriendController` para obtener la lista de amigos
-            String friendsList = ChatFriendController.findFriends(remitenteUsername);
+            // Obtén la lista de amigos del remitente
+            String friendsListJson = ChatFriendController.findFriends(remitenteUsername);
+            JSONArray friendsList = new JSONArray(friendsListJson);
 
+            // Lista para amigos conectados
+            JSONArray amigosConectados = new JSONArray();
+
+            // Verifica cuáles amigos están conectados
+            for (int i = 0; i < friendsList.length(); i++) {
+                String amigoNombre = friendsList.getString(i);
+                if (GlobalClients.connectedClients.containsKey(amigoNombre)) {
+                    amigosConectados.put(amigoNombre);
+                }
+            }
+
+            // Devuelve los amigos conectados como un JSON
             respuesta.put("status", "0");
-            respuesta.put("message", friendsList);
+            respuesta.put("message", amigosConectados);
 
             return respuesta.toString();
 
@@ -334,6 +321,532 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    // Método para encontrar a todos los amigos desconectados
+    private String handleFindFriendsDisconnected(Socket clientSocket) {
+        JSONObject respuesta = new JSONObject();
+        try {
+            // Identifica el nombre del remitente
+            String remitenteUsername = IdentifyUserName(clientSocket);
+
+            if (remitenteUsername == null) {
+                respuesta.put("status", "-1");
+                return respuesta.toString();
+            }
+
+            // Obtén la lista de amigos del remitente
+            String friendsListJson = ChatFriendController.findFriends(remitenteUsername);
+            JSONArray friendsList = new JSONArray(friendsListJson);
+
+            // Lista para amigos desconectados
+            JSONArray amigosDesconectados = new JSONArray();
+
+            // Verifica cuáles amigos no están conectados
+            for (int i = 0; i < friendsList.length(); i++) {
+                String amigoNombre = friendsList.getString(i);
+                if (!GlobalClients.connectedClients.containsKey(amigoNombre)) {
+                    amigosDesconectados.put(amigoNombre);
+                }
+            }
+
+            // Devuelve los amigos desconectados como un JSON
+            respuesta.put("status", "0");
+            respuesta.put("message", amigosDesconectados);
+
+            return respuesta.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            respuesta.put("status", "-2");
+            return respuesta.toString();
+        }
+    }
+
+//Método para enviar una solicitud de amistad 
+    private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonObject) {
+        JSONObject respuesta = new JSONObject();
+        try {
+            // Identificar el nombre del remitente
+            String remitenteUsername = IdentifyUserName(clientSocket);
+
+            if (remitenteUsername == null) {
+                respuesta.put("status", "-4");
+                respuesta.put("message", "Remitente no identificado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar enviar una solicitud de amistad: remitente no identificado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Deserializar el JSON para obtener el nombre del receptor
+            String receptorUsername = jsonObject.optString("receptor");
+
+            // Verificar que el nombre del receptor esté presente
+            if (receptorUsername == null || receptorUsername.isEmpty()) {
+                respuesta.put("status", "-5");
+                respuesta.put("message", "Campo 'receptor' faltante en la solicitud");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar enviar una solicitud de amistad: falta el campo 'receptor'");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Llamar al método para agregar la solicitud de amistad
+            String result = FriendInvitationController.AddInvitation(remitenteUsername, receptorUsername);
+
+            // Incluir el resultado en la respuesta
+            if (result.equals("0")) {
+                respuesta.put("status", "0");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ENVIAR_SOLICITUD_AMISTAD, remitenteUsername, receptorUsername);
+                } catch (SQLException ex) {
+
+                }
+            } else {
+                respuesta.put("status", result);
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar una solicitud de amistad de " + remitenteUsername + " a " + receptorUsername);
+                } catch (SQLException ex) {
+
+                }
+            }
+
+            return respuesta.toString();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            respuesta.put("status", "-6");
+            respuesta.put("message", "Error interno");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al enviar una solicitud de amistad");
+            } catch (SQLException exSql) {
+
+            }
+            return respuesta.toString();
+        }
+    }
+
+    private String handleCancelFriendInvitation(Socket clientSocket, JSONObject jsonObject) {
+        JSONObject respuesta = new JSONObject();
+        try {
+            // Identificar el nombre del remitente desde el socket
+            String receptorUsername = IdentifyUserName(clientSocket);
+
+            if (receptorUsername == null) {
+                respuesta.put("status", "-5");
+                respuesta.put("message", "Remitente no identificado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar cancelar una solicitud de amistad: remitente no identificado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Deserializar el JSON para obtener el nombre del receptor
+            String remitenteUsername = jsonObject.optString("receptor");
+
+            // Verificar que el nombre del receptor esté presente
+            if (receptorUsername == null || receptorUsername.isEmpty()) {
+                respuesta.put("status", "-6");
+                respuesta.put("message", "Campo 'receptor' faltante en la solicitud");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar cancelar una solicitud de amistad: falta el campo 'receptor'");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Llamar al método para cancelar la solicitud de amistad
+            String result = FriendInvitationController.CancelInvitation(remitenteUsername, receptorUsername);
+
+            // Incluir el resultado en la respuesta con un mapeo de códigos distinto
+            switch (result) {
+                case "0":
+                    respuesta.put("status", "0");
+                    respuesta.put("message", "Solicitud de amistad cancelada con éxito");
+                    try {
+                        LogController.insertLogStatic(DescripcionAccion.ELIMINAR_AMISTAD, remitenteUsername, receptorUsername);
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                    break;
+                case "-2":
+                    respuesta.put("status", "-2");
+                    respuesta.put("message", "Remitente o receptor no encontrado");
+                    try {
+                        LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al cancelar la solicitud de amistad: remitente o receptor no encontrado");
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                    break;
+                case "-1":
+                default:
+                    respuesta.put("status", "-1");
+                    respuesta.put("message", "Error al cancelar la solicitud de amistad");
+                    try {
+                        LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al cancelar la solicitud de amistad entre " + remitenteUsername + " y " + receptorUsername);
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                    break;
+            }
+
+            return respuesta.toString();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            respuesta.put("status", "-7");
+            respuesta.put("message", "Error interno");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al cancelar la solicitud de amistad");
+            } catch (SQLException exSql) {
+                exSql.printStackTrace();
+            }
+            return respuesta.toString();
+        }
+    }
+
+//Método para recibir las solicitudes
+    private String handleGetReceivedInvitations(Socket clientSocket, JSONObject jsonObject) {
+        JSONObject respuesta = new JSONObject();
+        try {
+            // Identificar el nombre del receptor usando el socket
+            String receptorUsername = IdentifyUserName(clientSocket);
+
+            if (receptorUsername == null) {
+                respuesta.put("status", "-4");
+                respuesta.put("message", "Receptor no identificado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar obtener solicitudes recibidas: receptor no identificado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Llamar al método que obtiene las solicitudes de amistad recibidas
+            String receivedInvitationsJson = FriendInvitationController.GetReceivedInvitations(receptorUsername);
+
+            // Verificar si el resultado es un código de error
+            if (receivedInvitationsJson.equals("-2")) {
+                respuesta.put("status", "-5");
+                respuesta.put("message", "Receptor no encontrado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar obtener solicitudes recibidas: receptor " + receptorUsername + " no encontrado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            } else if (receivedInvitationsJson.equals("-1")) {
+                respuesta.put("status", "-6");
+                respuesta.put("message", "Error al obtener solicitudes recibidas");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error en SQL al obtener solicitudes recibidas para " + receptorUsername);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                // Si no es un error, devolver la lista de solicitudes recibidas
+                JSONArray receivedInvitationsArray = new JSONArray(receivedInvitationsJson);
+                respuesta.put("status", "0");
+                respuesta.put("message", receivedInvitationsArray);
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.OBTENER_SOLICITUDES, receptorUsername);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            return respuesta.toString();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            respuesta.put("status", "-7");
+            respuesta.put("message", "Error interno");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al obtener solicitudes recibidas");
+            } catch (SQLException exSql) {
+                exSql.printStackTrace();
+            }
+            return respuesta.toString();
+        }
+    }
+
+//Método para recibir soliciudes
+    private String handleAcceptFriendInvitation(Socket clientSocket, JSONObject jsonObject) {
+        JSONObject respuesta = new JSONObject();
+        try {
+            // Identificar el nombre del receptor (quien acepta la solicitud)
+            String receptorUsername = IdentifyUserName(clientSocket);
+
+            if (receptorUsername == null) {
+                respuesta.put("status", "-4");
+                respuesta.put("message", "Receptor no identificado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Deserializar el JSON para obtener el nombre del remitente (quien envió la solicitud)
+            String remitenteUsername = jsonObject.optString("receptor");
+
+            if (remitenteUsername == null || remitenteUsername.isEmpty()) {
+                respuesta.put("status", "-5");
+                respuesta.put("message", "Campo 'receptor' faltante en la solicitud");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: falta el campo 'receptor'");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Llamar al método para aceptar la solicitud de amistad
+            String result = FriendInvitationController.acceptFriendInvitation(remitenteUsername, receptorUsername);
+
+            // Evaluar el resultado
+            switch (result) {
+                case "0":
+                    respuesta.put("status", "0");
+                    respuesta.put("message", "Solicitud de amistad aceptada con éxito");
+                    try {
+                        LogController.insertLogStatic(DescripcionAccion.ACEPTAR_SOLICITUD_AMISTAD, remitenteUsername, receptorUsername);
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                    break;
+                case "-2":
+                    respuesta.put("status", "-6");
+                    respuesta.put("message", "Remitente o receptor no encontrado");
+                    try {
+                        LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al aceptar la solicitud de amistad: remitente o receptor no encontrado");
+                    } catch (SQLException ex) {
+
+                    }
+                    break;
+                case "-1":
+                default:
+                    respuesta.put("status", "-7");
+                    respuesta.put("message", "Error al aceptar la solicitud de amistad");
+                    try {
+                        LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al aceptar la solicitud de amistad entre " + remitenteUsername + " y " + receptorUsername);
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                    break;
+            }
+
+            return respuesta.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            respuesta.put("status", "-8");
+            respuesta.put("message", "Error interno");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al aceptar una solicitud de amistad");
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return respuesta.toString();
+        }
+    }
+
+//Método para cargar todos los mensajes
+    private String handleObtainAllMessages(Socket clientSocket, JSONObject jsonObject) {
+        JSONObject respuesta = new JSONObject();
+        // Identificar el nombre del receptor (quien acepta la solicitud)
+        String receptorUsername = IdentifyUserName(clientSocket);
+        try {
+            if (receptorUsername == null) {
+                respuesta.put("status", "-4");
+                respuesta.put("message", "Receptor no identificado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Deserializar el JSON para obtener el nombre del remitente (quien envió la solicitud)
+            String remitenteUsername = jsonObject.optString("receptor");
+
+            if (remitenteUsername.isEmpty() || receptorUsername.isEmpty()) {
+                respuesta.put("status", "-4");
+                respuesta.put("message", "Campos 'remitente' o 'receptor' faltantes");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Obtener todos los mensajes: campos 'remitente' o 'receptor' faltantes");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Llamar al método para obtener todos los mensajes
+            String result = ChatFriendController.obtainAllMessages(remitenteUsername, receptorUsername);
+
+            if (result.equals("-1")) {
+                respuesta.put("status", "-5");
+                respuesta.put("message", "Error al obtener todos los mensajes");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al obtener todos los mensajes entre " + remitenteUsername + " y " + receptorUsername);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                respuesta.put("status", "0");
+                respuesta.put("message", result);
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.CONSULTAR_MENSAJES, remitenteUsername, receptorUsername);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            return respuesta.toString();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            respuesta.put("status", "-6");
+            respuesta.put("message", "Error interno al obtener todos los mensajes");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al obtener todos los mensajes");
+            } catch (SQLException exSql) {
+                exSql.printStackTrace();
+            }
+            return respuesta.toString();
+        }
+    }
+
+//Método para mandar mensajes a otros amigos
+    private String handleSendMessageFriend(Socket clientSocket, JSONObject jsonObject) {
+        JSONObject respuesta = new JSONObject();
+        String receptorUsername = IdentifyUserName(clientSocket);
+        try {
+            if (receptorUsername == null) {
+                respuesta.put("status", "-4");
+                respuesta.put("message", "Receptor no identificado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Deserializar el JSON para obtener el nombre del remitente (quien envió la solicitud)
+            String remitenteUsername = jsonObject.optString("receptor");
+
+            String contenido = jsonObject.optString("contenido");
+
+            String result = ChatFriendController.SendMessage(remitenteUsername, receptorUsername, contenido);
+
+            if (result.equals("-1")) {
+                respuesta.put("status", "-5");
+                respuesta.put("message", "Error al enviar el mensaje");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar el mensaje de " + remitenteUsername + " a " + receptorUsername);
+                } catch (SQLException ex) {
+
+                }
+            } else {
+                respuesta.put("status", "0");
+                respuesta.put("message", "Mensaje enviado con éxito");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ENVIAR_MENSAJE, remitenteUsername, receptorUsername);
+                } catch (SQLException ex) {
+
+                }
+            }
+
+            return respuesta.toString();
+
+        } catch (Exception ex) {
+
+            respuesta.put("status", "-6");
+            respuesta.put("message", "Error interno al enviar el mensaje");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al enviar el mensaje");
+            } catch (SQLException exSql) {
+
+            }
+            return respuesta.toString();
+        }
+    }
+
+//Metodo para eliminar un chat y la amistad
+    private String handleDeleteAllMessagesAndFriendship(Socket clientSocket, JSONObject jsonObject) {
+        JSONObject respuesta = new JSONObject();
+        String receptorUsername = IdentifyUserName(clientSocket);
+        try {
+            if (receptorUsername == null) {
+                respuesta.put("status", "-4");
+                respuesta.put("message", "Receptor no identificado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                return respuesta.toString();
+            }
+
+            // Deserializar el JSON para obtener el nombre del remitente (quien envió la solicitud)
+            String remitenteUsername = jsonObject.optString("receptor");
+
+            if (remitenteUsername == null) {
+                respuesta.put("status", "-6");
+                respuesta.put("message", "Receptor no identificado");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            // Llamar al método para eliminar todos los mensajes y la amistad
+            String result = ChatFriendController.DeleteAllMessagesAndFriendship(remitenteUsername, receptorUsername);
+
+            if (result.equals("-1")) {
+                respuesta.put("status", "-5");
+                respuesta.put("message", "Error al eliminar todos los mensajes y la amistad");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al eliminar todos los mensajes y la amistad entre " + remitenteUsername + " y " + receptorUsername);
+                } catch (SQLException ex) {
+
+                }
+            } else {
+                respuesta.put("status", "0");
+                respuesta.put("message", "Mensajes y amistad eliminados con éxito");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ELIMINAR_AMISTAD, remitenteUsername, receptorUsername);
+                } catch (SQLException ex) {
+
+                }
+            }
+
+            return respuesta.toString();
+
+        } catch (Exception ex) {
+
+            respuesta.put("status", "-6");
+            respuesta.put("message", "Error interno al eliminar todos los mensajes y la amistad");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al eliminar todos los mensajes y la amistad");
+            } catch (SQLException exSql) {
+
+            }
+            return respuesta.toString();
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------------------------------------
     private String handleFindUsersConnected() {
         JSONArray connectedUsers = new JSONArray();
         GlobalClients.connectedClients.keySet().forEach(connectedUsers::put);  // Añade todos los nombres de usuario al JSONArray
