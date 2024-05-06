@@ -23,7 +23,8 @@ public class ChatList extends JFrame {
     private ArrayList<Usuario> usuariosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
     private ArrayList<Usuario> amigosDesconectados = new ArrayList<>();
-    private ArrayList<Usuario> solicitudesAmigos = new ArrayList<>();
+    private ArrayList<Usuario> solicitudesAmigosEnviadas = new ArrayList<>();
+    private ArrayList<Usuario> solicitudesAmigosRecibidas = new ArrayList<>();
     private ArrayList<Grupo> grupos = new ArrayList<>();
     private ArrayList<Grupo> solicitudesGrupos = new ArrayList<>();
 
@@ -68,7 +69,8 @@ public class ChatList extends JFrame {
             usuariosDesconectados.add(usuario);
           //  amigosConectados.add(usuario);
             amigosDesconectados.add(usuario);
-            solicitudesAmigos.add(usuario);
+            solicitudesAmigosEnviadas.add(usuario);
+            solicitudesAmigosRecibidas.add(usuario);
 
             Grupo grupo = new Grupo();
             grupo.setId_grupo(i);
@@ -149,6 +151,8 @@ public class ChatList extends JFrame {
         JPanel panel = new JPanel(new GridLayout(2, 1));
         panel.add(crearListaAmigos("Amigos Conectados", amigosConectados, true));
         panel.add(crearListaAmigos("Amigos Desconectados", amigosDesconectados, false));
+        panel.add(crearListaSolicitudesAmigos("Solicitudes Enviadas", solicitudesAmigosEnviadas ,true));
+        panel.add(crearListaSolicitudesAmigos("Solicitudes Recibidas", solicitudesAmigosRecibidas ,false));
         return panel;
     }
 
@@ -165,11 +169,25 @@ public class ChatList extends JFrame {
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
         return scrollPane;
     }
+    
+    private JScrollPane crearListaSolicitudesAmigos(String titulo, ArrayList<Usuario> elementos, boolean Envia) {
+        DefaultListModel<Object> modelo = new DefaultListModel<>();
+        elementos.forEach(modelo::addElement);
+
+        JList<Object> lista = new JList<>(modelo);
+        lista.setCellRenderer(new SolicitudesAmistadCellRenderer(Envia));
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        lista.setLayoutOrientation(JList.VERTICAL);
+
+        JScrollPane scrollPane = new JScrollPane(lista);
+        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+        return scrollPane;
+    }
 
     private JPanel crearPanelGrupos() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
         panel.add(crearListaGrupos("Grupos", grupos, false));
-        panel.add(crearListaSolicitudes("Solicitudes de Grupos", solicitudesGrupos, false));
+        panel.add(crearListaSolicitudesGrupo("Solicitudes de Grupos", solicitudesGrupos, false));
         return panel;
     }
 
@@ -202,12 +220,12 @@ public class ChatList extends JFrame {
         return scrollPane;
     }
 
-    private JScrollPane crearListaSolicitudes(String titulo, ArrayList<?> elementos, boolean esUsuario) {
+    private JScrollPane crearListaSolicitudesGrupo(String titulo, ArrayList<?> elementos, boolean esUsuario) {
         DefaultListModel<Object> modelo = new DefaultListModel<>();
         elementos.forEach(modelo::addElement);
 
         JList<Object> lista = new JList<>(modelo);
-        lista.setCellRenderer(new SolicitudesCellRenderer(esUsuario));
+        lista.setCellRenderer(new SolicitudesGrupoCellRenderer(esUsuario));
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lista.setLayoutOrientation(JList.VERTICAL);
 
@@ -215,7 +233,7 @@ public class ChatList extends JFrame {
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
         return scrollPane;
     }
-
+    
     class UsuarioCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
 
         private JLabel lblNombre = new JLabel();
@@ -267,6 +285,65 @@ public class ChatList extends JFrame {
             return this;
         }
     }
+    
+    
+    class SolicitudesAmistadCellRenderer extends JPanel implements ListCellRenderer<Object> {
+
+        private JLabel lblNombre = new JLabel();
+        private JButton btnAceptar = new JButton("Aceptar");
+        private JButton btnRechazar = new JButton("Rechazar");
+        private JButton btnCancelar = new JButton("Cancelar");
+
+        public SolicitudesAmistadCellRenderer(boolean Envia) {
+            setLayout(new FlowLayout(FlowLayout.LEFT));
+            add(lblNombre);
+            if(!Envia)
+            {
+                add(btnAceptar);
+                add(btnRechazar);
+                estiloBoton(btnAceptar);
+                estiloBoton(btnRechazar);
+                
+                btnAceptar.addActionListener(e -> {
+                // Lógica para aceptar la solicitud
+                System.out.println("Solicitud aceptada para: " + lblNombre.getText());
+                });
+
+                btnRechazar.addActionListener(e -> {
+                // Lógica para rechazar la solicitud
+                System.out.println("Solicitud rechazada para: " + lblNombre.getText());
+                });
+            }
+            else
+            {
+                add(btnCancelar);
+                estiloBoton(btnCancelar);
+                
+                btnCancelar.addActionListener(e -> {
+                // Lógica para rechazar la solicitud
+                System.out.println("Solicitud cancelada para: " + lblNombre.getText());
+                
+            });
+            }
+
+
+
+
+            
+
+        }
+
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            if (value instanceof Usuario) {
+                lblNombre.setText(((Usuario) value).getNombre());
+            } else if (value instanceof Grupo) {
+                lblNombre.setText("Grupo ID: " + ((Grupo) value).getId_grupo());
+            }
+            setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
+            return this;
+        }
+    }
 
     class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
 
@@ -294,13 +371,13 @@ public class ChatList extends JFrame {
         }
     }
 
-    class SolicitudesCellRenderer extends JPanel implements ListCellRenderer<Object> {
+    class SolicitudesGrupoCellRenderer extends JPanel implements ListCellRenderer<Object> {
 
         private JLabel lblNombre = new JLabel();
         private JButton btnAceptar = new JButton("Aceptar");
         private JButton btnRechazar = new JButton("Rechazar");
 
-        public SolicitudesCellRenderer(boolean esUsuario) {
+        public SolicitudesGrupoCellRenderer(boolean esUsuario) {
             setLayout(new FlowLayout(FlowLayout.LEFT));
             add(lblNombre);
             add(btnAceptar);
