@@ -97,5 +97,11 @@ public class Usuario {
         this.fecha_creacion = fecha_creacion;
     }
     
+    public Usuario(String nombre){
+    this.nombre = nombre;
+    }
+    
+    public Usuario(){}
+    
     
 }
