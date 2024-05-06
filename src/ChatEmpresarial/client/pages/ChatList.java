@@ -5,7 +5,10 @@ import ChatEmpresarial.shared.models.Grupo;
 import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
+import ChatEmpresarial.client.utilities.SessionManager;
 import ChatEmpresarial.shared.utilities.Enumerators;
+import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
+import ChatEmpresarial.shared.utilities.Functions;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,9 +17,18 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ChatList extends JFrame {
+    
+       private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
+    private DefaultListModel<Usuario> modeloUsuariosDesconectados = new DefaultListModel<>();
+    private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
+    private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
+    
+    
+    private String nombreUserActive;
 
     
     private ArrayList<Usuario> usuariosConectados = new ArrayList<>();
@@ -40,20 +52,61 @@ public class ChatList extends JFrame {
     private JPanel panelPrincipal;
     private CardLayout cardLayout;
 
-    public ChatList() {
-        inicializarDatosDePrueba();
-        configurarVentana();
-        configurarNavegacion();
-        setVisible(true);
-    }
+    public ChatList(String username) {
+     nombreUserActive = username;
+    inicializarDatosDePrueba();  // Llamada inicial para cargar datos antes de que el Timer comience
+    configurarVentana();
+    configurarNavegacion();
+     configurarTimer();
+
+    setVisible(true);
+}
+
+private void configurarTimer() {
+    int delay = 1000; // Retraso en milisegundos (1000 ms = 1 segundo)
+    ActionListener taskPerformer = new ActionListener() {
+        public void actionPerformed(ActionEvent evt) {
+            inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
+            actualizarListasUsuarios();
+
+        }
+    };
+    new Timer(delay, taskPerformer).start();
+}
+
+
 
     private void inicializarDatosDePrueba() {
         
-        
-        //Inicializar amigos
+          
+    String username = nombreUserActive;
+
+    usuariosConectados.clear();
+    usuariosDesconectados.clear();
+
+    // Simular obtener nombres de amigos del servidor (esto deberías adaptarlo)
+
+    ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
+    ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
+
+    for (String nombre : usuariosConectadosNombres) {
+        if (!nombre.equals(username)) { // Evitar añadir al usuario logueado
+            usuariosConectados.add(new Usuario(nombre));
+        }
+    }
+
+    for (String nombre : usuariosDesconectadosNombres) {
+        usuariosDesconectados.add(new Usuario(nombre));
+    }
+
+    // Actualizar la UI después de obtener los datos
+    actualizarListasUsuarios();
+    
         
           // Obtener amigos de la respuesta del servidor
-        ArrayList<String> amigosNombres = handleListFriends();
+    ArrayList<String> amigosNombres = handleListFriends();
+        
+
 
         // Convertir nombres a objetos `Usuario`
         for (String nombre : amigosNombres) {
@@ -62,11 +115,14 @@ public class ChatList extends JFrame {
             amigosConectados.add(usuario);
         }
         
+   
         for (int i = 1; i <= 3; i++) {
             Usuario usuario = new Usuario();
             usuario.setNombre("User" + i);
-            usuariosConectados.add(usuario);
-            usuariosDesconectados.add(usuario);
+   
+      
+            
+            
           //  amigosConectados.add(usuario);
             amigosDesconectados.add(usuario);
             solicitudesAmigosEnviadas.add(usuario);
@@ -78,6 +134,17 @@ public class ChatList extends JFrame {
             solicitudesGrupos.add(grupo);
         }
     }
+    
+    private void actualizarListasUsuarios() {
+    SwingUtilities.invokeLater(() -> {
+        modeloUsuariosConectados.clear();
+        usuariosConectados.forEach(modeloUsuariosConectados::addElement);
+        
+        modeloUsuariosDesconectados.clear();
+        usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
+    });
+}
+
 
     private void configurarVentana() {
         setTitle("Chats Empresariales");
@@ -126,26 +193,55 @@ public class ChatList extends JFrame {
         boton.setBorderPainted(false);
     }
 
+   
     private JPanel crearPanelUsuarios() {
-        JPanel panel = new JPanel(new GridLayout(2, 1));
-        panel.add(crearListaUsuarios("Usuarios Conectados", usuariosConectados, true));
-        panel.add(crearListaUsuarios("Usuarios Desconectados", usuariosDesconectados, false));
-        return panel;
+    JPanel panel = new JPanel(new GridLayout(2, 1));
+    panel.add(crearListaUsuarios("Usuarios Conectados", listaUsuariosConectados, modeloUsuariosConectados));
+    panel.add(crearListaUsuarios("Usuarios Desconectados", listaUsuariosDesconectados, modeloUsuariosDesconectados));
+    return panel;
+}
+
+
+    private JScrollPane crearListaUsuarios(String titulo, JList<Usuario> lista, DefaultListModel<Usuario> modelo) {
+    lista.setModel(modelo);
+    lista.setCellRenderer(new UsuarioCellRenderer());
+    lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    lista.setLayoutOrientation(JList.VERTICAL);
+
+    if (titulo.equals("Usuarios Conectados")) {  // Aplica solo a la lista de usuarios conectados
+        lista.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                JList list = (JList) evt.getSource();
+                if (evt.getClickCount() == 2) {  // Doble clic
+                    int index = list.locationToIndex(evt.getPoint());
+                    if (index >= 0) {
+                        Usuario usuario = (Usuario) list.getModel().getElementAt(index);
+                        
+                              JSONObject json = new JSONObject();
+                        json.put("user1", usuario.getNombre());
+                        json.put("user2", nombreUserActive);
+                        json.put("action", TipoRequest.CREATE_CHAT_USERS);
+
+                    PersistentClient client = PersistentClient.getInstance();
+                    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+                       System.out.println("Server response" + serverResponse);
+
+                        
+                        new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+                    }
+                }
+            }
+        });
     }
 
-    private JScrollPane crearListaUsuarios(String titulo, ArrayList<Usuario> usuarios, boolean estaConectado) {
-        DefaultListModel<Usuario> modelo = new DefaultListModel<>();
-        usuarios.forEach(modelo::addElement);
+    JScrollPane scrollPane = new JScrollPane(lista);
+    scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+    return scrollPane;
+}
 
-        JList<Usuario> lista = new JList<>(modelo);
-        lista.setCellRenderer(new UsuarioCellRenderer());
-        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lista.setLayoutOrientation(JList.VERTICAL);
+    
 
-        JScrollPane scrollPane = new JScrollPane(lista);
-        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
-        return scrollPane;
-    }
+
 
     private JPanel crearPanelAmigos() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
@@ -205,20 +301,7 @@ public class ChatList extends JFrame {
         return scrollPane;
     }
 
-    private JScrollPane crearLista(String titulo, ArrayList<?> elementos, boolean esUsuario) {
-        DefaultListModel<Object> modelo = new DefaultListModel<>();
-        elementos.forEach(modelo::addElement);
 
-        JList<Object> lista = new JList<>(modelo);
-        lista.setCellRenderer(esUsuario ? new UsuarioFixCellRenderer() : new GroupFixCellRenderer());
-        lista.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        lista.setLayoutOrientation(JList.VERTICAL_WRAP);
-        lista.setFixedCellWidth(120);
-
-        JScrollPane scrollPane = new JScrollPane(lista);
-        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
-        return scrollPane;
-    }
 
     private JScrollPane crearListaSolicitudesGrupo(String titulo, ArrayList<?> elementos, boolean esUsuario) {
         DefaultListModel<Object> modelo = new DefaultListModel<>();
@@ -489,6 +572,76 @@ public class ChatList extends JFrame {
 
     return resultado; // Devuelve la lista con los nombres de amigos
 }
+ 
+ 
+ private ArrayList<String> handleListUsersConectados() {
+    ArrayList<String> resultado = new ArrayList<>();
+
+    JSONObject json = new JSONObject();
+    json.put("action", TipoRequest.FIND_USERS_CONNECTED);
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    try {
+        JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
+        int status = responseJson.getInt("status");
+
+        if (status == 0) {
+            JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
+            for (int i = 0; i < usuariosArray.length(); i++) {
+                String usuario = usuariosArray.getString(i);
+                resultado.add(usuario);
+            }
+        } else {
+            System.err.println("Error al obtener usuarios desconectados: estado " + status);
+        }
+    } catch (JSONException e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+    }
+
+    return resultado;
+    
+
+}
+
+ 
+ private ArrayList<String> handleListUsersDesconectados() {
+    ArrayList<String> resultado = new ArrayList<>();
+
+    JSONObject json = new JSONObject();
+    json.put("action", TipoRequest.FIND_USERS_DISCONNECTED);
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    try {
+        JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
+        int status = responseJson.getInt("status");
+
+        if (status == 0) {
+            JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
+            for (int i = 0; i < usuariosArray.length(); i++) {
+                String usuario = usuariosArray.getString(i);
+                resultado.add(usuario);
+            }
+        } else {
+            System.err.println("Error al obtener usuarios desconectados: estado " + status);
+        }
+    } catch (JSONException e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+    }
+
+    return resultado;
+}
+ 
+ 
+ 
+
+
+ 
+ 
+
     
   
 }

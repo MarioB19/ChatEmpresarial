@@ -24,14 +24,7 @@ public class Enumerators {
     SEND_MESSAGE_FRIEND("messageFriend"),
     FIND_FRIENDS("findFriends"),
     FIND_FRIENDS_DISC("findFriendsDisconnected"),
-    DELETE_CHAT_FRIEND("deletefriend"),
-    FIND_USERS_DISCONNECTED("findUsersDisconnected"),
-    FIND_USERS_CONNECTED("findUsersConnected"),
-    CREATE_CHAT_USERS("createChatUsers"),
-    SEND_MESSAGE_CHAT_USERS("sendMessageChatUsers"),
-    GET_MESSAGES_CHAT_USERS("getMessagesChatUsers");
-    
-
+    DELETE_CHAT_FRIEND("deletefriend");
 
     private final String actionString;
 

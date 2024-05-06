@@ -155,7 +155,7 @@ public class LoginPage extends JFrame {
                 break;
             case "0":
                 JOptionPane.showMessageDialog(null, "Inicio de sesión exitoso.", "Bienvenido", JOptionPane.INFORMATION_MESSAGE);
-                ChatList chatList = new ChatList();
+                ChatList chatList = new ChatList(username);
                 chatList.setVisible(true);
                 dispose();
                 break;
