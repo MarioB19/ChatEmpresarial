@@ -19,6 +19,11 @@ public class Grupo {
     //Llave
     private int id_grupo;
     
+<<<<<<< Updated upstream
+=======
+    private String nombre;
+
+>>>>>>> Stashed changes
   //FK --> Usuario
     private int id_aministrador;
 
@@ -34,10 +39,19 @@ public class Grupo {
     public int getId_grupo() {
         return id_grupo;
     }
-
+    
     public void setId_grupo(int id_grupo) {
         this.id_grupo = id_grupo;
     }
+    
+    public String getNombre() {
+        return nombre;
+    }
+    
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
 
     public int getId_aministrador() {
         return id_aministrador;

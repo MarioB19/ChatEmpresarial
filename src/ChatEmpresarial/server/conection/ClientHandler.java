@@ -1,5 +1,6 @@
 package ChatEmpresarial.server.conection;
 
+import ChatEmpresarial.server.controllers.CreateGroupController;
 import ChatEmpresarial.server.controllers.LoginController;
 import ChatEmpresarial.server.controllers.RecoveryPasswordController;
 import ChatEmpresarial.server.controllers.RecoveryPassword2Controller;
@@ -70,6 +71,10 @@ public class ClientHandler implements Runnable {
                         break;
                     case FORGOTPSW2:
                         response = handleRecoveryPassword2 (jsonObject);
+                        break;
+                        
+                    case CREATEGROUP:
+                        response = 
                         break;
                         
                     default:
@@ -145,6 +150,18 @@ public class ClientHandler implements Runnable {
         String password = data.optString("password");
 
         return RecoveryPassword2Controller.updatePassword(username,password);
+
+    }
+  
+    public String handleCreateGroup(JSONObject data) throws SQLException {
+        System.out.println("Handling create group with data: " + data.toString());
+
+        // Extracción de datos del JSON
+        String groupname = data.optString("groupname");
+        int adminId = data.optInt("adminId");
+
+
+        return CreateGroupController.createGroupInDatabase(groupname, adminId);
 
     }
     //Método que maneja el cierre de sesión
