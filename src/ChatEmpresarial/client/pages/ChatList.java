@@ -6,6 +6,7 @@ import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
 import ChatEmpresarial.shared.utilities.Enumerators;
+import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ChatList extends JFrame {
@@ -54,6 +56,9 @@ public class ChatList extends JFrame {
         
           // Obtener amigos de la respuesta del servidor
         ArrayList<String> amigosNombres = handleListFriends();
+        
+        ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
+        ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
 
         // Convertir nombres a objetos `Usuario`
         for (String nombre : amigosNombres) {
@@ -62,11 +67,26 @@ public class ChatList extends JFrame {
             amigosConectados.add(usuario);
         }
         
+        for(String nombre: usuariosConectadosNombres){
+            Usuario usuario = new Usuario();
+            usuario.setNombre(nombre);
+            usuariosConectados.add(usuario); 
+        }
+        
+        for(String nombre: usuariosDesconectadosNombres){
+                    Usuario usuario = new Usuario();
+            usuario.setNombre(nombre);
+                  usuariosDesconectados.add(usuario);
+
+        }
+        
         for (int i = 1; i <= 3; i++) {
             Usuario usuario = new Usuario();
             usuario.setNombre("User" + i);
-            usuariosConectados.add(usuario);
-            usuariosDesconectados.add(usuario);
+   
+      
+            
+            
           //  amigosConectados.add(usuario);
             amigosDesconectados.add(usuario);
             solicitudesAmigosEnviadas.add(usuario);
@@ -489,6 +509,75 @@ public class ChatList extends JFrame {
 
     return resultado; // Devuelve la lista con los nombres de amigos
 }
+ 
+ 
+ private ArrayList<String> handleListUsersConectados() {
+    ArrayList<String> resultado = new ArrayList<>();
+
+    JSONObject json = new JSONObject();
+    json.put("action", TipoRequest.FIND_USERS_CONNECTED);
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    try {
+        JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
+        int status = responseJson.getInt("status");
+
+        if (status == 0) {
+            JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
+            for (int i = 0; i < usuariosArray.length(); i++) {
+                String usuario = usuariosArray.getString(i);
+                resultado.add(usuario);
+            }
+        } else {
+            System.err.println("Error al obtener usuarios desconectados: estado " + status);
+        }
+    } catch (JSONException e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+    }
+
+    return resultado;
+    
+
+}
+
+ 
+ private ArrayList<String> handleListUsersDesconectados() {
+    ArrayList<String> resultado = new ArrayList<>();
+
+    JSONObject json = new JSONObject();
+    json.put("action", TipoRequest.FIND_USERS_DISCONNECTED);
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    try {
+        JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
+        int status = responseJson.getInt("status");
+
+        if (status == 0) {
+            JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
+            for (int i = 0; i < usuariosArray.length(); i++) {
+                String usuario = usuariosArray.getString(i);
+                resultado.add(usuario);
+            }
+        } else {
+            System.err.println("Error al obtener usuarios desconectados: estado " + status);
+        }
+    } catch (JSONException e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+    }
+
+    return resultado;
+}
+ 
+ 
+
+
+ 
+ 
+
     
   
 }
