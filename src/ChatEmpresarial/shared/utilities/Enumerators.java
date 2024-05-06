@@ -19,11 +19,7 @@ public class Enumerators {
     REGISTER("register"),
     LOGIN("login"),
     FORGOTPSW1("forgotpsw1"),
-<<<<<<< Updated upstream
-    FORGOTPSW2("forgotpsw2"),  
-=======
-    FORGOTPSW2("forgotpsw2"),    
->>>>>>> Stashed changes
+    FORGOTPSW2("forgotpsw2"),     
     CREATEGROUP("creategroup");
 
 

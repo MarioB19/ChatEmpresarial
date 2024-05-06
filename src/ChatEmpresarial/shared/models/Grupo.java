@@ -19,11 +19,8 @@ public class Grupo {
     //Llave
     private int id_grupo;
     
-<<<<<<< Updated upstream
-=======
     private String nombre;
 
->>>>>>> Stashed changes
   //FK --> Usuario
     private int id_aministrador;
 
