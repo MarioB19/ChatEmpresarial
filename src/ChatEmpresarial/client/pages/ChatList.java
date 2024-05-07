@@ -27,7 +27,8 @@ public class ChatList extends JFrame {
     private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
     private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
     
-    
+    private Timer updateTimer;
+
     private String nombreUserActive;
 
     
@@ -61,17 +62,17 @@ public class ChatList extends JFrame {
 
     setVisible(true);
 }
-
+    
 private void configurarTimer() {
     int delay = 1000; // Retraso en milisegundos (1000 ms = 1 segundo)
     ActionListener taskPerformer = new ActionListener() {
         public void actionPerformed(ActionEvent evt) {
             inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
             actualizarListasUsuarios();
-
         }
     };
-    new Timer(delay, taskPerformer).start();
+    updateTimer = new Timer(delay, taskPerformer);
+    updateTimer.start();
 }
 
 
@@ -205,37 +206,39 @@ private void configurarTimer() {
     }
 
    
- private void cerrarSesion() {
-     
-         JSONObject json = new JSONObject();
+
+    private void cerrarSesion() {
+    if (updateTimer != null) {
+        updateTimer.stop();  // Detener el Timer primero para evitar llamadas de actualización
+        updateTimer = null;
+    }
+
+    JSONObject json = new JSONObject();
     json.put("action", TipoRequest.LOGOUT);
     json.put("nombre", nombreUserActive);
 
+    // Asegúrate de que la instancia de cliente pueda manejar adecuadamente la reconexión
     PersistentClient client = PersistentClient.getInstance();
     String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
-    
-    
-     System.out.println("Sever Response" + serverResponse);
-    if(serverResponse.equals("0")){
-        
-            setVisible(false);  // Ocultar la ventana actual
-    dispose();  // Liberar los recursos de la ventana actual
+    System.out.println("Server Response: " + serverResponse);
 
-    // Crear e iniciar la ventana de login
-    LoginPage loginPage = new LoginPage();
-    loginPage.setVisible(true);
-    }
-    else{
+    if (serverResponse.equals("0")) {
+        dispose();
         
-        JOptionPane.showMessageDialog(null, "Ha ocurrido un error, al cerrar Sesion", "Error", JOptionPane.ERROR_MESSAGE);
-    }
- 
-     
+      client = PersistentClient.getInstance();
+     serverResponse = client.sendMessageAndWaitForResponse("init"); //inicializando comunicacion
    
 
-    
-    
+        // Crear e iniciar la ventana de login
+        EventQueue.invokeLater(() -> {
+            LoginPage loginPage = new LoginPage();
+            loginPage.setVisible(true);
+        });
+    } else {
+        JOptionPane.showMessageDialog(this, "Ha ocurrido un error al cerrar sesión", "Error", JOptionPane.ERROR_MESSAGE);
+    }
 }
+
 
 
 
