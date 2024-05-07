@@ -628,7 +628,7 @@ private void configurarTimer() {
     //Método para acceder al chat de un amigo
     private void handleChatFriendRequest(String friendUsername) {
         JSONObject json = new JSONObject();
-        json.put("friend_username", friendUsername);
+        json.put("receptor", friendUsername);
         json.put("action", "REQUEST_CHAT_FRIEND"); // Ajusta este campo con el tipo de acción correcto
 
         PersistentClient client = PersistentClient.getInstance();
@@ -673,7 +673,7 @@ private void configurarTimer() {
         // Si el estado es 0, el resultado fue exitoso
         if (status == 0) {
             // Acceder directamente al array JSON
-            JSONArray amigosArray = responseJson.getJSONArray("connectedFriends");
+            JSONArray amigosArray = responseJson.getJSONArray("message");
             for (int i = 0; i < amigosArray.length(); i++) {
                 String amigo = amigosArray.getString(i);
                 resultado.add(amigo); // Añadir a la lista de resultado
@@ -710,7 +710,7 @@ private void configurarTimer() {
         // Si el estado es 0, el resultado fue exitoso
         if (status == 0) {
             // Acceder directamente al array JSON
-            JSONArray amigosArray = responseJson.getJSONArray("disconnectedFriends");
+            JSONArray amigosArray = responseJson.getJSONArray("message");
             for (int i = 0; i < amigosArray.length(); i++) {
                 String amigo = amigosArray.getString(i);
                 resultado.add(amigo); // Añadir a la lista de resultado
