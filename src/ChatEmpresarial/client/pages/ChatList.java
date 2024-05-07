@@ -16,6 +16,8 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -241,8 +243,6 @@ private void configurarTimer() {
 
     
 
-
-
     private JPanel crearPanelAmigos() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
         panel.add(crearListaAmigos("Amigos Conectados", amigosConectados, true));
@@ -253,18 +253,78 @@ private void configurarTimer() {
     }
 
     private JScrollPane crearListaAmigos(String titulo, ArrayList<Usuario> amigos, boolean estaConectado) {
-        DefaultListModel<Usuario> modelo = new DefaultListModel<>();
-        amigos.forEach(modelo::addElement);
+        
+        DefaultTableModel modelo = new DefaultTableModel()
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+            // Esto hará que ninguna celda sea editable
+            return false;
+            }
+        };
+        
+        modelo.addColumn("nombre");
+        modelo.addColumn("borrar");
 
-        JList<Usuario> lista = new JList<>(modelo);
-        lista.setCellRenderer(new AmigoCellRenderer());
+        for( Usuario us : amigos)
+        {
+            modelo.addRow(new Object[]{us.getNombre(), "-"});
+        }
+        
+        JTable lista = new JTable(modelo);
+        
+        lista.setTableHeader(null);
+        lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
+        
+        
+        
+        
+        
+        
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lista.setLayoutOrientation(JList.VERTICAL);
+        
+        lista.addMouseListener(new MouseAdapter() {
+           
+            public void mouseClicked(MouseEvent e) {
+                
+                int column = lista.getColumnModel().getColumnIndexAtX(e.getX()); // obtiene la columna
+                int row = e.getY() / lista.getRowHeight(); // obtiene la fila
+
+                // asegurando que la fila y columna seleccionadas están dentro de la tabla
+                if (row < lista.getRowCount() && row >= 0 && column < lista.getColumnCount() && column >= 0) {
+                    Object value = lista.getValueAt(row, column);
+                    
+                    // si es un botón, realiza la acción correspondiente
+                    if (column == 1) 
+                    {
+                        yupi();
+                    }
+                }
+            }
+
+        });
+        
 
         JScrollPane scrollPane = new JScrollPane(lista);
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
         return scrollPane;
     }
+    
+    void yupi()
+    {
+        System.out.println("lolazo");
+    }
+    
+    public class ButtonRenderer extends JButton implements TableCellRenderer {
+        
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            setText((value == null) ? "" : value.toString());
+            return this;
+        }
+        
+    }
+
     
     private JScrollPane crearListaSolicitudesAmigos(String titulo, ArrayList<Usuario> elementos, boolean Envia) {
         DefaultListModel<Object> modelo = new DefaultListModel<>();
@@ -279,6 +339,13 @@ private void configurarTimer() {
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
         return scrollPane;
     }
+    
+    
+   
+    
+
+
+    
 
     private JPanel crearPanelGrupos() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
@@ -329,10 +396,13 @@ private void configurarTimer() {
             btnEnviarSolicitud.setBackground(colorBotonSolicitud);
             btnEnviarSolicitud.setForeground(colorTexto);
 
+            
             btnEnviarSolicitud.addActionListener(e -> {
                 // Lógica para enviar solicitud
+                
                 System.out.println("Solicitud enviada a: " + lblNombre.getText());
             });
+            
         }
 
         @Override
@@ -354,11 +424,14 @@ private void configurarTimer() {
             add(btnEliminarAmigo);
             btnEliminarAmigo.setBackground(colorBotonEliminar);
             btnEliminarAmigo.setForeground(colorTexto);
-
+            
+            
             btnEliminarAmigo.addActionListener(e -> {
                 // Lógica para eliminar amigo
                 System.out.println("Amigo eliminado: " + lblNombre.getText());
             });
+            
+
         }
 
         @Override
@@ -368,6 +441,8 @@ private void configurarTimer() {
             return this;
         }
     }
+    
+    
     
     
     class SolicitudesAmistadCellRenderer extends JPanel implements ListCellRenderer<Object> {
@@ -490,6 +565,43 @@ private void configurarTimer() {
             return this;
         }
     }
+    
+    /*
+    class ControlPanelEliminarAmigos extends JPanel 
+    {
+            
+        private JButton btnEliminarAmigo = new JButton("-");
+        private JLabel algo = new JLabel("buenas tardes");
+
+        public ControlPanelEliminarAmigos(JList<Usuario> listaUsuarios) {
+
+            setLayout(new FlowLayout());
+            btnEliminarAmigo.setBackground(colorBotonEliminar);
+            btnEliminarAmigo.setForeground(colorTexto);
+
+            // Acción del botón
+
+            btnEliminarAmigo.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Usuario usuarioSeleccionado = listaUsuarios.getSelectedValue();
+                    if (usuarioSeleccionado != null) {
+                        // Realiza la acción con el usuario seleccionado
+                        System.out.println("Eliminaste a: " + usuarioSeleccionado.getNombre());
+
+                    } else {
+                        System.out.println("No hay usuario seleccionado");
+                    }
+                }
+            });
+            add(btnEliminarAmigo);
+            add(algo);
+        }
+    }
+
+*/
+    
+    
 
     //---------------------
     //Métodos privados
@@ -517,8 +629,8 @@ private void configurarTimer() {
                 ChatAmigosPage amigos = new ChatAmigosPage();
                 amigos.setVisible(true);
                 break;
-
         }
+        
     }
 
     
