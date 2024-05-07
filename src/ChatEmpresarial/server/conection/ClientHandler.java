@@ -58,8 +58,23 @@ public class ClientHandler implements Runnable {
                 switch (requestType) {
                     case REGISTER:
                         response = handleRegister(jsonObject);
-
                         break;
+                        
+                    case LOGOUT:
+                        
+                     
+                     String username = jsonObject.getString("nombre");
+                    response = "0"; 
+                    JSONObject responseJson = new JSONObject();
+                    responseJson.put("response", response);
+                    out.writeObject(responseJson.toString());
+                    out.flush();  
+                    handleLogout(username); 
+                    return; 
+                   
+                        
+
+                        
                     case LOGIN:
                         response = handleLogin(jsonObject);
 
@@ -367,6 +382,27 @@ public class ClientHandler implements Runnable {
 
         return responseJson.toString();
     }
+    
+    
+    private void handleLogout(String username) {
+    // Cerrar el socket y remover el usuario de los clientes conectados
+    removeClientBySocketLogOut(clientSocket);
+
+    // Borrar los chats asociados al usuario
+    ChatManager.cleanUpChats();
+}
+    
+    private void removeClientBySocketLogOut(Socket socket) {
+    GlobalClients.connectedClients.values().removeIf(val -> val.equals(socket));
+    try {
+        socket.close();
+    } catch (IOException e) {
+        Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
+    }
+}
+
+
+
 
 //Método que maneja cosas raras
     private String handleUnknownAction() {
