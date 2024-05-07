@@ -239,6 +239,24 @@ public class ChatFriendController {
                     friendsIds.add(rsAmistad.getInt("id_receptor"));
                 }
             }
+            
+            if(friendsIds.isEmpty())
+            {
+                queryAmistad = "SELECT id_remitente FROM amistad WHERE id_receptor = ?";
+           friendsIds = new ArrayList<>();
+
+            // Encontrar todos los amigos relacionados al remitente
+            try (PreparedStatement sqlAmistad = con.prepareStatement(queryAmistad)) {
+                sqlAmistad.setInt(1, remitenteId);
+                ResultSet rsAmistad = sqlAmistad.executeQuery();
+
+                while (rsAmistad.next()) {
+                    friendsIds.add(rsAmistad.getInt("id_remitente"));
+                }
+            }
+                
+            }
+            
 
             // Consulta para obtener los nombres de los amigos
             if (!friendsIds.isEmpty()) {
