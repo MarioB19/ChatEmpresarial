@@ -18,6 +18,7 @@ public class Enumerators {
     public enum TipoRequest {
     REGISTER("register"),
     LOGIN("login"),
+    LOGOUT("logout"),
     FORGOTPSW1("forgotpsw1"),
     FORGOTPSW2("forgotpsw2"),
     REQUEST_CHAT_FRIEND("chatfriend"),

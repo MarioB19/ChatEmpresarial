@@ -152,6 +152,17 @@ private void configurarTimer() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         getContentPane().setBackground(colorFondoPrincipal);
+        
+          // Panel para cerrar sesión
+    JPanel panelCerrarSesion = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    JButton btnCerrarSesion = new JButton("Cerrar Sesión");
+    btnCerrarSesion.addActionListener(e -> cerrarSesion());
+    estiloBoton(btnCerrarSesion);  // Aplicar el estilo predefinido de los botones
+    panelCerrarSesion.add(btnCerrarSesion);
+    panelCerrarSesion.setBackground(colorBarraNavegacion);  // Usar el mismo color que la barra de navegación
+     getContentPane().add(panelCerrarSesion, BorderLayout.NORTH);
+    
+    
     }
 
     private void configurarNavegacion() {
@@ -194,6 +205,41 @@ private void configurarTimer() {
     }
 
    
+ private void cerrarSesion() {
+     
+         JSONObject json = new JSONObject();
+    json.put("action", TipoRequest.LOGOUT);
+    json.put("nombre", nombreUserActive);
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+    
+    
+     System.out.println("Sever Response" + serverResponse);
+    if(serverResponse.equals("0")){
+        
+            setVisible(false);  // Ocultar la ventana actual
+    dispose();  // Liberar los recursos de la ventana actual
+
+    // Crear e iniciar la ventana de login
+    LoginPage loginPage = new LoginPage();
+    loginPage.setVisible(true);
+    }
+    else{
+        
+        JOptionPane.showMessageDialog(null, "Ha ocurrido un error, al cerrar Sesion", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+ 
+     
+   
+
+    
+    
+}
+
+
+
+
     private JPanel crearPanelUsuarios() {
     JPanel panel = new JPanel(new GridLayout(2, 1));
     panel.add(crearListaUsuarios("Usuarios Conectados", listaUsuariosConectados, modeloUsuariosConectados));
