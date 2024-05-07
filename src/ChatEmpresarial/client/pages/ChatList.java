@@ -797,6 +797,136 @@ private void configurarTimer() {
  
  
 
+ 
+ 
+ //---------------------Metodos de control de peticiones -------------//
+ 
+ private void cancelarSolicitudAmistad(String receptor) {
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "CANCEL_FRIEND_INVITATION");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    switch (serverResponse) {
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Campo 'receptor' faltante en la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-2":
+            JOptionPane.showMessageDialog(null, "Remitente o receptor no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JOptionPane.showMessageDialog(null, "Solicitud de amistad cancelada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error al cancelar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+}
+ 
+ 
+ private void enviarSolicitudAmistad(String receptor) {
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "SEND_FRIEND_INVITATION");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    switch (serverResponse) {
+        case "-4":
+            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Campo 'receptor' faltante en la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Error interno.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JOptionPane.showMessageDialog(null, "Solicitud de amistad enviada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error desconocido al enviar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+    
+}
+ 
+ 
+ private void obtenerSolicitudesRecibidas() {
+    JSONObject json = new JSONObject();
+    json.put("action", "GET_RECEIVED_INVITATIONS");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    switch (serverResponse) {
+        case "-4":
+            JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Receptor no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Error al obtener las solicitudes recibidas.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JSONObject responseObject = new JSONObject(serverResponse);
+            JSONArray receivedInvitations = responseObject.optJSONArray("message");
+            // Procesar las invitaciones recibidas (JSON array)
+            for (int i = 0; i < receivedInvitations.length(); i++) {
+                JSONObject invitation = receivedInvitations.getJSONObject(i);
+                String remitente = invitation.optString("remitente");
+                System.out.println("Solicitud recibida de: " + remitente);
+            }
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+}
+
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
     
   
 }
