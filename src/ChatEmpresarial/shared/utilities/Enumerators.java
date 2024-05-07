@@ -19,6 +19,7 @@ public class Enumerators {
     REGISTER("register"),
     LOGOUT("logout"),
     LOGIN("login"),
+    LOGOUT("logout"),
     FORGOTPSW1("forgotpsw1"),
     FORGOTPSW2("forgotpsw2"),
     REQUEST_CHAT_FRIEND("chatfriend"),

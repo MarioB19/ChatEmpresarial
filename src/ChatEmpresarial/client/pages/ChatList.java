@@ -27,7 +27,8 @@ public class ChatList extends JFrame {
     private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
     private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
     
-    
+    private Timer updateTimer;
+
     private String nombreUserActive;
 
     
@@ -61,17 +62,17 @@ public class ChatList extends JFrame {
 
     setVisible(true);
 }
-
+    
 private void configurarTimer() {
     int delay = 1000; // Retraso en milisegundos (1000 ms = 1 segundo)
     ActionListener taskPerformer = new ActionListener() {
         public void actionPerformed(ActionEvent evt) {
             inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
             actualizarListasUsuarios();
-
         }
     };
-    new Timer(delay, taskPerformer).start();
+    updateTimer = new Timer(delay, taskPerformer);
+    updateTimer.start();
 }
 
 
@@ -152,6 +153,17 @@ private void configurarTimer() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         getContentPane().setBackground(colorFondoPrincipal);
+        
+          // Panel para cerrar sesión
+    JPanel panelCerrarSesion = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    JButton btnCerrarSesion = new JButton("Cerrar Sesión");
+    btnCerrarSesion.addActionListener(e -> cerrarSesion());
+    estiloBoton(btnCerrarSesion);  // Aplicar el estilo predefinido de los botones
+    panelCerrarSesion.add(btnCerrarSesion);
+    panelCerrarSesion.setBackground(colorBarraNavegacion);  // Usar el mismo color que la barra de navegación
+     getContentPane().add(panelCerrarSesion, BorderLayout.NORTH);
+    
+    
     }
 
     private void configurarNavegacion() {
@@ -194,6 +206,43 @@ private void configurarTimer() {
     }
 
    
+
+    private void cerrarSesion() {
+    if (updateTimer != null) {
+        updateTimer.stop();  // Detener el Timer primero para evitar llamadas de actualización
+        updateTimer = null;
+    }
+
+    JSONObject json = new JSONObject();
+    json.put("action", TipoRequest.LOGOUT);
+    json.put("nombre", nombreUserActive);
+
+    // Asegúrate de que la instancia de cliente pueda manejar adecuadamente la reconexión
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+    System.out.println("Server Response: " + serverResponse);
+
+    if (serverResponse.equals("0")) {
+        dispose();
+        
+      client = PersistentClient.getInstance();
+     serverResponse = client.sendMessageAndWaitForResponse("init"); //inicializando comunicacion
+   
+
+        // Crear e iniciar la ventana de login
+        EventQueue.invokeLater(() -> {
+            LoginPage loginPage = new LoginPage();
+            loginPage.setVisible(true);
+        });
+    } else {
+        JOptionPane.showMessageDialog(this, "Ha ocurrido un error al cerrar sesión", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+
+
+
+
+
     private JPanel crearPanelUsuarios() {
     JPanel panel = new JPanel(new GridLayout(2, 1));
     panel.add(crearListaUsuarios("Usuarios Conectados", listaUsuariosConectados, modeloUsuariosConectados));
