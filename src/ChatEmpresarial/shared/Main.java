@@ -26,11 +26,8 @@ public class Main {
        
            
   
-            
-
-        IndexClient cliente = new IndexClient();
-        IndexServer cliente1 = new IndexServer();   
-      
+        IndexClient client = new IndexClient();    
+        //IndexServer client = new IndexServer(); 
     }
         
         

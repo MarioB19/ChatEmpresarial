@@ -6,6 +6,7 @@ import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
 import ChatEmpresarial.client.utilities.SessionManager;
+import ChatEmpresarial.shared.models.SolicitudAmistad;
 import ChatEmpresarial.shared.utilities.Enumerators;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
 import ChatEmpresarial.shared.utilities.Functions;
@@ -37,7 +38,8 @@ public class ChatList extends JFrame {
     
     private String nombreUserActive;
 
-    
+    private ArrayList<Usuario> SolicitudAmistadRecibida = new ArrayList<>();
+    private ArrayList<Usuario> SolicitudAmistadEnviada = new ArrayList<>();
     private ArrayList<Usuario> usuariosConectados = new ArrayList<>();
     private ArrayList<Usuario> usuariosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
@@ -995,9 +997,15 @@ private void configurarTimer() {
          JSONArray  receivedInvitations = responseObject.optJSONArray("message");
             // Procesar las invitaciones recibidas (JSON array)
             for (int i = 0; i < receivedInvitations.length(); i++) {
-                JSONObject invitation = receivedInvitations.getJSONObject(i);
-                String remitente = invitation.optString("remitente");
-                System.out.println("Solicitud recibida de: " + remitente);
+                JSONArray invitation = receivedInvitations.getJSONArray(i);
+                SolicitudAmistadRecibida.clear();
+                for(Object inv : invitation)
+                {
+                    SolicitudAmistadRecibida.add(new Usuario(inv.toString()));
+                }
+                    
+                
+                
             }
             break;
         default:
