@@ -146,7 +146,7 @@ private void configurarTimer() {
     private void actualizarListasUsuarios() {
     SwingUtilities.invokeLater(() -> {
         
-        
+        obtenerSolicitudesRecibidas();
         modeloUsuariosConectados.clear();
         usuariosConectados.forEach(modeloUsuariosConectados::addElement);
         
@@ -217,13 +217,102 @@ private void configurarTimer() {
    
     private JPanel crearPanelUsuarios() {
     JPanel panel = new JPanel(new GridLayout(2, 1));
-    panel.add(crearListaUsuarios("Usuarios Conectados", listaUsuariosConectados, modeloUsuariosConectados));
-    panel.add(crearListaUsuarios("Usuarios Desconectados", listaUsuariosDesconectados, modeloUsuariosDesconectados));
+    panel.add(crearListaUsuarios("Usuarios Conectados", usuariosConectados, true));
+    panel.add(crearListaUsuarios("Usuarios Desconectados", usuariosDesconectados, false));
     return panel;
 }
 
 
-    private JScrollPane crearListaUsuarios(String titulo, JList<Usuario> lista, DefaultListModel<Usuario> modelo) {
+    private JScrollPane crearListaUsuarios(String titulo, ArrayList<Usuario> usuarios, boolean estaConectado) {
+        
+         
+        DefaultTableModel modelo = new DefaultTableModel()
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+            // Esto hará que ninguna celda sea editable
+            return false;
+            }
+        };
+        
+        modelo.addColumn("nombre");
+        modelo.addColumn("borrar");
+        for(Usuario us : usuarios)
+        {
+            modelo.addRow(new Object[]{us.getNombre(), "+"});
+        }
+        
+        JTable lista = new JTable(modelo);
+        
+        lista.setTableHeader(null);
+        lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
+        
+        
+        
+        
+        
+        
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        lista.addMouseListener(new MouseAdapter() {
+           
+            public void mouseClicked(MouseEvent e) {
+                
+                int column = lista.getColumnModel().getColumnIndexAtX(e.getX()); // obtiene la columna
+                int row = e.getY() / lista.getRowHeight(); // obtiene la fila
+
+                // asegurando que la fila y columna seleccionadas están dentro de la tabla
+                if (row < lista.getRowCount() && row >= 0 && column < lista.getColumnCount() && column >= 0) {
+                    Object value = lista.getValueAt(row, column);
+                    
+                    // si es un botón, realiza la acción correspondiente
+                    if(column == 0)
+                    {
+                        
+                        if (row >= 0) {
+                            
+                            if(estaConectado)
+                            {
+                                Usuario usuario = usuariosConectados.get(row);
+
+
+                                JSONObject json = new JSONObject();
+                                json.put("user1", usuario.getNombre());
+                                json.put("user2", nombreUserActive);
+                                json.put("action", TipoRequest.CREATE_CHAT_USERS);
+
+                                PersistentClient client = PersistentClient.getInstance();
+                                String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+                                System.out.println("Server response" + serverResponse);
+
+
+                                new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+                                
+                            }
+                            
+                        }
+                    
+                    }
+                    
+                        if (column == 1) 
+                        {
+                            
+                            Usuario usuario = usuariosDesconectados.get(row);
+                            enviarSolicitudAmistad(usuario.getNombre());
+                           
+                                    
+                        }
+                }
+            }
+
+        });
+        
+
+        JScrollPane scrollPane = new JScrollPane(lista);
+        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+        return scrollPane;
+        
+        /*
     lista.setModel(modelo);
     lista.setCellRenderer(new UsuarioCellRenderer());
     lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -257,7 +346,8 @@ private void configurarTimer() {
 
     JScrollPane scrollPane = new JScrollPane(lista);
     scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
-    return scrollPane;
+    
+        */
 }
 
     
@@ -804,7 +894,7 @@ private void configurarTimer() {
  private void cancelarSolicitudAmistad(String receptor) {
     JSONObject json = new JSONObject();
     json.put("receptor", receptor);
-    json.put("action", "CANCEL_FRIEND_INVITATION");
+    json.put("action", "REFUSE_INVITATION_FRIEND");
 
     PersistentClient client = PersistentClient.getInstance();
     String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
@@ -832,7 +922,7 @@ private void configurarTimer() {
  private void enviarSolicitudAmistad(String receptor) {
     JSONObject json = new JSONObject();
     json.put("receptor", receptor);
-    json.put("action", "SEND_FRIEND_INVITATION");
+    json.put("action", "SENT_INVITATION_FRIEND");
 
     PersistentClient client = PersistentClient.getInstance();
     String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
@@ -860,12 +950,14 @@ private void configurarTimer() {
  
  private void obtenerSolicitudesRecibidas() {
     JSONObject json = new JSONObject();
-    json.put("action", "GET_RECEIVED_INVITATIONS");
+    json.put("action", "GET_INVITATION_FRIEND");
 
     PersistentClient client = PersistentClient.getInstance();
     String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+      JSONObject responseObject = new JSONObject(serverResponse);
+           String status  = responseObject.getString("status");
 
-    switch (serverResponse) {
+    switch (status) {
         case "-4":
             JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
@@ -876,8 +968,8 @@ private void configurarTimer() {
             JOptionPane.showMessageDialog(null, "Error al obtener las solicitudes recibidas.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
         case "0":
-            JSONObject responseObject = new JSONObject(serverResponse);
-            JSONArray receivedInvitations = responseObject.optJSONArray("message");
+            responseObject = new JSONObject(serverResponse);
+         JSONArray  receivedInvitations = responseObject.optJSONArray("message");
             // Procesar las invitaciones recibidas (JSON array)
             for (int i = 0; i < receivedInvitations.length(); i++) {
                 JSONObject invitation = receivedInvitations.getJSONObject(i);
