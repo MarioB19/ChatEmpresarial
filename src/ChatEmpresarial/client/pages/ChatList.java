@@ -24,14 +24,13 @@ import org.json.JSONObject;
 
 public class ChatList extends JFrame {
     
-       private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
-    private DefaultListModel<Usuario> modeloUsuariosDesconectados = new DefaultListModel<>();
+    private DefaultTableModel modeloUsuariosConectados = new DefaultTableModel();
+    private DefaultTableModel modeloUsuariosDesconectados = new DefaultTableModel();
     
-    private DefaultListModel<Usuario> modeloAmigosConectados = new DefaultListModel<>();
-    private DefaultListModel<Usuario> modeloAmigosDesconectados = new DefaultListModel<>();
+    private DefaultTableModel modeloAmigosConectados = new DefaultTableModel();
+    private DefaultTableModel modeloAmigosDesconectados = new DefaultTableModel();
     
-    private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
-    private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
+
     
     
     
@@ -62,7 +61,7 @@ public class ChatList extends JFrame {
 
     public ChatList(String username) {
      nombreUserActive = username;
-    inicializarDatosDePrueba();  // Llamada inicial para cargar datos antes de que el Timer comience
+    inicializarDatos();  // Llamada inicial para cargar datos antes de que el Timer comience
     configurarVentana();
     configurarNavegacion();
      configurarTimer();
@@ -74,7 +73,7 @@ private void configurarTimer() {
     int delay = 1000; // Retraso en milisegundos (1000 ms = 1 segundo)
     ActionListener taskPerformer = new ActionListener() {
         public void actionPerformed(ActionEvent evt) {
-            inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
+            inicializarDatos();  // Llama a tu método que actualiza los datos
             actualizarListasUsuarios();
 
         }
@@ -84,7 +83,7 @@ private void configurarTimer() {
 
 
 
-    private void inicializarDatosDePrueba() {
+    private void inicializarDatos() {
         
           
     String username = nombreUserActive;
@@ -92,7 +91,7 @@ private void configurarTimer() {
     usuariosConectados.clear();
     usuariosDesconectados.clear();
 
-    // Simular obtener nombres de amigos del servidor (esto deberías adaptarlo)
+    // Obtener los nombres de los usuarios desde el server
 
     ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
     ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
@@ -109,6 +108,8 @@ private void configurarTimer() {
 
     // Actualizar la UI después de obtener los datos
    
+    amigosConectados.clear();
+    amigosDesconectados.clear();
     
         
           // Obtener amigos de la respuesta del servidor
@@ -147,20 +148,42 @@ private void configurarTimer() {
     SwingUtilities.invokeLater(() -> {
         
         obtenerSolicitudesRecibidas();
-        modeloUsuariosConectados.clear();
-        usuariosConectados.forEach(modeloUsuariosConectados::addElement);
+        modeloUsuariosConectados.setRowCount(0);
         
-        modeloUsuariosDesconectados.clear();
-        usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
+        for( Usuario us : usuariosConectados)
+        {
+            modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
+        }
+        
+        
+        modeloUsuariosDesconectados.setRowCount(0);
+        
+        for( Usuario us : usuariosDesconectados)
+        {
+            modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
+        }
+                
+        
         
         //Amigos
-        modeloAmigosConectados.clear();
-       amigosConectados.forEach(modeloAmigosConectados::addElement);
+        modeloAmigosConectados.setRowCount(0);
+        
+        for( Usuario us : amigosConectados)
+        {
+            modeloAmigosConectados.addRow(new Object[]{us.getNombre(), "-"});
+        }
+        
+        
+
        
+       modeloAmigosDesconectados.setRowCount(0);
        
-       modeloAmigosDesconectados.clear();
-      amigosDesconectados.forEach(modeloAmigosDesconectados::addElement);
+        for( Usuario us : amigosDesconectados)
+        {
+            modeloAmigosDesconectados.addRow(new Object[]{us.getNombre(), "-"});
+        }
        
+
         
         
     });
