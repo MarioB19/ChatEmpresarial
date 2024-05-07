@@ -981,34 +981,55 @@ private void configurarTimer() {
             JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
     }
+    
+    
+    //-------------Métodos de control de Amistad --------------------- /
+    
+    
 }
 
  
  
- 
- 
+private void eliminarMensajesYAmistad(String receptor) {
+    // Crear un objeto JSON con la información necesaria para el servidor
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "DELETE_CHAT_FRIEND");
 
- 
- 
- 
+    // Enviar la solicitud al servidor y esperar una respuesta
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+    // Procesar la respuesta del servidor
+    try {
+        JSONObject response = new JSONObject(serverResponse);
+        String status = response.getString("status");
+        String message = response.getString("message");
+
+        // Interpretar el resultado basado en el estado
+        switch (status) {
+            case "-4":
+                JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-5":
+                JOptionPane.showMessageDialog(null, "Error al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-6":
+                JOptionPane.showMessageDialog(null, "Error interno al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "0":
+                JOptionPane.showMessageDialog(null, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                break;
+            default:
+                JOptionPane.showMessageDialog(null, "Error desconocido.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
+    } catch (Exception e) {
+        System.err.println("Error al analizar la respuesta del servidor: " + e.getMessage());
+        JOptionPane.showMessageDialog(null, "Error al procesar la respuesta del servidor.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+
  
  
  
