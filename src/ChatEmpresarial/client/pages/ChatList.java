@@ -6,7 +6,6 @@ import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
 import ChatEmpresarial.shared.utilities.Functions;
-import ChatEmpresarial.client.utilities.GetUsers;
 import ChatEmpresarial.client.utilities.SessionManager;
 import ChatEmpresarial.shared.utilities.Enumerators;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
@@ -39,8 +38,9 @@ public class ChatList extends JFrame {
     private ArrayList<Usuario> amigosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> solicitudesAmigosEnviadas = new ArrayList<>();
     private ArrayList<Usuario> solicitudesAmigosRecibidas = new ArrayList<>();
-    private ArrayList<Grupo> grupos = new ArrayList<>();
+    private ArrayList<Grupo> grupos = handleGetGroups();
     private ArrayList<Grupo> solicitudesGrupos = new ArrayList<>();
+
 
     private final Color colorFondoPrincipal = new Color(225, 245, 254);
     private final Color colorFondoSecundario = new Color(144, 202, 249);
@@ -59,13 +59,15 @@ public class ChatList extends JFrame {
     inicializarDatosDePrueba();  // Llamada inicial para cargar datos antes de que el Timer comience
     configurarVentana();
     configurarNavegacion();
-     configurarTimer();
-
+    configurarTimer();
+    grupos = handleGetGroups(); 
     setVisible(true);
 }
 
+    
+    
 private void configurarTimer() {
-    int delay = 1000; // Retraso en milisegundos (1000 ms = 1 segundo)
+    int delay = 2000000000; // Retraso en milisegundos (1000 ms = 1 segundo)
     ActionListener taskPerformer = new ActionListener() {
         public void actionPerformed(ActionEvent evt) {
             inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
@@ -132,7 +134,6 @@ private void configurarTimer() {
 
             Grupo grupo = new Grupo();
             grupo.setId_grupo(i);
-            grupos.add(grupo);
             solicitudesGrupos.add(grupo);
         }
     }
@@ -172,7 +173,6 @@ private void configurarTimer() {
         panelPrincipal.add(crearPanelUsuarios(), "Usuarios");
         panelPrincipal.add(crearPanelAmigos(), "Amigos");
         panelPrincipal.add(crearPanelGrupos(), "Grupos");
-        panelPrincipal.add(crearPanelCrearGrupo(), "PanelCrearGrupo");
 
         btnUsuarios.addActionListener(e -> cardLayout.show(panelPrincipal, "Usuarios"));
         btnAmigos.addActionListener(e -> cardLayout.show(panelPrincipal, "Amigos"));
@@ -291,92 +291,30 @@ private void configurarTimer() {
         // Botón para crear un nuevo grupo
         JButton btnCrearGrupo = new JButton("Crear Grupo");
         estiloBoton(btnCrearGrupo);
-        btnCrearGrupo.addActionListener(e -> cardLayout.show(panelPrincipal, "PanelCrearGrupo"));
+        btnCrearGrupo.addActionListener(e -> {
+            try {
+                ArrayList<Usuario> users = handleGetUsersExceptSelf();  // Fetch the users
+                AddGroup createGroupFrame = new AddGroup(nombreUserActive, users);
+                createGroupFrame.setVisible(true); // Show the frame
+                dispose();  // Close the current frame
+            } catch (Exception ex) {
+                ex.printStackTrace(); // Log the exception to standard error
+                JOptionPane.showMessageDialog(null, "Error opening the group creation frame: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        
+        grupos = handleGetGroups(); 
 
         // Panel para la lista de grupos y solicitudes
         JPanel panelListas = new JPanel(new GridLayout(2, 1));
         panelListas.add(crearListaGrupos("Grupos", grupos, false));
-        panelListas.add(crearListaSolicitudes("Solicitudes de Grupos", solicitudesGrupos, false));
+        panelListas.add(crearListaSolicitudesGrupo("Solicitudes de Grupos", solicitudesGrupos, false));
 
         panel.add(btnCrearGrupo, BorderLayout.NORTH);
         panel.add(panelListas, BorderLayout.CENTER);
 
         return panel;
-    }
-
-    private JPanel crearPanelCrearGrupo() {
-        JPanel panelCrearGrupo = new JPanel(new BorderLayout());
-
-        // Panel for inputs and buttons
-        JPanel inputPanel = new JPanel(new GridLayout(0, 1));
-        JLabel lblNombreGrupo = new JLabel("Nombre:");
-        JTextField txtNombreGrupo = new JTextField(10);
-        JButton btnCrear = new JButton("Crear");
-        JButton btnCancelar = new JButton("Cancelar");
-
-        inputPanel.add(lblNombreGrupo);
-        inputPanel.add(txtNombreGrupo);
-        inputPanel.add(btnCrear);
-        inputPanel.add(btnCancelar);
-
-        
-        // Scroll panel for users
-        JPanel userPanel = new JPanel();
-        userPanel.setLayout(new BoxLayout(userPanel, BoxLayout.Y_AXIS));
-        JScrollPane scrollPane = new JScrollPane(userPanel);
-        scrollPane.setPreferredSize(new Dimension(200, 120));
-
-        // Suppose userList is your list of user objects
-        ArrayList<Usuario> userList = GetUsers.getUsers();
-        ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
-
-        for (Usuario user : userList) {
-            JCheckBox checkBox = new JCheckBox(user.getNombre());
-            checkBox.setActionCommand(String.valueOf(user.getId_usuario())); // Store user ID in action command
-            userPanel.add(checkBox);
-            checkBoxes.add(checkBox);
-        }
-
-        panelCrearGrupo.add(inputPanel, BorderLayout.NORTH);
-        panelCrearGrupo.add(scrollPane, BorderLayout.CENTER);
-
-
-        // Acción para el botón crear grupo
-        btnCrear.addActionListener(e -> {
-        String groupname = txtNombreGrupo.getText();
-        
-        JSONObject json = new JSONObject();
-        json.put("groupname", groupname);
-        json.put("adminId", 1);
-        json.put("action", Enumerators.TipoRequest.CREATEGROUP.toString());
-        
-        PersistentClient client = PersistentClient.getInstance();
-        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
-        
-                // Mostrar la respuesta en un diálogo según el código
-        switch (serverResponse) {
-            case "0":  // Éxito
-                JOptionPane.showMessageDialog(null, "Creation successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                cardLayout.show(panelPrincipal, "Grupos");
-                break;
-            case "1":  
-                JOptionPane.showMessageDialog(null, "Could not create group.", "Creation Failed", JOptionPane.ERROR_MESSAGE);
-                break;
-            case "-1":  // Error desconocido
-                JOptionPane.showMessageDialog(null, "An unknown error occurred during creation.", "Error", JOptionPane.ERROR_MESSAGE);
-                break;
-            default:  // Cualquier otra respuesta
-                JOptionPane.showMessageDialog(null, "Unexpected server response: " + serverResponse, "Error", JOptionPane.ERROR_MESSAGE);
-                break;
-        }
-
-            System.out.println("Crear grupo: " + txtNombreGrupo.getText());
-        });
-
-        // Acción para el botón cancelar
-        btnCancelar.addActionListener(e -> cardLayout.show(panelPrincipal, "Grupos"));
-
-        return panelCrearGrupo;
     }
 
     private JScrollPane crearListaGrupos(String titulo, ArrayList<Grupo> grupos, boolean estaConectado) {
@@ -730,8 +668,93 @@ private void configurarTimer() {
 }
  
  
- 
+  private ArrayList<Usuario> handleGetUsersExceptSelf() {
+   ArrayList<Usuario> users = new ArrayList<>();
 
+    try {
+        System.out.println("Usuario activo mandando a get usuarios: " + nombreUserActive);
+        JSONObject request = new JSONObject();
+        request.put("activeuser",nombreUserActive);
+        request.put("action", "GET_ALL_USERS_EXCEPT_SELF");  
+
+        PersistentClient client = PersistentClient.getInstance();
+        String response = client.sendMessageAndWaitForResponse(request.toString());
+
+        JSONObject jsonResponse = new JSONObject(response);
+        String status = jsonResponse.getString("status");
+
+        switch (status) {
+            case "0":  // Success
+                System.out.println("Data recieved from server: " + jsonResponse.toString());
+                JSONArray usersArray = jsonResponse.getJSONArray("users");
+                for (int i = 0; i < usersArray.length(); i++) {
+                    JSONObject userJson = usersArray.getJSONObject(i);
+                    Usuario user = new Usuario();
+                    user.setId_usuario(userJson.getInt("id"));
+                    user.setNombre(userJson.getString("nombre"));
+                    users.add(user);
+                }
+                break;
+            case "1":  // Failure
+                JOptionPane.showMessageDialog(null, "Failed to fetch users.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            default:  // Unknown error or other statuses
+                JOptionPane.showMessageDialog(null, "Unexpected response while fetching users: " + status, "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(null, "Error processing user data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    return users;
+}
+ 
+ 
+ private ArrayList<Grupo> handleGetGroups() {
+   ArrayList<Grupo> groups = new ArrayList<>();
+
+    try {
+        System.out.println("Usuario activo mandando a grupos: " + nombreUserActive);
+        
+        JSONObject request = new JSONObject();
+        request.put("activeuser",nombreUserActive);
+        request.put("action", "GET_ALL_GROUPS");  
+
+        PersistentClient client = PersistentClient.getInstance();
+        String response = client.sendMessageAndWaitForResponse(request.toString());
+
+        JSONObject jsonResponse = new JSONObject(response);
+        String status = jsonResponse.getString("status");
+
+        System.out.println("Making request to fetch groups with: " + request.toString());
+        
+        switch (status) {
+            case "0":  // Success
+                System.out.println("Groups recieved from server: " + jsonResponse.toString());
+                JSONArray usersArray = jsonResponse.getJSONArray("groups");
+                for (int i = 0; i < usersArray.length(); i++) {
+                    JSONObject userJson = usersArray.getJSONObject(i);
+                    Grupo grupo = new Grupo();
+                    grupo.setId_grupo(userJson.getInt("id"));
+                    grupo.setNombre(userJson.getString("nombre"));
+                    grupo.setId_aministrador(userJson.getInt("admin"));                    
+                    grupo.setId_chat(userJson.getInt("chat"));
+                    groups.add(grupo);
+                }
+                break;
+            case "1":  // Failure
+                JOptionPane.showMessageDialog(null, "Failed to fetch groups.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            default:  // Unknown error or other statuses
+                JOptionPane.showMessageDialog(null, "Unexpected response while fetching groups: " + status, "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(null, "Error processing group data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    return groups;
+}
 
  
  
