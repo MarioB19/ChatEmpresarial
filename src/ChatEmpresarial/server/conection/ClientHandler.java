@@ -16,7 +16,9 @@ import org.json.JSONObject;
 import ChatEmpresarial.server.pages.LogPage;
 import ChatEmpresarial.shared.utilities.Enumerators.DescripcionAccion;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_ALL_USERS_EXCEPT_SELF;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -136,6 +138,14 @@ public class ClientHandler implements Runnable {
                         );
                         response = new JSONObject().put("messages", messages).toString();
                         break;
+                        
+                    case GET_ALL_USERS_EXCEPT_SELF:
+                        response = handleGetAllUsersExceptSelf(jsonObject);
+                        break;
+                                                
+                    case GET_ALL_GROUPS:
+                        response = handleGetAllGroups(jsonObject);
+                        break;
 
                     default:
                         response = handleUnknownAction();
@@ -225,12 +235,76 @@ public class ClientHandler implements Runnable {
 
         // Extracción de datos del JSON
         String groupname = data.optString("groupname");
-        int adminId = data.optInt("adminId");
+        String adminName = data.optString("adminId");
+        JSONArray participantIdsJson = data.optJSONArray("participantIds");
 
+        if (participantIdsJson == null || participantIdsJson.length() == 0) {
+            System.out.println("Error: No participants provided.");
+            return "-1";  // Retorna error si no hay participantes.
+        }
 
-        return CreateGroupController.createGroupInDatabase(groupname, adminId);
+        // Convertir JSONArray a array de int
+        int[] participantIds = new int[participantIdsJson.length()];
+        for (int i = 0; i < participantIdsJson.length(); i++) {
+            participantIds[i] = participantIdsJson.optInt(i);
+        }
 
+        // Log de los IDs de los participantes
+        System.out.println("Participant IDs: " + Arrays.toString(participantIds));
+
+        // Llamada al controlador con el nombre del admin y los IDs de los participantes
+        String response = CreateGroupController.createGroupInDatabase(adminName, groupname, participantIds);
+        System.out.println("Response from createGroupInDatabase: " + response);
+        return response;
     }
+
+
+            
+    public String handleGetAllUsersExceptSelf(JSONObject data) throws SQLException {
+        System.out.println("Handling get all users except self with data: " + data.toString());
+
+        String activeuser = data.optString("activeuser");
+
+        JSONObject responseJson = new JSONObject();
+        try {
+            List<JSONObject> allUsers = UsersController.getAllUsersExceptSelf(activeuser);
+            JSONArray result = new JSONArray(allUsers);
+
+            responseJson.put("status", "0");
+            responseJson.put("users", result);
+        } catch (Exception e) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
+            responseJson.put("status", "-1");
+            responseJson.put("error", "Error al obtener usuarios");
+        }
+
+        System.out.println("Response sent while fetch users except self" +  responseJson.toString());
+        return responseJson.toString();
+    }
+    
+    public String handleGetAllGroups(JSONObject data) throws SQLException {
+        System.out.println("Handling get all groups with data: " + data.toString());
+
+        String activeuser = data.optString("activeuser");
+
+        JSONObject responseJson = new JSONObject();
+        try {
+            List<JSONObject> allUsers = CreateGroupController.getAllGroups(activeuser);
+            JSONArray result = new JSONArray(allUsers);
+
+            responseJson.put("status", "0");
+            responseJson.put("groups", result);
+        } catch (Exception e) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
+            responseJson.put("status", "-1");
+            responseJson.put("error", "Error al obtener grupos");
+        }
+
+        System.out.println("Response sent while fetch groups " +  responseJson.toString());
+        return responseJson.toString();
+    }
+
+    
     //Método que maneja el cierre de sesión
     private void removeClientBySocket(Socket socket) {
         String keyToRemove = null;

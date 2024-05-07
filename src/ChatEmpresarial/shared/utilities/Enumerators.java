@@ -30,7 +30,9 @@ public class Enumerators {
     FIND_USERS_CONNECTED("findUsersConnected"),
     CREATE_CHAT_USERS("createChatUsers"),
     SEND_MESSAGE_CHAT_USERS("sendMessageChatUsers"),
-    GET_MESSAGES_CHAT_USERS("getMessagesChatUsers");
+    GET_MESSAGES_CHAT_USERS("getMessagesChatUsers"),
+    GET_ALL_USERS_EXCEPT_SELF("getAllUsersExceptSelf"),
+    GET_ALL_GROUPS("getallgroups");
 
     private final String actionString;
 

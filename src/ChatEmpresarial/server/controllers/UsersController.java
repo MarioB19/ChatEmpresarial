@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class UsersController {
 
@@ -43,4 +45,35 @@ public class UsersController {
 
         return usernames;
     }
+    
+    public static List<JSONObject> getAllUsersExceptSelf(String activeuser) throws SQLException {
+        List<JSONObject> users = new ArrayList<>();
+        Conexion conexion = new Conexion();
+        Connection con = conexion.getCon();
+
+        // SQL query to fetch usernames and ids
+        String query = "SELECT id_usuario, nombre FROM usuario WHERE nombre != ?";
+        try (PreparedStatement pstmt = con.prepareStatement(query)) {
+            pstmt.setString(1, activeuser);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                JSONObject user = new JSONObject();
+                user.put("id", rs.getInt("id_usuario"));
+                user.put("nombre", rs.getString("nombre"));
+                users.add(user);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, "SQL Error in getAllUsersExceptSelf", ex);
+            throw ex;
+        } finally {
+            try {
+                if (con != null) con.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(UsersController.class.getName()).log(Level.SEVERE, "Error closing connection", ex);
+            }
+        }
+        return users;
+    }
+
 }
