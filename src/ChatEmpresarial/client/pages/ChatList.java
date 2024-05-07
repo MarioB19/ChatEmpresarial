@@ -7,6 +7,7 @@ import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
 import ChatEmpresarial.shared.utilities.Enumerators;
 import ChatEmpresarial.shared.utilities.Functions;
+import ChatEmpresarial.client.utilities.GetUsers;
 
 import javax.swing.*;
 import java.awt.*;
@@ -172,18 +173,40 @@ public class ChatList extends JFrame {
     }
 
     private JPanel crearPanelCrearGrupo() {
-        JPanel panelCrearGrupo = new JPanel(new GridLayout(3, 2));
+        JPanel panelCrearGrupo = new JPanel(new BorderLayout());
 
-        // Añade los campos y botones necesarios para crear un grupo
+        // Panel for inputs and buttons
+        JPanel inputPanel = new JPanel(new GridLayout(0, 1));
         JLabel lblNombreGrupo = new JLabel("Nombre:");
-        JTextField txtNombreGrupo = new JTextField();
+        JTextField txtNombreGrupo = new JTextField(10);
         JButton btnCrear = new JButton("Crear");
         JButton btnCancelar = new JButton("Cancelar");
 
-        panelCrearGrupo.add(lblNombreGrupo);
-        panelCrearGrupo.add(txtNombreGrupo);
-        panelCrearGrupo.add(btnCrear);
-        panelCrearGrupo.add(btnCancelar);
+        inputPanel.add(lblNombreGrupo);
+        inputPanel.add(txtNombreGrupo);
+        inputPanel.add(btnCrear);
+        inputPanel.add(btnCancelar);
+
+        
+        // Scroll panel for users
+        JPanel userPanel = new JPanel();
+        userPanel.setLayout(new BoxLayout(userPanel, BoxLayout.Y_AXIS));
+        JScrollPane scrollPane = new JScrollPane(userPanel);
+        scrollPane.setPreferredSize(new Dimension(200, 120));
+
+        // Suppose userList is your list of user objects
+        ArrayList<Usuario> userList = GetUsers.getUsers();
+        ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
+
+        for (Usuario user : userList) {
+            JCheckBox checkBox = new JCheckBox(user.getNombre());
+            checkBox.setActionCommand(String.valueOf(user.getId_usuario())); // Store user ID in action command
+            userPanel.add(checkBox);
+            checkBoxes.add(checkBox);
+        }
+
+        panelCrearGrupo.add(inputPanel, BorderLayout.NORTH);
+        panelCrearGrupo.add(scrollPane, BorderLayout.CENTER);
 
 
         // Acción para el botón crear grupo
@@ -191,7 +214,7 @@ public class ChatList extends JFrame {
         String groupname = txtNombreGrupo.getText();
         
         JSONObject json = new JSONObject();
-        json.put("username", groupname);
+        json.put("groupname", groupname);
         json.put("adminId", 1);
         json.put("action", Enumerators.TipoRequest.CREATEGROUP.toString());
         
@@ -201,11 +224,11 @@ public class ChatList extends JFrame {
                 // Mostrar la respuesta en un diálogo según el código
         switch (serverResponse) {
             case "0":  // Éxito
-                JOptionPane.showMessageDialog(null, "Cretion successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Creation successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 cardLayout.show(panelPrincipal, "Grupos");
                 break;
-            case "1":  // Nombre de usuario ya registrado
-                JOptionPane.showMessageDialog(null, "Could'nt create group.", "Creation Failed", JOptionPane.ERROR_MESSAGE);
+            case "1":  
+                JOptionPane.showMessageDialog(null, "Could not create group.", "Creation Failed", JOptionPane.ERROR_MESSAGE);
                 break;
             case "-1":  // Error desconocido
                 JOptionPane.showMessageDialog(null, "An unknown error occurred during creation.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -266,6 +289,8 @@ public class ChatList extends JFrame {
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
         return scrollPane;
     }
+
+
 
     class UsuarioCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
 
