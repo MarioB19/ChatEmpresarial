@@ -74,7 +74,7 @@ public class ClientHandler implements Runnable {
                         break;
                         
                     case CREATEGROUP:
-                        response = 
+                        response = handleCreateGroup(jsonObject);
                         break;
                         
                     default:

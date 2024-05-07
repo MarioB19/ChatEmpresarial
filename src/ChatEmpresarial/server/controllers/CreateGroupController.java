@@ -27,10 +27,9 @@ public class CreateGroupController extends Conexion {
     
     try{
         
-        sql = con.prepareStatement("INSERT INTO grupo (nombre, id_administrador, id_chat, fecha_creacion) VALUES (?, ?, ?, NOW())");
+        sql = con.prepareStatement("INSERT INTO grupo (nombre, id_administrador, fecha_creacion) VALUES (?, ?, NOW())");
         sql.setString(1, name);
         sql.setInt(2, adminId);
-        sql.setInt(3, 1);
         
         int result = sql.executeUpdate();
         return result > 0 ? "0" : "-1";
