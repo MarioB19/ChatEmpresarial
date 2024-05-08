@@ -20,6 +20,8 @@ public class Grupo {
     private int id_grupo;
     
     private String nombre;
+    
+    private String nombreAdmin;
 
   //FK --> Usuario
     private int id_aministrador;
@@ -46,6 +48,15 @@ public class Grupo {
     }
     
     public void setNombre(String nombre) {
+        this.nombre = nombre;
+        
+        
+        
+    }    public String getNombreAdmin() {
+        return nombre;
+    }
+    
+    public void setNombreAdmin(String nombre) {
         this.nombre = nombre;
     }
 

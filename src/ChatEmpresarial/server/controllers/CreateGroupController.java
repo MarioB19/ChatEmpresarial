@@ -105,7 +105,13 @@ public class CreateGroupController extends Conexion {
         Connection con = conexion.getCon();
 
         // SQL query to fetch usernames and ids
-        String query = "SELECT g.nombre AS NombreGrupo, g.id_administrador, g.id_chat, g.id_grupo FROM usuario u JOIN participantes p ON u.id_usuario = p.id_usuario JOIN chat c ON p.id_chat = c.id_chat JOIN grupo g ON c.id_chat = g.id_chat WHERE u.nombre = ?";
+        String query = "SELECT g.nombre AS NombreGrupo, u2.nombre AS NombreAdministrador, g.id_chat, g.id_grupo " +
+                       "FROM usuario u " +
+                       "JOIN participantes p ON u.id_usuario = p.id_usuario " +
+                       "JOIN chat c ON p.id_chat = c.id_chat " +
+                       "JOIN grupo g ON c.id_chat = g.id_chat " +
+                       "JOIN usuario u2 ON g.id_administrador = u2.id_usuario " +
+                       "WHERE u.nombre = ?";
         try (PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setString(1, activeuser);
             ResultSet rs = pstmt.executeQuery();
@@ -114,7 +120,7 @@ public class CreateGroupController extends Conexion {
                 JSONObject user = new JSONObject();
                 user.put("id", rs.getInt("id_grupo"));
                 user.put("nombre", rs.getString("NombreGrupo"));
-                user.put("admin", rs.getString("id_administrador"));
+                user.put("admin", rs.getString("NombreAdministrador"));
                 user.put("chat", rs.getString("id_chat"));
                 users.add(user);
             }
