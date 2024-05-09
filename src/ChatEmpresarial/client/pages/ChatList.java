@@ -6,6 +6,7 @@ import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
 import ChatEmpresarial.client.utilities.SessionManager;
+import ChatEmpresarial.shared.models.SolicitudAmistad;
 import ChatEmpresarial.shared.utilities.Enumerators;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
 import ChatEmpresarial.shared.utilities.Functions;
@@ -26,21 +27,21 @@ import org.json.JSONObject;
 
 public class ChatList extends JFrame {
     
-       private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
-    private DefaultListModel<Usuario> modeloUsuariosDesconectados = new DefaultListModel<>();
+    private DefaultTableModel modeloUsuariosConectados = new DefaultTableModel();
+    private DefaultTableModel modeloUsuariosDesconectados = new DefaultTableModel();
     
-    private DefaultListModel<Usuario> modeloAmigosConectados = new DefaultListModel<>();
-    private DefaultListModel<Usuario> modeloAmigosDesconectados = new DefaultListModel<>();
+    private DefaultTableModel modeloAmigosConectados = new DefaultTableModel();
+    private DefaultTableModel modeloAmigosDesconectados = new DefaultTableModel();
     
-    private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
-    private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
+
     
     
     
     
     private String nombreUserActive;
 
-    
+    private ArrayList<Usuario> SolicitudAmistadRecibida = new ArrayList<>();
+    private ArrayList<Usuario> SolicitudAmistadEnviada = new ArrayList<>();
     private ArrayList<Usuario> usuariosConectados = new ArrayList<>();
     private ArrayList<Usuario> usuariosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
@@ -64,7 +65,7 @@ public class ChatList extends JFrame {
 
     public ChatList(String username) {
      nombreUserActive = username;
-    inicializarDatosDePrueba();  // Llamada inicial para cargar datos antes de que el Timer comience
+    inicializarDatos();  // Llamada inicial para cargar datos antes de que el Timer comience
     configurarVentana();
     configurarNavegacion();
      configurarTimer();
@@ -76,7 +77,7 @@ private void configurarTimer() {
     int delay = 1000; // Retraso en milisegundos (1000 ms = 1 segundo)
     ActionListener taskPerformer = new ActionListener() {
         public void actionPerformed(ActionEvent evt) {
-            inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
+            inicializarDatos();  // Llama a tu método que actualiza los datos
             actualizarListasUsuarios();
 
         }
@@ -86,7 +87,7 @@ private void configurarTimer() {
 
 
 
-    private void inicializarDatosDePrueba() {
+    private void inicializarDatos() {
         
           
     String username = nombreUserActive;
@@ -94,7 +95,7 @@ private void configurarTimer() {
     usuariosConectados.clear();
     usuariosDesconectados.clear();
 
-    // Simular obtener nombres de amigos del servidor (esto deberías adaptarlo)
+    // Obtener los nombres de los usuarios desde el server
 
     ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
     ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
@@ -111,6 +112,8 @@ private void configurarTimer() {
 
     // Actualizar la UI después de obtener los datos
    
+    amigosConectados.clear();
+    amigosDesconectados.clear();
     
         
           // Obtener amigos de la respuesta del servidor
@@ -148,7 +151,10 @@ private void configurarTimer() {
     private void actualizarListasUsuarios() {
     SwingUtilities.invokeLater(() -> {
         
+        obtenerSolicitudesRecibidas();
+        modeloUsuariosConectados.setRowCount(0);
         
+<<<<<<< HEAD
         modeloUsuariosConectados.clear();
         
         usuariosConectados.forEach(modeloUsuariosConectados::addElement);
@@ -157,15 +163,42 @@ private void configurarTimer() {
         
         modeloUsuariosDesconectados.clear();
         usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
+=======
+        for( Usuario us : usuariosConectados)
+        {
+            modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
+        }
+        
+        
+        modeloUsuariosDesconectados.setRowCount(0);
+        
+        for( Usuario us : usuariosDesconectados)
+        {
+            modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
+        }
+                
+        
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
         
         //Amigos
-        modeloAmigosConectados.clear();
-       amigosConectados.forEach(modeloAmigosConectados::addElement);
+        modeloAmigosConectados.setRowCount(0);
+        
+        for( Usuario us : amigosConectados)
+        {
+            modeloAmigosConectados.addRow(new Object[]{us.getNombre(), "-"});
+        }
+        
+        
+
        
+       modeloAmigosDesconectados.setRowCount(0);
        
-       modeloAmigosDesconectados.clear();
-      amigosDesconectados.forEach(modeloAmigosDesconectados::addElement);
+        for( Usuario us : amigosDesconectados)
+        {
+            modeloAmigosDesconectados.addRow(new Object[]{us.getNombre(), "-"});
+        }
        
+
         
         
     });
@@ -228,9 +261,15 @@ private void configurarTimer() {
 }
 
 
+<<<<<<< HEAD
     private JScrollPane crearListaUsuarios(String titulo, ArrayList<Usuario> usuarios, boolean estaConectado ) {
         
         
+=======
+    private JScrollPane crearListaUsuarios(String titulo, ArrayList<Usuario> usuarios, boolean estaConectado) {
+        
+         
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
         DefaultTableModel modelo = new DefaultTableModel()
         {
             @Override
@@ -275,6 +314,7 @@ private void configurarTimer() {
                     {
                         
                         if (row >= 0) {
+<<<<<<< HEAD
                             Usuario usuario = (Usuario) lista.getModel().getValueAt(row, 0);
 
                             JSONObject json = new JSONObject();
@@ -288,17 +328,46 @@ private void configurarTimer() {
 
 
                             new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+=======
+                            
+                            if(estaConectado)
+                            {
+                                Usuario usuario = usuariosConectados.get(row);
+
+
+                                JSONObject json = new JSONObject();
+                                json.put("user1", usuario.getNombre());
+                                json.put("user2", nombreUserActive);
+                                json.put("action", TipoRequest.CREATE_CHAT_USERS);
+
+                                PersistentClient client = PersistentClient.getInstance();
+                                String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+                                System.out.println("Server response" + serverResponse);
+
+
+                                new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+                                
+                            }
+                            
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
                         }
                     
                     }
                     
                         if (column == 1) 
                         {
+<<<<<<< HEAD
                             Usuario usuario = (Usuario) lista.getModel().getValueAt(row, 0);
                             String nombre = usuario.getNombre();
                             
                             System.out.println(nombre);
                             
+=======
+                            
+                            Usuario usuario = usuariosDesconectados.get(row);
+                            enviarSolicitudAmistad(usuario.getNombre());
+                           
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
                                     
                         }
                 }
@@ -309,6 +378,10 @@ private void configurarTimer() {
 
         JScrollPane scrollPane = new JScrollPane(lista);
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+<<<<<<< HEAD
+=======
+        return scrollPane;
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
         
         /*
     lista.setModel(modelo);
@@ -344,8 +417,13 @@ private void configurarTimer() {
 
     JScrollPane scrollPane = new JScrollPane(lista);
     scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+<<<<<<< HEAD
     */
     return scrollPane;
+=======
+    
+        */
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
 }
 
     
@@ -885,6 +963,165 @@ private void configurarTimer() {
  
  
 
+ 
+ 
+ //---------------------Metodos de control de peticiones -------------//
+ 
+ private void cancelarSolicitudAmistad(String receptor) {
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "REFUSE_INVITATION_FRIEND");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    switch (serverResponse) {
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Campo 'receptor' faltante en la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-2":
+            JOptionPane.showMessageDialog(null, "Remitente o receptor no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JOptionPane.showMessageDialog(null, "Solicitud de amistad cancelada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error al cancelar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+}
+ 
+ 
+ private void enviarSolicitudAmistad(String receptor) {
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "SENT_INVITATION_FRIEND");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    switch (serverResponse) {
+        case "-4":
+            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Campo 'receptor' faltante en la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Error interno.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JOptionPane.showMessageDialog(null, "Solicitud de amistad enviada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error desconocido al enviar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+    
+}
+ 
+ 
+ private void obtenerSolicitudesRecibidas() {
+    JSONObject json = new JSONObject();
+    json.put("action", "GET_INVITATION_FRIEND");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+      JSONObject responseObject = new JSONObject(serverResponse);
+           String status  = responseObject.getString("status");
+
+    switch (status) {
+        case "-4":
+            JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Receptor no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Error al obtener las solicitudes recibidas.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            responseObject = new JSONObject(serverResponse);
+         JSONArray  receivedInvitations = responseObject.optJSONArray("message");
+            // Procesar las invitaciones recibidas (JSON array)
+            for (int i = 0; i < receivedInvitations.length(); i++) {
+                JSONArray invitation = receivedInvitations.getJSONArray(i);
+                SolicitudAmistadRecibida.clear();
+                for(Object inv : invitation)
+                {
+                    SolicitudAmistadRecibida.add(new Usuario(inv.toString()));
+                }
+                    
+                
+                
+            }
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+    
+    
+    //-------------Métodos de control de Amistad --------------------- /
+    
+    
+}
+
+ 
+ 
+private void eliminarMensajesYAmistad(String receptor) {
+    // Crear un objeto JSON con la información necesaria para el servidor
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "DELETE_CHAT_FRIEND");
+
+    // Enviar la solicitud al servidor y esperar una respuesta
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    // Procesar la respuesta del servidor
+    try {
+        JSONObject response = new JSONObject(serverResponse);
+        String status = response.getString("status");
+        String message = response.getString("message");
+
+        // Interpretar el resultado basado en el estado
+        switch (status) {
+            case "-4":
+                JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-5":
+                JOptionPane.showMessageDialog(null, "Error al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-6":
+                JOptionPane.showMessageDialog(null, "Error interno al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "0":
+                JOptionPane.showMessageDialog(null, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                break;
+            default:
+                JOptionPane.showMessageDialog(null, "Error desconocido.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
+    } catch (Exception e) {
+        System.err.println("Error al analizar la respuesta del servidor: " + e.getMessage());
+        JOptionPane.showMessageDialog(null, "Error al procesar la respuesta del servidor.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
     
   
 }
