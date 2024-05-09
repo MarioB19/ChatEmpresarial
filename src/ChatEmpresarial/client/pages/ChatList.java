@@ -322,9 +322,21 @@ private void configurarTimer() {
         grupos.forEach(modelo::addElement);
 
         JList<Grupo> lista = new JList<>(modelo);
+
         lista.setCellRenderer(new GrupoCellRenderer());
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lista.setLayoutOrientation(JList.VERTICAL);
+        
+            lista.addListSelectionListener(e -> {
+        if (!e.getValueIsAdjusting()) {
+            Grupo grupoSeleccionado = lista.getSelectedValue();
+            if (grupoSeleccionado != null) {
+                GroupChatWindow chatWindow = new GroupChatWindow(grupoSeleccionado,nombreUserActive);
+                chatWindow.setVisible(true);
+                dispose();
+                }
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(lista);
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
@@ -460,31 +472,33 @@ private void configurarTimer() {
         }
     }
 
-    class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
+class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
+    private JLabel lblNombre = new JLabel();
+    private JButton btnIrAlGrupo = new JButton("Entrar");
+    private JButton btnEditarMiembros = new JButton("Editar Miembros");
+    private JButton btnEliminarGrupo = new JButton("Eliminar Grupo");
+    private JButton btnSalirDelGrupo = new JButton("Salir del Grupo");
 
-        private JLabel lblNombre = new JLabel();
-        private JButton btnEliminarGrupo = new JButton("-");
+    public GrupoCellRenderer() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        public GrupoCellRenderer() {
-            setLayout(new FlowLayout(FlowLayout.LEFT));
-            add(lblNombre);
-            add(btnEliminarGrupo);
-            btnEliminarGrupo.setBackground(colorBotonEliminar);
-            btnEliminarGrupo.setForeground(colorTexto);
-
-            btnEliminarGrupo.addActionListener(e -> {
-                // Lógica para eliminar grupo
-                System.out.println("Grupo eliminado: " + lblNombre.getText());
-            });
-        }
+        topPanel.add(lblNombre); 
+        add(topPanel);
+        add(bottomPanel);
+    }
 
         @Override
         public Component getListCellRendererComponent(JList<? extends Grupo> list, Grupo value, int index, boolean isSelected, boolean cellHasFocus) {
-            lblNombre.setText("Grupo ID: " + value.getId_grupo());
+            lblNombre.setText("Grupo " + value.getNombre() + " con ID: " + value.getId_grupo());
             setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
+            validate();
             return this;
         }
-    }
+
+}
+
 
     class SolicitudesGrupoCellRenderer extends JPanel implements ListCellRenderer<Object> {
 
@@ -737,7 +751,7 @@ private void configurarTimer() {
                     Grupo grupo = new Grupo();
                     grupo.setId_grupo(userJson.getInt("id"));
                     grupo.setNombre(userJson.getString("nombre"));
-                    grupo.setId_aministrador(userJson.getInt("admin"));                    
+                    grupo.setNombreAdmin(userJson.getString("admin"));                    
                     grupo.setId_chat(userJson.getInt("chat"));
                     groups.add(grupo);
                 }

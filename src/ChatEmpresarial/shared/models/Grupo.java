@@ -53,11 +53,11 @@ public class Grupo {
         
         
     }    public String getNombreAdmin() {
-        return nombre;
+        return nombreAdmin;
     }
     
-    public void setNombreAdmin(String nombre) {
-        this.nombre = nombre;
+    public void setNombreAdmin(String nombreAdmin) {
+        this.nombreAdmin = nombreAdmin;
     }
 
 
