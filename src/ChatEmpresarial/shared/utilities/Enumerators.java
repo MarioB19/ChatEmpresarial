@@ -32,7 +32,10 @@ public class Enumerators {
     SEND_MESSAGE_CHAT_USERS("sendMessageChatUsers"),
     GET_MESSAGES_CHAT_USERS("getMessagesChatUsers"),
     GET_ALL_USERS_EXCEPT_SELF("getAllUsersExceptSelf"),
-    GET_ALL_GROUPS("getallgroups");
+    GET_ALL_GROUPS("getallgroups"),
+    GET_MESSAGES_GROUP("getdmessagesgroup"),
+    SEND_MESSAGE_GROUP("sendmessagegroup");
+
 
     private final String actionString;
 
