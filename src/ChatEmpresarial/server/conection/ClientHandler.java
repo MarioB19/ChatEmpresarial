@@ -2,6 +2,7 @@ package ChatEmpresarial.server.conection;
 
 import ChatEmpresarial.server.controllers.CreateGroupController;
 import ChatEmpresarial.server.controllers.ChatFriendController;
+import ChatEmpresarial.server.controllers.GroupChatController;
 import ChatEmpresarial.server.controllers.LoginController;
 import ChatEmpresarial.server.controllers.RecoveryPasswordController;
 import ChatEmpresarial.server.controllers.RecoveryPassword2Controller;
@@ -16,7 +17,9 @@ import org.json.JSONObject;
 import ChatEmpresarial.server.pages.LogPage;
 import ChatEmpresarial.shared.utilities.Enumerators.DescripcionAccion;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_ALL_GROUPS;
 import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_ALL_USERS_EXCEPT_SELF;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_MESSAGES_GROUP;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -146,10 +149,17 @@ public class ClientHandler implements Runnable {
                     case GET_ALL_GROUPS:
                         response = handleGetAllGroups(jsonObject);
                         break;
+                    case GET_MESSAGES_GROUP:
+                        response = handleFetchMessagesGroup(jsonObject);
+                        break;
+                    case SEND_MESSAGE_GROUP:
+                        response = handleSendMessageGroup(jsonObject);
+                        break;
 
                     default:
                         response = handleUnknownAction();
-
+                        
+                        
                 }
 
                 JSONObject responseJson = new JSONObject();
@@ -303,6 +313,49 @@ public class ClientHandler implements Runnable {
         System.out.println("Response sent while fetch groups " +  responseJson.toString());
         return responseJson.toString();
     }
+    
+        //Método que maneja la obtencion de un chat de grupos
+    private String handleFetchMessagesGroup(JSONObject jsonObject) {
+        System.out.println("Request recibida para obtener mensajes de grupo: " + jsonObject.toString());
+        try {
+            // Extrae los nombres del remitente y receptor desde el JSON
+            String idchat = jsonObject.getString("idChat");
+
+            // Llama al método que obtiene los mensajes
+            String mensajesJson = GroupChatController.obtainAllMessages(Integer.parseInt(idchat));
+
+            // Devuelve la respuesta JSON completa que incluye todos los mensajes
+            return mensajesJson;
+
+        } catch (Exception e) {
+            // Maneja cualquier excepción y retorna un error estándar
+            e.printStackTrace();
+            return "-1";
+        }
+    }
+    
+    
+        //Método para guardar un mensaje de grupo
+    private String handleSendMessageGroup(JSONObject jsonObject) {
+        try {
+            // Extrae el remitente, receptor y contenido del mensaje desde el JSON
+            String idChat = jsonObject.getString("idChat");
+            String contenido = jsonObject.getString("contenido");
+
+            // Llama al método que envía el mensaje y obtiene el resultado como un número
+            String resultado = GroupChatController.SendMessage(Integer.parseInt(idChat) ,contenido);
+
+            // Devuelve el número tal como lo proporciona el controlador
+            return resultado;
+
+        } catch (Exception e) {
+            // Maneja cualquier excepción y retorna un error estándar
+            e.printStackTrace();
+            return "-1";
+        }
+    }
+
+    
 
     
     //Método que maneja el cierre de sesión

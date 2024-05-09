@@ -3,10 +3,16 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/Users/brunosanchezpadilla/Documents/GitHub/ChatEmpresarial/src/ChatEmpresarial/client/pages/ChatList.java</file>
-            <file>file:/Users/brunosanchezpadilla/Documents/GitHub/ChatEmpresarial/src/ChatEmpresarial/client/pages/GroupChatWindow.java</file>
-            <file>file:/Users/brunosanchezpadilla/Documents/GitHub/ChatEmpresarial/src/ChatEmpresarial/client/pages/AddGroup.java</file>
-            <file>file:/Users/brunosanchezpadilla/Documents/GitHub/ChatEmpresarial/src/ChatEmpresarial/client/pages/ChatUserPage.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/server/conection/PersistentServer.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/server/controllers/LoginController.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/shared/utilities/Enumerators.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/shared/Main.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/shared/models/Grupo.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/server/controllers/CreateGroupController.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/server/IndexServer.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/server/conection/ClientHandler.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/server/controllers/RegisterController.java</file>
+            <file>file:/C:/Users/BRUNO/Documents/ChatEmpresarial/src/ChatEmpresarial/client/pages/ChatList.java</file>
         </group>
     </open-files>
 </project-private>
