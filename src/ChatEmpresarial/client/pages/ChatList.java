@@ -6,6 +6,7 @@ import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
 import ChatEmpresarial.client.utilities.SessionManager;
+import ChatEmpresarial.shared.models.SolicitudAmistad;
 import ChatEmpresarial.shared.utilities.Enumerators;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
 import ChatEmpresarial.shared.utilities.Functions;
@@ -24,21 +25,21 @@ import org.json.JSONObject;
 
 public class ChatList extends JFrame {
     
-       private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
-    private DefaultListModel<Usuario> modeloUsuariosDesconectados = new DefaultListModel<>();
+    private DefaultTableModel modeloUsuariosConectados = new DefaultTableModel();
+    private DefaultTableModel modeloUsuariosDesconectados = new DefaultTableModel();
     
-    private DefaultListModel<Usuario> modeloAmigosConectados = new DefaultListModel<>();
-    private DefaultListModel<Usuario> modeloAmigosDesconectados = new DefaultListModel<>();
+    private DefaultTableModel modeloAmigosConectados = new DefaultTableModel();
+    private DefaultTableModel modeloAmigosDesconectados = new DefaultTableModel();
     
-    private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
-    private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
+
     
     
     
     
     private String nombreUserActive;
 
-    
+    private ArrayList<Usuario> SolicitudAmistadRecibida = new ArrayList<>();
+    private ArrayList<Usuario> SolicitudAmistadEnviada = new ArrayList<>();
     private ArrayList<Usuario> usuariosConectados = new ArrayList<>();
     private ArrayList<Usuario> usuariosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
@@ -62,7 +63,7 @@ public class ChatList extends JFrame {
 
     public ChatList(String username) {
      nombreUserActive = username;
-    inicializarDatosDePrueba();  // Llamada inicial para cargar datos antes de que el Timer comience
+    inicializarDatos();  // Llamada inicial para cargar datos antes de que el Timer comience
     configurarVentana();
     configurarNavegacion();
      configurarTimer();
@@ -74,7 +75,7 @@ private void configurarTimer() {
     int delay = 1000; // Retraso en milisegundos (1000 ms = 1 segundo)
     ActionListener taskPerformer = new ActionListener() {
         public void actionPerformed(ActionEvent evt) {
-            inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
+            inicializarDatos();  // Llama a tu método que actualiza los datos
             actualizarListasUsuarios();
 
         }
@@ -84,7 +85,7 @@ private void configurarTimer() {
 
 
 
-    private void inicializarDatosDePrueba() {
+    private void inicializarDatos() {
         
           
     String username = nombreUserActive;
@@ -92,7 +93,7 @@ private void configurarTimer() {
     usuariosConectados.clear();
     usuariosDesconectados.clear();
 
-    // Simular obtener nombres de amigos del servidor (esto deberías adaptarlo)
+    // Obtener los nombres de los usuarios desde el server
 
     ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
     ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
@@ -109,6 +110,8 @@ private void configurarTimer() {
 
     // Actualizar la UI después de obtener los datos
    
+    amigosConectados.clear();
+    amigosDesconectados.clear();
     
         
           // Obtener amigos de la respuesta del servidor
@@ -147,20 +150,42 @@ private void configurarTimer() {
     SwingUtilities.invokeLater(() -> {
         
         obtenerSolicitudesRecibidas();
-        modeloUsuariosConectados.clear();
-        usuariosConectados.forEach(modeloUsuariosConectados::addElement);
+        modeloUsuariosConectados.setRowCount(0);
         
-        modeloUsuariosDesconectados.clear();
-        usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
+        for( Usuario us : usuariosConectados)
+        {
+            modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
+        }
+        
+        
+        modeloUsuariosDesconectados.setRowCount(0);
+        
+        for( Usuario us : usuariosDesconectados)
+        {
+            modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
+        }
+                
+        
         
         //Amigos
-        modeloAmigosConectados.clear();
-       amigosConectados.forEach(modeloAmigosConectados::addElement);
+        modeloAmigosConectados.setRowCount(0);
+        
+        for( Usuario us : amigosConectados)
+        {
+            modeloAmigosConectados.addRow(new Object[]{us.getNombre(), "-"});
+        }
+        
+        
+
        
+       modeloAmigosDesconectados.setRowCount(0);
        
-       modeloAmigosDesconectados.clear();
-      amigosDesconectados.forEach(modeloAmigosDesconectados::addElement);
+        for( Usuario us : amigosDesconectados)
+        {
+            modeloAmigosDesconectados.addRow(new Object[]{us.getNombre(), "-"});
+        }
        
+
         
         
     });
@@ -296,9 +321,18 @@ private void configurarTimer() {
                     
                         if (column == 1) 
                         {
+                            if(estaConectado)
+                            {
+                                Usuario usuario = usuariosConectados.get(row);
+                                enviarSolicitudAmistad(usuario.getNombre());
+                            }
+                            else
+                            {
+                                Usuario usuario = usuariosDesconectados.get(row);
+                                enviarSolicitudAmistad(usuario.getNombre());
+                            }
                             
-                            Usuario usuario = usuariosDesconectados.get(row);
-                            enviarSolicitudAmistad(usuario.getNombre());
+                            
                            
                                     
                         }
@@ -356,8 +390,8 @@ private void configurarTimer() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
         panel.add(crearListaAmigos("Amigos Conectados", amigosConectados, true));
         panel.add(crearListaAmigos("Amigos Desconectados", amigosDesconectados, false));
-        panel.add(crearListaSolicitudesAmigos("Solicitudes Enviadas", solicitudesAmigosEnviadas ,true));
-        panel.add(crearListaSolicitudesAmigos("Solicitudes Recibidas", solicitudesAmigosRecibidas ,false));
+        panel.add(crearListaSolicitudesAmigosRecibidas("Solicitudes Enviadas", solicitudesAmigosEnviadas ,true));
+        panel.add(crearListaSolicitudesAmigosEnviadas("Solicitudes Recibidas", solicitudesAmigosRecibidas ,false));
         return panel;
     }
 
@@ -406,7 +440,9 @@ private void configurarTimer() {
                     // si es un botón, realiza la acción correspondiente
                     if (column == 1) 
                     {
-                        yupi();
+                        Usuario usuario = amigosDesconectados.get(row);
+                        eliminarMensajesYAmistad(usuario.getNombre());
+                            
                     }
                 }
             }
@@ -419,10 +455,150 @@ private void configurarTimer() {
         return scrollPane;
     }
     
-    void yupi()
-    {
-        System.out.println("lolazo");
+     private JScrollPane crearListaSolicitudesAmigosRecibidas(String titulo, ArrayList<Usuario> elementos, boolean Envia) {
+DefaultTableModel modelo = new DefaultTableModel()
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+            // Esto hará que ninguna celda sea editable
+            return false;
+            }
+        };
+        
+        modelo.addColumn("nombre");
+        modelo.addColumn("Agregar");
+        modelo.addColumn("borrar");
+
+        for( Usuario us : elementos)
+        {
+            modelo.addRow(new Object[]{us.getNombre(), "+","-"});
+        }
+        
+        JTable lista = new JTable(modelo);
+        
+        lista.setTableHeader(null);
+        lista.getColumn("Agregar").setCellRenderer(new ButtonRenderer());
+        lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
+        
+        
+        
+        
+        
+        
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        lista.addMouseListener(new MouseAdapter() {
+           
+            public void mouseClicked(MouseEvent e) {
+                
+                int column = lista.getColumnModel().getColumnIndexAtX(e.getX()); // obtiene la columna
+                int row = e.getY() / lista.getRowHeight(); // obtiene la fila
+
+                // asegurando que la fila y columna seleccionadas están dentro de la tabla
+                if (row < lista.getRowCount() && row >= 0 && column < lista.getColumnCount() && column >= 0) {
+                    Object value = lista.getValueAt(row, column);
+                    
+                    // si es un botón, realiza la acción correspondiente
+                    
+                    
+                    
+                        if (column == 1) 
+                        {
+                            Usuario usuario = solicitudesAmigosEnviadas.get(row);
+                            //AceptarSolicitudAmistad(usuario.getNombre());
+                            //aqui falta la funcion >:)
+                        }
+
+                    
+                        if (column == 2) 
+                        {
+                            Usuario usuario = solicitudesAmigosEnviadas.get(row);
+                            //RechazarSolicitudAmistad(usuario.getNombre());
+                            //aqui falta la funcion >:)
+                        }
+                    
+                }
+            }
+
+        });
+        
+
+        JScrollPane scrollPane = new JScrollPane(lista);
+        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+        return scrollPane;
     }
+    
+    
+    
+     private JScrollPane crearListaSolicitudesAmigosEnviadas(String titulo, ArrayList<Usuario> elementos, boolean Envia) {
+        DefaultTableModel modelo = new DefaultTableModel()
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+            // Esto hará que ninguna celda sea editable
+            return false;
+            }
+        };
+        
+        modelo.addColumn("nombre");
+
+        modelo.addColumn("borrar");
+
+        for( Usuario us : elementos)
+        {
+            modelo.addRow(new Object[]{us.getNombre(),"-"});
+        }
+        
+        JTable lista = new JTable(modelo);
+        
+        lista.setTableHeader(null);
+        lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
+        
+        
+        
+        
+        
+        
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        lista.addMouseListener(new MouseAdapter() {
+           
+            public void mouseClicked(MouseEvent e) {
+                
+                int column = lista.getColumnModel().getColumnIndexAtX(e.getX()); // obtiene la columna
+                int row = e.getY() / lista.getRowHeight(); // obtiene la fila
+
+                // asegurando que la fila y columna seleccionadas están dentro de la tabla
+                if (row < lista.getRowCount() && row >= 0 && column < lista.getColumnCount() && column >= 0) {
+                    Object value = lista.getValueAt(row, column);
+                    
+                    // si es un botón, realiza la acción correspondiente
+                    
+                    
+                    
+                        if (column == 1) 
+                        {
+                            Usuario usuario = solicitudesAmigosEnviadas.get(row);
+                            cancelarSolicitudAmistad(usuario.getNombre());
+                            
+                        }
+
+                    
+
+                    
+                }
+            }
+
+        });
+        
+
+        JScrollPane scrollPane = new JScrollPane(lista);
+        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+        return scrollPane;
+    }
+
+    
+
     
     public class ButtonRenderer extends JButton implements TableCellRenderer {
         
@@ -972,9 +1148,20 @@ private void configurarTimer() {
          JSONArray  receivedInvitations = responseObject.optJSONArray("message");
             // Procesar las invitaciones recibidas (JSON array)
             for (int i = 0; i < receivedInvitations.length(); i++) {
-                JSONObject invitation = receivedInvitations.getJSONObject(i);
-                String remitente = invitation.optString("remitente");
-                System.out.println("Solicitud recibida de: " + remitente);
+                
+                String usuario = receivedInvitations.getString(i);
+                SolicitudAmistadRecibida.add(new Usuario(usuario));
+                
+                /*
+                JSONArray invitation = receivedInvitations.getJSONArray(i);
+                SolicitudAmistadRecibida.clear();
+                for(Object inv : invitation)
+                {
+                    SolicitudAmistadRecibida.add(new Usuario(inv.toString()));
+                }
+                */
+                
+                
             }
             break;
         default:
@@ -1037,10 +1224,5 @@ private void eliminarMensajesYAmistad(String receptor) {
  
  
  
- 
- 
- 
-    
-  
+
 }
-        
