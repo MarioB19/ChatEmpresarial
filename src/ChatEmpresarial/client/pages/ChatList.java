@@ -23,6 +23,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
+
 public class ChatList extends JFrame {
     
     private DefaultTableModel modeloUsuariosConectados = new DefaultTableModel();
@@ -152,6 +154,7 @@ private void configurarTimer() {
         obtenerSolicitudesRecibidas();
         modeloUsuariosConectados.setRowCount(0);
         
+<<<<<<< HEAD
         for( Usuario us : usuariosConectados)
         {
             modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
@@ -166,6 +169,33 @@ private void configurarTimer() {
         }
                 
         
+=======
+<<<<<<< HEAD
+        modeloUsuariosConectados.clear();
+        
+        usuariosConectados.forEach(modeloUsuariosConectados::addElement);
+        
+ 
+        
+        modeloUsuariosDesconectados.clear();
+        usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
+=======
+        for( Usuario us : usuariosConectados)
+        {
+            modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
+        }
+        
+        
+        modeloUsuariosDesconectados.setRowCount(0);
+        
+        for( Usuario us : usuariosDesconectados)
+        {
+            modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
+        }
+                
+        
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
+>>>>>>> 9a940de4585c2e9305bdb1e8f83166f0c3fa592a
         
         //Amigos
         modeloAmigosConectados.setRowCount(0);
@@ -248,9 +278,15 @@ private void configurarTimer() {
 }
 
 
+<<<<<<< HEAD
+    private JScrollPane crearListaUsuarios(String titulo, ArrayList<Usuario> usuarios, boolean estaConectado ) {
+        
+        
+=======
     private JScrollPane crearListaUsuarios(String titulo, ArrayList<Usuario> usuarios, boolean estaConectado) {
         
          
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
         DefaultTableModel modelo = new DefaultTableModel()
         {
             @Override
@@ -295,6 +331,21 @@ private void configurarTimer() {
                     {
                         
                         if (row >= 0) {
+<<<<<<< HEAD
+                            Usuario usuario = (Usuario) lista.getModel().getValueAt(row, 0);
+
+                            JSONObject json = new JSONObject();
+                            json.put("user1", usuario.getNombre());
+                            json.put("user2", nombreUserActive);
+                            json.put("action", TipoRequest.CREATE_CHAT_USERS);
+
+                            PersistentClient client = PersistentClient.getInstance();
+                            String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+                            System.out.println("Server response" + serverResponse);
+
+
+                            new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+=======
                             
                             if(estaConectado)
                             {
@@ -315,12 +366,14 @@ private void configurarTimer() {
                                 
                             }
                             
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
                         }
                     
                     }
                     
                         if (column == 1) 
                         {
+<<<<<<< HEAD
                             if(estaConectado)
                             {
                                 Usuario usuario = usuariosConectados.get(row);
@@ -332,8 +385,18 @@ private void configurarTimer() {
                                 enviarSolicitudAmistad(usuario.getNombre());
                             }
                             
+=======
+<<<<<<< HEAD
+                            Usuario usuario = (Usuario) lista.getModel().getValueAt(row, 0);
+                            String nombre = usuario.getNombre();
+                            
+                            System.out.println(nombre);
+                            
+=======
+>>>>>>> 9a940de4585c2e9305bdb1e8f83166f0c3fa592a
                             
                            
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
                                     
                         }
                 }
@@ -344,7 +407,10 @@ private void configurarTimer() {
 
         JScrollPane scrollPane = new JScrollPane(lista);
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+<<<<<<< HEAD
+=======
         return scrollPane;
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
         
         /*
     lista.setModel(modelo);
@@ -380,8 +446,13 @@ private void configurarTimer() {
 
     JScrollPane scrollPane = new JScrollPane(lista);
     scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+<<<<<<< HEAD
+    */
+    return scrollPane;
+=======
     
         */
+>>>>>>> 20745c9ec8c34803f1b419700eb343aa2695e6ea
 }
 
     
@@ -1148,18 +1219,25 @@ DefaultTableModel modelo = new DefaultTableModel()
          JSONArray  receivedInvitations = responseObject.optJSONArray("message");
             // Procesar las invitaciones recibidas (JSON array)
             for (int i = 0; i < receivedInvitations.length(); i++) {
+<<<<<<< HEAD
                 
                 String usuario = receivedInvitations.getString(i);
                 SolicitudAmistadRecibida.add(new Usuario(usuario));
                 
                 /*
+=======
+>>>>>>> 9a940de4585c2e9305bdb1e8f83166f0c3fa592a
                 JSONArray invitation = receivedInvitations.getJSONArray(i);
                 SolicitudAmistadRecibida.clear();
                 for(Object inv : invitation)
                 {
                     SolicitudAmistadRecibida.add(new Usuario(inv.toString()));
                 }
+<<<<<<< HEAD
                 */
+=======
+                    
+>>>>>>> 9a940de4585c2e9305bdb1e8f83166f0c3fa592a
                 
                 
             }
