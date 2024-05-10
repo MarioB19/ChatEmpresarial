@@ -26,7 +26,7 @@ public class Main {
        
            
   
-<<<<<<< HEAD
+
             
 
         //IndexClient cliente1 = new IndexClient();
@@ -34,10 +34,8 @@ public class Main {
         //IndexServer server = new IndexServer();
               
       
-=======
-        IndexClient client = new IndexClient();    
-        //IndexServer client = new IndexServer(); 
->>>>>>> 9a940de4585c2e9305bdb1e8f83166f0c3fa592a
+
+
     }
         
         
