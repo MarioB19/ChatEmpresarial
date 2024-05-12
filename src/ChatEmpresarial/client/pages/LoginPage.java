@@ -141,6 +141,13 @@ public class LoginPage extends JFrame {
 
         PersistentClient client = PersistentClient.getInstance();
         String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+        
+           // Manejar posibles respuestas nulas o vacías del servidor
+    if (serverResponse == null || serverResponse.trim().isEmpty()) {
+        JOptionPane.showMessageDialog(null, "No se pudo obtener una respuesta del servidor.", "Error de Conexión", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    
 
         switch (serverResponse) {
             case "-1":
