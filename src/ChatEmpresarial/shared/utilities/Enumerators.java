@@ -90,7 +90,7 @@ public enum DescripcionAccion {
     ELIMINAR_AMISTAD("El %s ha eliminado a %s de sus amigos "),
     SALIR_GRUPO("El %s ha abandonado el grupo %s"),
     ELIMINAR_GRUPO("El grupo %s ha sido eliminado"),
-    OBTENER_SOLICITUDES("El usuario &s  ha recibido sus solicitudes de amistad :V"),
+  //  OBTENER_SOLICITUDES("El usuario &s  ha recibido sus solicitudes de amistad :V"),
     CONSULTAR_MENSAJES("El usuario %s ha consultado los mensajes de %s"),
     ERROR("Ocurrio un error al: %s");
 

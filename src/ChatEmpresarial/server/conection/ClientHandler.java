@@ -559,21 +559,13 @@ public class ClientHandler implements Runnable {
             } else if (receivedInvitationsJson.equals("-1")) {
                 respuesta.put("status", "-6");
                 respuesta.put("message", "Error al obtener solicitudes recibidas");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error en SQL al obtener solicitudes recibidas para " + receptorUsername);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+               
             } else {
                 // Si no es un error, devolver la lista de solicitudes recibidas
                 JSONArray receivedInvitationsArray = new JSONArray(receivedInvitationsJson);
                 respuesta.put("status", "0");
                 respuesta.put("message", receivedInvitationsArray);
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.OBTENER_SOLICITUDES, receptorUsername);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+           
             }
 
             return respuesta.toString();
@@ -718,11 +710,7 @@ public class ClientHandler implements Runnable {
             } else {
                 respuesta.put("status", "0");
                 respuesta.put("message", result);
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.CONSULTAR_MENSAJES, remitenteUsername, receptorUsername);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
             }
 
             return respuesta.toString();

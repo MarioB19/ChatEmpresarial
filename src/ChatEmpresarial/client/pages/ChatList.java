@@ -27,6 +27,10 @@ import org.json.JSONObject;
 
 public class ChatList extends JFrame {
     
+    
+    //Bandera de la página en que se encuentra
+    private String CurrentVisibleCard = "Usuarios";
+    
     private DefaultTableModel modeloUsuariosConectados = new DefaultTableModel();
     private DefaultTableModel modeloUsuariosDesconectados = new DefaultTableModel();
     
@@ -153,7 +157,12 @@ private void configurarTimer() {
     SwingUtilities.invokeLater(() -> {
         
         obtenerSolicitudesRecibidas();
+        
+        //Elliminar datos
         modeloUsuariosConectados.setRowCount(0);
+        modeloUsuariosDesconectados.setRowCount(0);
+        modeloAmigosDesconectados.setRowCount(0);
+        modeloAmigosConectados.setRowCount(0);
         
 
         for( Usuario us : usuariosConectados)
@@ -172,19 +181,7 @@ private void configurarTimer() {
         
 
 
-        for( Usuario us : usuariosConectados)
-        {
-            modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
-        }
-        
-        
-        modeloUsuariosDesconectados.setRowCount(0);
-        
-        for( Usuario us : usuariosDesconectados)
-        {
-            modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
-        }
-                
+          
         
         //Amigos
         modeloAmigosConectados.setRowCount(0);
@@ -204,10 +201,25 @@ private void configurarTimer() {
             modeloAmigosDesconectados.addRow(new Object[]{us.getNombre(), "-"});
         }
        
+        
+           //   modeloUsuariosConectados.fireTableDataChanged();
+      //  modeloUsuariosDesconectados.fireTableDataChanged();
+       // modeloAmigosConectados.fireTableDataChanged();
+       // modeloAmigosDesconectados.fireTableDataChanged();
+        
+     
+           
+
+         configurarNavegacion();
+        
+          panelPrincipal.revalidate();
+           panelPrincipal.repaint();
+            
+           restoreVisibleCard();
+      
+    });
 
         
-        
-    });
 }
 
 
@@ -246,9 +258,9 @@ private void configurarTimer() {
         panelPrincipal.add(crearPanelAmigos(), "Amigos");
         panelPrincipal.add(crearPanelGrupos(), "Grupos");
 
-        btnUsuarios.addActionListener(e -> cardLayout.show(panelPrincipal, "Usuarios"));
-        btnAmigos.addActionListener(e -> cardLayout.show(panelPrincipal, "Amigos"));
-        btnGrupos.addActionListener(e -> cardLayout.show(panelPrincipal, "Grupos"));
+        btnUsuarios.addActionListener(e -> showCard("Usuarios"));
+        btnAmigos.addActionListener(e -> showCard("Amigos"));
+        btnGrupos.addActionListener(e -> showCard("Grupos"));
 
         estiloBoton(btnUsuarios);
         estiloBoton(btnAmigos);
@@ -973,6 +985,8 @@ DefaultTableModel modelo = new DefaultTableModel()
 */
     
     
+    
+    
 
     //---------------------
     //Métodos privados
@@ -1310,7 +1324,16 @@ private void eliminarMensajesYAmistad(String receptor) {
  
  
  
- 
+ // Método para cambiar la pestaña y actualizar la variable
+private void showCard(String cardName) {
+    cardLayout.show(panelPrincipal, cardName);
+    CurrentVisibleCard = cardName; // Guardar la pestaña actual
+}
+
+// Método para restaurar la pestaña después de una actualización
+private void restoreVisibleCard() {
+    cardLayout.show(panelPrincipal, CurrentVisibleCard);
+}
  
  
  
