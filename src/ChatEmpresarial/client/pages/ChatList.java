@@ -7,6 +7,7 @@ import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
 import ChatEmpresarial.shared.utilities.Functions;
 import ChatEmpresarial.client.utilities.SessionManager;
+import ChatEmpresarial.shared.models.SolicitudGrupo;
 import ChatEmpresarial.shared.utilities.Enumerators;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
 import ChatEmpresarial.shared.utilities.Functions;
@@ -22,16 +23,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ChatList extends JFrame {
-    
-       private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
+
+    private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
     private DefaultListModel<Usuario> modeloUsuariosDesconectados = new DefaultListModel<>();
     private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
     private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
-    
-    
+
     private String nombreUserActive;
 
-    
     private ArrayList<Usuario> usuariosConectados = new ArrayList<>();
     private ArrayList<Usuario> usuariosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
@@ -39,8 +38,7 @@ public class ChatList extends JFrame {
     private ArrayList<Usuario> solicitudesAmigosEnviadas = new ArrayList<>();
     private ArrayList<Usuario> solicitudesAmigosRecibidas = new ArrayList<>();
     private ArrayList<Grupo> grupos = handleGetGroups();
-    private ArrayList<Grupo> solicitudesGrupos = new ArrayList<>();
-
+    private ArrayList<SolicitudGrupo> solicitudesGrupos = handleGetRequestGroups();
 
     private final Color colorFondoPrincipal = new Color(225, 245, 254);
     private final Color colorFondoSecundario = new Color(144, 202, 249);
@@ -55,62 +53,53 @@ public class ChatList extends JFrame {
     private CardLayout cardLayout;
 
     public ChatList(String username) {
-     nombreUserActive = username;
-    inicializarDatosDePrueba();  // Llamada inicial para cargar datos antes de que el Timer comience
-    configurarVentana();
-    configurarNavegacion();
-    configurarTimer();
-    grupos = handleGetGroups(); 
-    setVisible(true);
-}
+        nombreUserActive = username;
+        inicializarDatosDePrueba();  // Llamada inicial para cargar datos antes de que el Timer comience
+        configurarVentana();
+        configurarNavegacion();
+        configurarTimer();
+        grupos = handleGetGroups();
+        setVisible(true);
+    }
 
-    
-    
-private void configurarTimer() {
-    int delay = 2000000000; // Retraso en milisegundos (1000 ms = 1 segundo)
-    ActionListener taskPerformer = new ActionListener() {
-        public void actionPerformed(ActionEvent evt) {
-            inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
-            actualizarListasUsuarios();
+    private void configurarTimer() {
+        int delay = 2000000000; // Retraso en milisegundos (1000 ms = 1 segundo)
+        ActionListener taskPerformer = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
+                actualizarListasUsuarios();
 
-        }
-    };
-    new Timer(delay, taskPerformer).start();
-}
-
-
+            }
+        };
+        new Timer(delay, taskPerformer).start();
+    }
 
     private void inicializarDatosDePrueba() {
-        
-          
-    String username = nombreUserActive;
 
-    usuariosConectados.clear();
-    usuariosDesconectados.clear();
+        String username = nombreUserActive;
 
-    // Simular obtener nombres de amigos del servidor (esto deberías adaptarlo)
+        usuariosConectados.clear();
+        usuariosDesconectados.clear();
 
-    ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
-    ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
+        // Simular obtener nombres de amigos del servidor (esto deberías adaptarlo)
+        ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
+        ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
 
-    for (String nombre : usuariosConectadosNombres) {
-        if (!nombre.equals(username)) { // Evitar añadir al usuario logueado
-            usuariosConectados.add(new Usuario(nombre));
+        for (String nombre : usuariosConectadosNombres) {
+            if (!nombre.equals(username)) { // Evitar añadir al usuario logueado
+                usuariosConectados.add(new Usuario(nombre));
+            }
         }
-    }
 
-    for (String nombre : usuariosDesconectadosNombres) {
-        usuariosDesconectados.add(new Usuario(nombre));
-    }
+        for (String nombre : usuariosDesconectadosNombres) {
+            usuariosDesconectados.add(new Usuario(nombre));
+        }
 
-    // Actualizar la UI después de obtener los datos
-    actualizarListasUsuarios();
-    
-        
-          // Obtener amigos de la respuesta del servidor
-    ArrayList<String> amigosNombres = handleListFriends();
-        
+        // Actualizar la UI después de obtener los datos
+        actualizarListasUsuarios();
 
+        // Obtener amigos de la respuesta del servidor
+        ArrayList<String> amigosNombres = handleListFriends();
 
         // Convertir nombres a objetos `Usuario`
         for (String nombre : amigosNombres) {
@@ -118,36 +107,30 @@ private void configurarTimer() {
             usuario.setNombre(nombre);
             amigosConectados.add(usuario);
         }
-        
-   
+
         for (int i = 1; i <= 3; i++) {
             Usuario usuario = new Usuario();
             usuario.setNombre("User" + i);
-   
-      
-            
-            
-          //  amigosConectados.add(usuario);
+
+            //  amigosConectados.add(usuario);
             amigosDesconectados.add(usuario);
             solicitudesAmigosEnviadas.add(usuario);
             solicitudesAmigosRecibidas.add(usuario);
 
             Grupo grupo = new Grupo();
             grupo.setId_grupo(i);
-            solicitudesGrupos.add(grupo);
         }
     }
-    
-    private void actualizarListasUsuarios() {
-    SwingUtilities.invokeLater(() -> {
-        modeloUsuariosConectados.clear();
-        usuariosConectados.forEach(modeloUsuariosConectados::addElement);
-        
-        modeloUsuariosDesconectados.clear();
-        usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
-    });
-}
 
+    private void actualizarListasUsuarios() {
+        SwingUtilities.invokeLater(() -> {
+            modeloUsuariosConectados.clear();
+            usuariosConectados.forEach(modeloUsuariosConectados::addElement);
+
+            modeloUsuariosDesconectados.clear();
+            usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
+        });
+    }
 
     private void configurarVentana() {
         setTitle("Chats Empresariales");
@@ -198,62 +181,55 @@ private void configurarTimer() {
         boton.setBorderPainted(false);
     }
 
-   
     private JPanel crearPanelUsuarios() {
-    JPanel panel = new JPanel(new GridLayout(2, 1));
-    panel.add(crearListaUsuarios("Usuarios Conectados", listaUsuariosConectados, modeloUsuariosConectados));
-    panel.add(crearListaUsuarios("Usuarios Desconectados", listaUsuariosDesconectados, modeloUsuariosDesconectados));
-    return panel;
-}
-
-
-    private JScrollPane crearListaUsuarios(String titulo, JList<Usuario> lista, DefaultListModel<Usuario> modelo) {
-    lista.setModel(modelo);
-    lista.setCellRenderer(new UsuarioCellRenderer());
-    lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    lista.setLayoutOrientation(JList.VERTICAL);
-
-    if (titulo.equals("Usuarios Conectados")) {  // Aplica solo a la lista de usuarios conectados
-        lista.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent evt) {
-                JList list = (JList) evt.getSource();
-                if (evt.getClickCount() == 2) {  // Doble clic
-                    int index = list.locationToIndex(evt.getPoint());
-                    if (index >= 0) {
-                        Usuario usuario = (Usuario) list.getModel().getElementAt(index);
-                        
-                              JSONObject json = new JSONObject();
-                        json.put("user1", usuario.getNombre());
-                        json.put("user2", nombreUserActive);
-                        json.put("action", TipoRequest.CREATE_CHAT_USERS);
-
-                    PersistentClient client = PersistentClient.getInstance();
-                    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
-                       System.out.println("Server response" + serverResponse);
-
-                        
-                        new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
-                    }
-                }
-            }
-        });
+        JPanel panel = new JPanel(new GridLayout(2, 1));
+        panel.add(crearListaUsuarios("Usuarios Conectados", listaUsuariosConectados, modeloUsuariosConectados));
+        panel.add(crearListaUsuarios("Usuarios Desconectados", listaUsuariosDesconectados, modeloUsuariosDesconectados));
+        return panel;
     }
 
-    JScrollPane scrollPane = new JScrollPane(lista);
-    scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
-    return scrollPane;
-}
+    private JScrollPane crearListaUsuarios(String titulo, JList<Usuario> lista, DefaultListModel<Usuario> modelo) {
+        lista.setModel(modelo);
+        lista.setCellRenderer(new UsuarioCellRenderer());
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        lista.setLayoutOrientation(JList.VERTICAL);
 
-    
+        if (titulo.equals("Usuarios Conectados")) {  // Aplica solo a la lista de usuarios conectados
+            lista.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent evt) {
+                    JList list = (JList) evt.getSource();
+                    if (evt.getClickCount() == 2) {  // Doble clic
+                        int index = list.locationToIndex(evt.getPoint());
+                        if (index >= 0) {
+                            Usuario usuario = (Usuario) list.getModel().getElementAt(index);
 
+                            JSONObject json = new JSONObject();
+                            json.put("user1", usuario.getNombre());
+                            json.put("user2", nombreUserActive);
+                            json.put("action", TipoRequest.CREATE_CHAT_USERS);
 
+                            PersistentClient client = PersistentClient.getInstance();
+                            String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+                            System.out.println("Server response" + serverResponse);
+
+                            new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+                        }
+                    }
+                }
+            });
+        }
+
+        JScrollPane scrollPane = new JScrollPane(lista);
+        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+        return scrollPane;
+    }
 
     private JPanel crearPanelAmigos() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
         panel.add(crearListaAmigos("Amigos Conectados", amigosConectados, true));
         panel.add(crearListaAmigos("Amigos Desconectados", amigosDesconectados, false));
-        panel.add(crearListaSolicitudesAmigos("Solicitudes Enviadas", solicitudesAmigosEnviadas ,true));
-        panel.add(crearListaSolicitudesAmigos("Solicitudes Recibidas", solicitudesAmigosRecibidas ,false));
+        panel.add(crearListaSolicitudesAmigos("Solicitudes Enviadas", solicitudesAmigosEnviadas, true));
+        panel.add(crearListaSolicitudesAmigos("Solicitudes Recibidas", solicitudesAmigosRecibidas, false));
         return panel;
     }
 
@@ -270,7 +246,7 @@ private void configurarTimer() {
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
         return scrollPane;
     }
-    
+
     private JScrollPane crearListaSolicitudesAmigos(String titulo, ArrayList<Usuario> elementos, boolean Envia) {
         DefaultListModel<Object> modelo = new DefaultListModel<>();
         elementos.forEach(modelo::addElement);
@@ -303,8 +279,8 @@ private void configurarTimer() {
             }
         });
 
-        
-        grupos = handleGetGroups(); 
+        grupos = handleGetGroups();
+        solicitudesGrupos = handleGetRequestGroups();
 
         // Panel para la lista de grupos y solicitudes
         JPanel panelListas = new JPanel(new GridLayout(2, 1));
@@ -326,14 +302,14 @@ private void configurarTimer() {
         lista.setCellRenderer(new GrupoCellRenderer());
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lista.setLayoutOrientation(JList.VERTICAL);
-        
-            lista.addListSelectionListener(e -> {
-        if (!e.getValueIsAdjusting()) {
-            Grupo grupoSeleccionado = lista.getSelectedValue();
-            if (grupoSeleccionado != null) {
-                GroupChatWindow chatWindow = new GroupChatWindow(grupoSeleccionado,nombreUserActive);
-                chatWindow.setVisible(true);
-                dispose();
+
+        lista.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Grupo grupoSeleccionado = lista.getSelectedValue();
+                if (grupoSeleccionado != null) {
+                    GroupChatWindow chatWindow = new GroupChatWindow(grupoSeleccionado, nombreUserActive);
+                    chatWindow.setVisible(true);
+                    dispose();
                 }
             }
         });
@@ -343,23 +319,30 @@ private void configurarTimer() {
         return scrollPane;
     }
 
-
-
-    private JScrollPane crearListaSolicitudesGrupo(String titulo, ArrayList<?> elementos, boolean esUsuario) {
-        DefaultListModel<Object> modelo = new DefaultListModel<>();
+    private JScrollPane crearListaSolicitudesGrupo(String titulo, ArrayList<SolicitudGrupo> elementos, boolean esUsuario) {
+        DefaultListModel<SolicitudGrupo> modelo = new DefaultListModel<>();
         elementos.forEach(modelo::addElement);
 
-        JList<Object> lista = new JList<>(modelo);
+        JList<SolicitudGrupo> lista = new JList<>(modelo);
         lista.setCellRenderer(new SolicitudesGrupoCellRenderer(esUsuario));
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lista.setLayoutOrientation(JList.VERTICAL);
 
+        lista.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                SolicitudGrupo solicitudGrupo = lista.getSelectedValue();
+                if (solicitudGrupo != null) {
+                    dispose();
+                    GroupRequest gr = new GroupRequest(solicitudGrupo, nombreUserActive);
+                    gr.setVisible(true);
+                    dispose();
+                }
+            }
+        });
         JScrollPane scrollPane = new JScrollPane(lista);
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
         return scrollPane;
     }
-
-
 
     class UsuarioCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
 
@@ -412,8 +395,7 @@ private void configurarTimer() {
             return this;
         }
     }
-    
-    
+
     class SolicitudesAmistadCellRenderer extends JPanel implements ListCellRenderer<Object> {
 
         private JLabel lblNombre = new JLabel();
@@ -424,39 +406,31 @@ private void configurarTimer() {
         public SolicitudesAmistadCellRenderer(boolean Envia) {
             setLayout(new FlowLayout(FlowLayout.LEFT));
             add(lblNombre);
-            if(!Envia)
-            {
+            if (!Envia) {
                 add(btnAceptar);
                 add(btnRechazar);
                 estiloBoton(btnAceptar);
                 estiloBoton(btnRechazar);
-                
+
                 btnAceptar.addActionListener(e -> {
-                // Lógica para aceptar la solicitud
-                System.out.println("Solicitud aceptada para: " + lblNombre.getText());
+                    // Lógica para aceptar la solicitud
+                    System.out.println("Solicitud aceptada para: " + lblNombre.getText());
                 });
 
                 btnRechazar.addActionListener(e -> {
-                // Lógica para rechazar la solicitud
-                System.out.println("Solicitud rechazada para: " + lblNombre.getText());
+                    // Lógica para rechazar la solicitud
+                    System.out.println("Solicitud rechazada para: " + lblNombre.getText());
                 });
-            }
-            else
-            {
+            } else {
                 add(btnCancelar);
                 estiloBoton(btnCancelar);
-                
+
                 btnCancelar.addActionListener(e -> {
-                // Lógica para rechazar la solicitud
-                System.out.println("Solicitud cancelada para: " + lblNombre.getText());
-                
-            });
+                    // Lógica para rechazar la solicitud
+                    System.out.println("Solicitud cancelada para: " + lblNombre.getText());
+
+                });
             }
-
-
-
-
-            
 
         }
 
@@ -472,22 +446,23 @@ private void configurarTimer() {
         }
     }
 
-class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
-    private JLabel lblNombre = new JLabel();
-    private JButton btnIrAlGrupo = new JButton("Entrar");
-    private JButton btnEditarMiembros = new JButton("Editar Miembros");
-    private JButton btnEliminarGrupo = new JButton("Eliminar Grupo");
-    private JButton btnSalirDelGrupo = new JButton("Salir del Grupo");
+    class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
 
-    public GrupoCellRenderer() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        private JLabel lblNombre = new JLabel();
+        private JButton btnIrAlGrupo = new JButton("Entrar");
+        private JButton btnEditarMiembros = new JButton("Editar Miembros");
+        private JButton btnEliminarGrupo = new JButton("Eliminar Grupo");
+        private JButton btnSalirDelGrupo = new JButton("Salir del Grupo");
 
-        topPanel.add(lblNombre); 
-        add(topPanel);
-        add(bottomPanel);
-    }
+        public GrupoCellRenderer() {
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+            topPanel.add(lblNombre);
+            add(topPanel);
+            add(bottomPanel);
+        }
 
         @Override
         public Component getListCellRendererComponent(JList<? extends Grupo> list, Grupo value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -497,10 +472,9 @@ class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
             return this;
         }
 
-}
+    }
 
-
-    class SolicitudesGrupoCellRenderer extends JPanel implements ListCellRenderer<Object> {
+    class SolicitudesGrupoCellRenderer extends JPanel implements ListCellRenderer<SolicitudGrupo> {
 
         private JLabel lblNombre = new JLabel();
         private JButton btnAceptar = new JButton("Aceptar");
@@ -509,30 +483,13 @@ class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
         public SolicitudesGrupoCellRenderer(boolean esUsuario) {
             setLayout(new FlowLayout(FlowLayout.LEFT));
             add(lblNombre);
-            add(btnAceptar);
-            add(btnRechazar);
-            estiloBoton(btnAceptar);
-            estiloBoton(btnRechazar);
-
-            btnAceptar.addActionListener(e -> {
-                // Lógica para aceptar la solicitud
-                System.out.println("Solicitud aceptada para: " + lblNombre.getText());
-            });
-
-            btnRechazar.addActionListener(e -> {
-                // Lógica para rechazar la solicitud
-                System.out.println("Solicitud rechazada para: " + lblNombre.getText());
-            });
         }
 
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            if (value instanceof Usuario) {
-                lblNombre.setText(((Usuario) value).getNombre());
-            } else if (value instanceof Grupo) {
-                lblNombre.setText("Grupo ID: " + ((Grupo) value).getId_grupo());
-            }
+        public Component getListCellRendererComponent(JList<? extends SolicitudGrupo> list, SolicitudGrupo value, int index, boolean isSelected, boolean cellHasFocus) {
+            lblNombre.setText(value.getId_remitente() + " te invita al Grupo " + value.getNombreGrupo() + " con ID: " + value.getId_grupo());
             setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
+            validate();
             return this;
         }
     }
@@ -567,213 +524,240 @@ class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
         }
     }
 
-    
-    
-    
-    
-    
-    
- private ArrayList<String> handleListFriends() {
-    ArrayList<String> resultado = new ArrayList<>();
+    private ArrayList<String> handleListFriends() {
+        ArrayList<String> resultado = new ArrayList<>();
 
-    JSONObject json = new JSONObject();
-    json.put("action", "FIND_FRIENDS");
+        JSONObject json = new JSONObject();
+        json.put("action", "FIND_FRIENDS");
 
-    PersistentClient client = PersistentClient.getInstance();
-    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
-    // Expresión regular para capturar status y friends
-    Pattern pattern = Pattern.compile("\"status\":\\s*\"(-?\\d+)\",\\s*\"message\":\\s*(\\[.*\\])");
-    Matcher matcher = pattern.matcher(serverResponse);
+        // Expresión regular para capturar status y friends
+        Pattern pattern = Pattern.compile("\"status\":\\s*\"(-?\\d+)\",\\s*\"message\":\\s*(\\[.*\\])");
+        Matcher matcher = pattern.matcher(serverResponse);
 
-    if (matcher.find()) {
-        // Extraer el valor de `status`
-        String statusStr = matcher.group(1).trim();
-        int status = Integer.parseInt(statusStr);
+        if (matcher.find()) {
+            // Extraer el valor de `status`
+            String statusStr = matcher.group(1).trim();
+            int status = Integer.parseInt(statusStr);
 
-        // Solo procesar si el estado es exitoso (status 0)
-        if (status == 0) {
-            // Extraer el valor de `friends`
-            String jsonFriends = matcher.group(2).trim();
+            // Solo procesar si el estado es exitoso (status 0)
+            if (status == 0) {
+                // Extraer el valor de `friends`
+                String jsonFriends = matcher.group(2).trim();
 
-            // Procesar el JSON en `friends`
-            JSONArray amigosArray = new JSONArray(jsonFriends);
-            for (int i = 0; i < amigosArray.length(); i++) {
-                String amigo = amigosArray.getString(i);
-                resultado.add(amigo); // Añadir cada amigo a la lista de resultado
-            }
-        } else {
-            // Gestionar estados de error
-            if (status == -1) {
-                System.err.println("Error: no se pudo identificar al usuario remitente.");
-            } else if (status == -2) {
-                System.err.println("Error: ocurrió un error interno del servidor.");
+                // Procesar el JSON en `friends`
+                JSONArray amigosArray = new JSONArray(jsonFriends);
+                for (int i = 0; i < amigosArray.length(); i++) {
+                    String amigo = amigosArray.getString(i);
+                    resultado.add(amigo); // Añadir cada amigo a la lista de resultado
+                }
             } else {
-                System.err.println("Error desconocido con el estado: " + status);
-            }
-        }
-    } else {
-        System.err.println("Formato incorrecto o datos no encontrados.");
-    }
-
-    return resultado; // Devuelve la lista con los nombres de amigos
-}
- 
- 
- private ArrayList<String> handleListUsersConectados() {
-    ArrayList<String> resultado = new ArrayList<>();
-
-    JSONObject json = new JSONObject();
-    json.put("action", TipoRequest.FIND_USERS_CONNECTED);
-
-    PersistentClient client = PersistentClient.getInstance();
-    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
-
-    try {
-        JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
-        int status = responseJson.getInt("status");
-
-        if (status == 0) {
-            JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
-            for (int i = 0; i < usuariosArray.length(); i++) {
-                String usuario = usuariosArray.getString(i);
-                resultado.add(usuario);
+                // Gestionar estados de error
+                if (status == -1) {
+                    System.err.println("Error: no se pudo identificar al usuario remitente.");
+                } else if (status == -2) {
+                    System.err.println("Error: ocurrió un error interno del servidor.");
+                } else {
+                    System.err.println("Error desconocido con el estado: " + status);
+                }
             }
         } else {
-            System.err.println("Error al obtener usuarios desconectados: estado " + status);
+            System.err.println("Formato incorrecto o datos no encontrados.");
         }
-    } catch (JSONException e) {
-        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+
+        return resultado; // Devuelve la lista con los nombres de amigos
     }
 
-    return resultado;
-    
+    private ArrayList<String> handleListUsersConectados() {
+        ArrayList<String> resultado = new ArrayList<>();
 
-}
+        JSONObject json = new JSONObject();
+        json.put("action", TipoRequest.FIND_USERS_CONNECTED);
 
- 
- private ArrayList<String> handleListUsersDesconectados() {
-    ArrayList<String> resultado = new ArrayList<>();
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
-    JSONObject json = new JSONObject();
-    json.put("action", TipoRequest.FIND_USERS_DISCONNECTED);
+        try {
+            JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
+            int status = responseJson.getInt("status");
 
-    PersistentClient client = PersistentClient.getInstance();
-    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
-
-    try {
-        JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
-        int status = responseJson.getInt("status");
-
-        if (status == 0) {
-            JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
-            for (int i = 0; i < usuariosArray.length(); i++) {
-                String usuario = usuariosArray.getString(i);
-                resultado.add(usuario);
+            if (status == 0) {
+                JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
+                for (int i = 0; i < usuariosArray.length(); i++) {
+                    String usuario = usuariosArray.getString(i);
+                    resultado.add(usuario);
+                }
+            } else {
+                System.err.println("Error al obtener usuarios desconectados: estado " + status);
             }
-        } else {
-            System.err.println("Error al obtener usuarios desconectados: estado " + status);
+        } catch (JSONException e) {
+            System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
         }
-    } catch (JSONException e) {
-        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+        return resultado;
     }
 
-    return resultado;
-}
- 
- 
-  private ArrayList<Usuario> handleGetUsersExceptSelf() {
-   ArrayList<Usuario> users = new ArrayList<>();
+    private ArrayList<String> handleListUsersDesconectados() {
+        ArrayList<String> resultado = new ArrayList<>();
 
-    try {
-        System.out.println("Usuario activo mandando a get usuarios: " + nombreUserActive);
-        JSONObject request = new JSONObject();
-        request.put("activeuser",nombreUserActive);
-        request.put("action", "GET_ALL_USERS_EXCEPT_SELF");  
+        JSONObject json = new JSONObject();
+        json.put("action", TipoRequest.FIND_USERS_DISCONNECTED);
 
         PersistentClient client = PersistentClient.getInstance();
-        String response = client.sendMessageAndWaitForResponse(request.toString());
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
-        JSONObject jsonResponse = new JSONObject(response);
-        String status = jsonResponse.getString("status");
+        try {
+            JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
+            int status = responseJson.getInt("status");
 
-        switch (status) {
-            case "0":  // Success
-                System.out.println("Data recieved from server: " + jsonResponse.toString());
-                JSONArray usersArray = jsonResponse.getJSONArray("users");
-                for (int i = 0; i < usersArray.length(); i++) {
-                    JSONObject userJson = usersArray.getJSONObject(i);
-                    Usuario user = new Usuario();
-                    user.setId_usuario(userJson.getInt("id"));
-                    user.setNombre(userJson.getString("nombre"));
-                    users.add(user);
+            if (status == 0) {
+                JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
+                for (int i = 0; i < usuariosArray.length(); i++) {
+                    String usuario = usuariosArray.getString(i);
+                    resultado.add(usuario);
                 }
-                break;
-            case "1":  // Failure
-                JOptionPane.showMessageDialog(null, "Failed to fetch users.", "Error", JOptionPane.ERROR_MESSAGE);
-                break;
-            default:  // Unknown error or other statuses
-                JOptionPane.showMessageDialog(null, "Unexpected response while fetching users: " + status, "Error", JOptionPane.ERROR_MESSAGE);
-                break;
+            } else {
+                System.err.println("Error al obtener usuarios desconectados: estado " + status);
+            }
+        } catch (JSONException e) {
+            System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
         }
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(null, "Error processing user data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
+        return resultado;
     }
 
-    return users;
-}
- 
- 
- private ArrayList<Grupo> handleGetGroups() {
-   ArrayList<Grupo> groups = new ArrayList<>();
+    private ArrayList<Usuario> handleGetUsersExceptSelf() {
+        ArrayList<Usuario> users = new ArrayList<>();
 
-    try {
-        System.out.println("Usuario activo mandando a grupos: " + nombreUserActive);
-        
-        JSONObject request = new JSONObject();
-        request.put("activeuser",nombreUserActive);
-        request.put("action", "GET_ALL_GROUPS");  
+        try {
+            System.out.println("Usuario activo mandando a get usuarios: " + nombreUserActive);
+            JSONObject request = new JSONObject();
+            request.put("activeuser", nombreUserActive);
+            request.put("action", "GET_ALL_USERS_EXCEPT_SELF");
 
-        PersistentClient client = PersistentClient.getInstance();
-        String response = client.sendMessageAndWaitForResponse(request.toString());
+            PersistentClient client = PersistentClient.getInstance();
+            String response = client.sendMessageAndWaitForResponse(request.toString());
 
-        JSONObject jsonResponse = new JSONObject(response);
-        String status = jsonResponse.getString("status");
+            JSONObject jsonResponse = new JSONObject(response);
+            String status = jsonResponse.getString("status");
 
-        System.out.println("Making request to fetch groups with: " + request.toString());
-        
-        switch (status) {
-            case "0":  // Success
-                System.out.println("Groups recieved from server: " + jsonResponse.toString());
-                JSONArray usersArray = jsonResponse.getJSONArray("groups");
-                for (int i = 0; i < usersArray.length(); i++) {
-                    JSONObject userJson = usersArray.getJSONObject(i);
-                    Grupo grupo = new Grupo();
-                    grupo.setId_grupo(userJson.getInt("id"));
-                    grupo.setNombre(userJson.getString("nombre"));
-                    grupo.setNombreAdmin(userJson.getString("admin"));                    
-                    grupo.setId_chat(userJson.getInt("chat"));
-                    groups.add(grupo);
-                }
-                break;
-            case "1":  // Failure
-                JOptionPane.showMessageDialog(null, "Failed to fetch groups.", "Error", JOptionPane.ERROR_MESSAGE);
-                break;
-            default:  // Unknown error or other statuses
-                JOptionPane.showMessageDialog(null, "Unexpected response while fetching groups: " + status, "Error", JOptionPane.ERROR_MESSAGE);
-                break;
+            switch (status) {
+                case "0":  // Success
+                    System.out.println("Data recieved from server: " + jsonResponse.toString());
+                    JSONArray usersArray = jsonResponse.getJSONArray("users");
+                    for (int i = 0; i < usersArray.length(); i++) {
+                        JSONObject userJson = usersArray.getJSONObject(i);
+                        Usuario user = new Usuario();
+                        user.setId_usuario(userJson.getInt("id"));
+                        user.setNombre(userJson.getString("nombre"));
+                        users.add(user);
+                    }
+                    break;
+                case "1":  // Failure
+                    JOptionPane.showMessageDialog(null, "Failed to fetch users.", "Error", JOptionPane.ERROR_MESSAGE);
+                    break;
+                default:  // Unknown error or other statuses
+                    JOptionPane.showMessageDialog(null, "Unexpected response while fetching users: " + status, "Error", JOptionPane.ERROR_MESSAGE);
+                    break;
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error processing user data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(null, "Error processing group data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
+        return users;
     }
 
-    return groups;
-}
+    private ArrayList<Grupo> handleGetGroups() {
+        ArrayList<Grupo> groups = new ArrayList<>();
 
- 
- 
+        try {
+            System.out.println("Usuario activo mandando a grupos: " + nombreUserActive);
 
-    
-  
+            JSONObject request = new JSONObject();
+            request.put("activeuser", nombreUserActive);
+            request.put("action", "GET_ALL_GROUPS");
+
+            PersistentClient client = PersistentClient.getInstance();
+            String response = client.sendMessageAndWaitForResponse(request.toString());
+
+            JSONObject jsonResponse = new JSONObject(response);
+            String status = jsonResponse.getString("status");
+
+            System.out.println("Making request to fetch groups with: " + request.toString());
+
+            switch (status) {
+                case "0":  // Success
+                    System.out.println("Groups recieved from server: " + jsonResponse.toString());
+                    JSONArray usersArray = jsonResponse.getJSONArray("groups");
+                    for (int i = 0; i < usersArray.length(); i++) {
+                        JSONObject userJson = usersArray.getJSONObject(i);
+                        Grupo grupo = new Grupo();
+                        grupo.setId_grupo(userJson.getInt("id"));
+                        grupo.setNombre(userJson.getString("nombre"));
+                        grupo.setNombreAdmin(userJson.getString("admin"));
+                        grupo.setId_chat(userJson.getInt("chat"));
+                        groups.add(grupo);
+                    }
+                    break;
+                case "1":  // Failure
+                    JOptionPane.showMessageDialog(null, "Failed to fetch groups.", "Error", JOptionPane.ERROR_MESSAGE);
+                    break;
+                default:  // Unknown error or other statuses
+                    JOptionPane.showMessageDialog(null, "Unexpected response while fetching groups: " + status, "Error", JOptionPane.ERROR_MESSAGE);
+                    break;
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error processing group data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return groups;
+    }
+
+    private ArrayList<SolicitudGrupo> handleGetRequestGroups() {
+        ArrayList<SolicitudGrupo> solicitudes = new ArrayList<>();
+
+        try {
+            System.out.println("Usuario activo mandando a solicitudes: " + nombreUserActive);
+
+            JSONObject request = new JSONObject();
+            request.put("activeuser", nombreUserActive);
+            request.put("action", "GET_ALL_GROUPS_REQUESTS");
+
+            PersistentClient client = PersistentClient.getInstance();
+            String response = client.sendMessageAndWaitForResponse(request.toString());
+
+            JSONObject jsonResponse = new JSONObject(response);
+            String status = jsonResponse.getString("status");
+
+            System.out.println("Making request to fetch groups requests with: " + request.toString());
+
+            switch (status) {
+                case "0":  // Success
+                    System.out.println("Requests recieved from server: " + jsonResponse.toString());
+                    JSONArray usersArray = jsonResponse.getJSONArray("request");
+                    for (int i = 0; i < usersArray.length(); i++) {
+                        JSONObject userJson = usersArray.getJSONObject(i);
+                        SolicitudGrupo solicitudGrupo = new SolicitudGrupo();
+                        solicitudGrupo.setId_solicitud(userJson.getInt("idSolicitud"));
+                        solicitudGrupo.setId_grupo(userJson.getInt("idGrupo"));
+                        solicitudGrupo.setId_remitente(userJson.getString("admin"));
+                        solicitudGrupo.setNombreGrupo(userJson.getString("nombreGrupo"));
+                        solicitudes.add(solicitudGrupo);
+                    }
+                    break;
+                case "1":  // Failure
+                    JOptionPane.showMessageDialog(null, "Failed to fetch requests.", "Error", JOptionPane.ERROR_MESSAGE);
+                    break;
+                default:  // Unknown error or other statuses
+                    JOptionPane.showMessageDialog(null, "Unexpected response while fetching requests: " + status, "Error", JOptionPane.ERROR_MESSAGE);
+                    break;
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error processing request data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return solicitudes;
+    }
+
 }
-        

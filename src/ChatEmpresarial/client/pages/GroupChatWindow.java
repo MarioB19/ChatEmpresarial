@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -20,7 +21,7 @@ import org.json.JSONObject;
  * @author brunosanchezpadilla
  */
 public class GroupChatWindow extends JFrame {
-    
+
     private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
     private DefaultListModel<Usuario> modeloUsuariosDesconectados = new DefaultListModel<>();
     private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
@@ -34,10 +35,13 @@ public class GroupChatWindow extends JFrame {
     private JButton sendButton;
     private JButton backButton;
     private JButton btnEditarMiembros;
+    private JButton btnAgregarMiembros;
     private JButton btnEliminarGrupo;
     private JButton btnSalirDelGrupo;
 
     private Timer messageFetchTimer;
+    private Timer connectedUsersFetchTimer;
+    private Timer disconnectedUsersFetchTimer;
 
     private String nombreUserActive;
 
@@ -61,9 +65,10 @@ public class GroupChatWindow extends JFrame {
 
         // Inicializar botones
         backButton = new JButton("Volver");
-        btnEditarMiembros = new JButton("Editar Miembros");
+        btnEditarMiembros = new JButton("Eliminar Miembros");
+        btnAgregarMiembros = new JButton("Agregar Miembros");
         btnEliminarGrupo = new JButton("Eliminar Grupo");
-        btnSalirDelGrupo = new JButton("Abandonar del Grupo");
+        btnSalirDelGrupo = new JButton("Abandonar Grupo");
 
         btnEditarMiembros.setBackground(new Color(255, 193, 7)); // Amarillo
         btnEliminarGrupo.setBackground(new Color(244, 67, 54)); // Rojo
@@ -78,6 +83,7 @@ public class GroupChatWindow extends JFrame {
             // El usuario activo es el administrador del grupo
             buttonPanel.add(btnEditarMiembros);
             buttonPanel.add(btnEliminarGrupo);
+            buttonPanel.add(btnAgregarMiembros);
         } else {
             // El usuario activo no es el administrador del grupo
             buttonPanel.add(btnSalirDelGrupo);
@@ -94,6 +100,7 @@ public class GroupChatWindow extends JFrame {
                     JOptionPane.QUESTION_MESSAGE);
             if (response == JOptionPane.YES_OPTION) {
                 // Código para manejar la salida del grupo
+                handleExitGroup();
                 System.out.println("El usuario ha salido del grupo.");
 
                 ChatList chatList = new ChatList(nombreUserActive);
@@ -110,6 +117,7 @@ public class GroupChatWindow extends JFrame {
                     JOptionPane.WARNING_MESSAGE);
             if (response == JOptionPane.YES_OPTION) {
                 // Código para manejar la eliminación del grupo
+                handleDeleteGroup();
                 System.out.println("El grupo ha sido eliminado.");
 
                 ChatList chatList = new ChatList(nombreUserActive);
@@ -118,6 +126,14 @@ public class GroupChatWindow extends JFrame {
             }
         });
 
+        btnAgregarMiembros.addActionListener(e -> {
+        });
+        
+        btnEditarMiembros.addActionListener(e -> {
+                MembersListToDeleteFromGroup membersList = new MembersListToDeleteFromGroup(grupo ,nombreUserActive);
+                membersList.setVisible(true);
+                dispose();
+        });        
         backButton.addActionListener(e -> {
             ChatList chatList = new ChatList(nombreUserActive);
             chatList.setVisible(true);
@@ -170,9 +186,14 @@ public class GroupChatWindow extends JFrame {
     }
 
     private void setupMessageFetchingTimer() {
-        int delay = 15000; // Tiempo en milisegundos entre cada ejecución
+        int delay = 5000; // Tiempo en milisegundos entre cada ejecución
         messageFetchTimer = new Timer(delay, e -> fetchMessages());
+        connectedUsersFetchTimer = new Timer(delay, e -> handleListUsersConectados());
+        disconnectedUsersFetchTimer = new Timer(delay, e -> handleListUsersDesconectados());
+
         messageFetchTimer.start();
+        connectedUsersFetchTimer.start();
+        disconnectedUsersFetchTimer.start();
     }
 
     private void sendText(ActionEvent e) {
@@ -232,4 +253,89 @@ public class GroupChatWindow extends JFrame {
         });
     }
 
+    private void handleListUsersConectados() {
+
+        JSONObject json = new JSONObject();
+        json.put("idChat", Integer.toString(grupo.getId_chat()));
+        json.put("action", "FIND_USERS_CONNECTED_GROUP");
+
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+        try {
+            JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
+            int status = responseJson.getInt("status");
+
+            if (status == 0) {
+                JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
+                SwingUtilities.invokeLater(() -> {
+                    connectedUsers.setText(""); // Limpia el área de chat antes de añadir nuevos usuarios
+                    connectedUsers.append("Miembros del grupo Conectados:" + "\n" + "\n");
+                    for (int i = 0; i < usuariosArray.length(); i++) {
+                        String usuario = usuariosArray.getString(i);
+                        connectedUsers.append("- " + usuario + "\n");
+                    }
+                });
+            } else {
+                System.err.println("Error al obtener usuarios Desconectados: estado " + status);
+            }
+        } catch (JSONException e) {
+            System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+        }
+    }
+
+    private void handleListUsersDesconectados() {
+
+        JSONObject json = new JSONObject();
+        json.put("idChat", Integer.toString(grupo.getId_chat()));
+        json.put("action", "FIND_USERS_DISCONNECTED_GROUP");
+
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+        try {
+            JSONObject responseJson = new JSONObject(serverResponse); // Parsea la respuesta directamente como un JSONObject
+            int status = responseJson.getInt("status");
+
+            if (status == 0) {
+                JSONArray usuariosArray = responseJson.getJSONArray("message"); // Accede directamente al array JSON
+                SwingUtilities.invokeLater(() -> {
+                    disconnectedUsers.setText(""); // Limpia el área de chat antes de añadir nuevos usuarios
+                    disconnectedUsers.append("Miembros del grupo Desconectados:" + "\n" + "\n");
+                    for (int i = 0; i < usuariosArray.length(); i++) {
+                        String usuario = usuariosArray.getString(i);
+                        disconnectedUsers.append("- " + usuario + "\n");
+                    }
+                });
+
+            } else {
+                System.err.println("Error al obtener usuarios desconectados: estado " + status);
+            }
+        } catch (JSONException e) {
+            System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+        }
+    }
+
+    private void handleDeleteGroup() {
+
+        JSONObject json = new JSONObject();
+        json.put("idChat", Integer.toString(grupo.getId_chat()));
+        json.put("idGrupo", Integer.toString(grupo.getId_grupo()));
+        json.put("action", "DELETE_GROUP");
+
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+    }
+
+    private void handleExitGroup() {
+
+        JSONObject json = new JSONObject();
+        json.put("idChat", Integer.toString(grupo.getId_chat()));
+        json.put("idGrupo", Integer.toString(grupo.getId_grupo()));
+        json.put("nombre", nombreUserActive);
+        json.put("action", "EXIT_GROUP");
+
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+    }
 }

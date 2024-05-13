@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class MembersListToDeleteFromGroup extends JFrame {
+public class AddMemberToGroup extends JFrame {
 
     private Grupo grupo;
     private JPanel userPanel;
@@ -27,7 +27,7 @@ public class MembersListToDeleteFromGroup extends JFrame {
     private String nombreUserActive;
     private Timer timer;
 
-    public MembersListToDeleteFromGroup(Grupo grupo, String nombreUserActive) {
+    public AddMemberToGroup(Grupo grupo, String nombreUserActive) {
         this.nombreUserActive = nombreUserActive;
         this.grupo = grupo;
         initializeUI();
@@ -41,7 +41,7 @@ public class MembersListToDeleteFromGroup extends JFrame {
     }
 
     private void initializeUI() {
-        setTitle("Eliminar usuarios del grupo: " + grupo.getNombre());
+        setTitle("Añadir usuarios del grupo: " + grupo.getNombre());
         getContentPane().setLayout(new BorderLayout());
 
         userPanel = new JPanel();
@@ -65,10 +65,10 @@ public class MembersListToDeleteFromGroup extends JFrame {
         userPanel.repaint();
     }
 
-    private void eliminarUsuario(Usuario usuario) {
+    private void agregarUsuario(Usuario usuario) {
         // Aquí iría la lógica para eliminar el usuario del grupo
-        System.out.println("Eliminar usuario: " + usuario.getNombre());
-        handleDeleteUser(usuario);
+        System.out.println("Añadir usuario: " + usuario.getNombre());
+        handleAddUser(usuario);
         updateUsersList(); // Actualiza la lista después de eliminar
     }
 
@@ -80,23 +80,26 @@ public class MembersListToDeleteFromGroup extends JFrame {
     }
 
     
-    private void handleDeleteUser(Usuario user) {
+    private void handleAddUser(Usuario user) {
         JSONObject json = new JSONObject();
         json.put("idChat", Integer.toString(grupo.getId_chat()));
         json.put("idGrupo", Integer.toString(grupo.getId_grupo()));
         json.put("nombre", user.getNombre());
-        json.put("action", "EXIT_GROUP");
+        json.put("admin", nombreUserActive);
+        json.put("action", "ADD_USER_TO_GROUP");
 
         PersistentClient client = PersistentClient.getInstance();
         client.sendMessageAndWaitForResponse(json.toString());
     }
+    
+    
     private void fetchUsers() {
         userPanel.removeAll(); // Limpiar el panel antes de agregar nuevos usuarios
         try {
             JSONObject json = new JSONObject();
             json.put("idChat", Integer.toString(grupo.getId_chat()));
             json.put("nombre", nombreUserActive);
-            json.put("action", "GET_USERS_GROUP");
+            json.put("action", "GET_USERS_NOT_IN_GROUP");
 
             String serverResponse = PersistentClient.getInstance().sendMessageAndWaitForResponse(json.toString());
 
@@ -123,9 +126,8 @@ public class MembersListToDeleteFromGroup extends JFrame {
                 JPanel panelUsuario = new JPanel();
                 panelUsuario.setLayout(new FlowLayout(FlowLayout.LEFT));
                 JLabel lblNombre = new JLabel(nombreUsuario);
-                JButton btnEliminar = new JButton("Eliminar");
-                btnEliminar.setBackground(new Color(244, 67, 54)); // Rojo para el botón de eliminar
-                btnEliminar.addActionListener(e -> eliminarUsuario(usuario));
+                JButton btnEliminar = new JButton("Añadir");
+                btnEliminar.addActionListener(e -> agregarUsuario(usuario));
                 panelUsuario.add(lblNombre);
                 panelUsuario.add(btnEliminar);
                 userPanel.add(panelUsuario);
