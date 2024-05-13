@@ -18,6 +18,10 @@ public class Grupo {
   
     //Llave
     private int id_grupo;
+    
+    private String nombre;
+    
+    private String nombreAdmin;
 
   //FK --> Usuario
     private int id_aministrador;
@@ -34,10 +38,28 @@ public class Grupo {
     public int getId_grupo() {
         return id_grupo;
     }
-
+    
     public void setId_grupo(int id_grupo) {
         this.id_grupo = id_grupo;
     }
+    
+    public String getNombre() {
+        return nombre;
+    }
+    
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+        
+        
+        
+    }    public String getNombreAdmin() {
+        return nombreAdmin;
+    }
+    
+    public void setNombreAdmin(String nombreAdmin) {
+        this.nombreAdmin = nombreAdmin;
+    }
+
 
     public int getId_aministrador() {
         return id_aministrador;

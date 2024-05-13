@@ -8,31 +8,31 @@ package ChatEmpresarial.shared.models;
  *
  * @author aguil
  */
+import java.sql.Timestamp;
 
- import java.sql.Timestamp;
 public class SolicitudGrupo {
-   
-  //PK
+
+    //PK
     private int solicitud_id; //NOTA: en la bae de datos es solicitud_id;
 
-  //FK --> grupo
+    //FK --> grupo
     private int id_grupo;
-    
-   //FK --> usuario
-    private int id_receptor;
-    
+
     //FK --> usuario
-    private int id_remitente;
+    private int id_receptor;
+
+    //FK --> usuario
+    private String remitente;
     
+    private String nombre;
+
     //Propiedades
     private int estado_solicitud;
-    
+
     private Timestamp fecha_creacion;
- 
-    
+
     //------------------------
     //Getters y setters
-
     public int getId_solicitud() {
         return solicitud_id;
     }
@@ -57,12 +57,20 @@ public class SolicitudGrupo {
         this.id_receptor = id_receptor;
     }
 
-    public int getId_remitente() {
-        return id_remitente;
+    public String getId_remitente() {
+        return remitente;
     }
 
-    public void setId_remitente(int id_remitente) {
-        this.id_remitente = id_remitente;
+    public String getNombreGrupo() {
+        return nombre;
+    }
+
+    public void setId_remitente(String id_remitente) {
+        this.remitente = id_remitente;
+    }
+    
+        public void setNombreGrupo(String nombre) {
+        this.nombre = nombre;
     }
 
     public int getEstado_solicitud() {
@@ -80,8 +88,5 @@ public class SolicitudGrupo {
     public void setFecha_creacion(Timestamp fecha_creacion) {
         this.fecha_creacion = fecha_creacion;
     }
-  
-    
-    
-}
 
+}

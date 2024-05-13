@@ -1,8 +1,13 @@
 package ChatEmpresarial.server.conection;
 
+import ChatEmpresarial.server.controllers.CreateGroupController;
 import ChatEmpresarial.server.controllers.ChatFriendController;
+
 import ChatEmpresarial.server.controllers.FriendInvitationController;
 import ChatEmpresarial.server.controllers.LogController;
+
+import ChatEmpresarial.server.controllers.GroupChatController;
+
 import ChatEmpresarial.server.controllers.LoginController;
 import ChatEmpresarial.server.controllers.RecoveryPasswordController;
 import ChatEmpresarial.server.controllers.RecoveryPassword2Controller;
@@ -17,7 +22,19 @@ import org.json.JSONObject;
 import ChatEmpresarial.server.pages.LogPage;
 import ChatEmpresarial.shared.utilities.Enumerators.DescripcionAccion;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.ADD_USER_TO_GROUP;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.DELETE_GROUP;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.EXIT_GROUP;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.FIND_USERS_CONNECTED;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.FIND_USERS_DISCONNECTED;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_ALL_GROUPS;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_ALL_GROUPS_REQUESTS;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_ALL_USERS_EXCEPT_SELF;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_MESSAGES_GROUP;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_USERS_GROUP;
+import static ChatEmpresarial.shared.utilities.Enumerators.TipoRequest.GET_USERS_NOT_IN_GROUP;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +71,9 @@ public class ClientHandler implements Runnable {
                 TipoRequest requestType = TipoRequest.valueOf(action.toUpperCase()); // Convertir string a enum
                 System.out.println("request type" + requestType);
                 System.out.println("Accion recibida " + action);
+
                 String response = "";
+
 
                 switch (requestType) {
                     case REGISTER:
@@ -167,6 +186,13 @@ public class ClientHandler implements Runnable {
                         response = ChatManager.createChat(jsonObject.getString("user1"), jsonObject.getString("user2"));
                         break;
 
+
+                    case CREATEGROUP:
+                        response = handleCreateGroup(jsonObject);
+                        break;
+
+
+                      
                     case SEND_MESSAGE_CHAT_USERS:
                         System.out.println("Entra aqui");
                         response = ChatManager.sendMessage(
@@ -183,6 +209,51 @@ public class ClientHandler implements Runnable {
                         response = new JSONObject().put("messages", messages).toString();
                         break;
 
+                    case GET_ALL_USERS_EXCEPT_SELF:
+                        response = handleGetAllUsersExceptSelf(jsonObject);
+                        break;
+
+                    case GET_ALL_GROUPS:
+                        response = handleGetAllGroups(jsonObject);
+                        break;
+                    case GET_MESSAGES_GROUP:
+                        response = handleFetchMessagesGroup(jsonObject);
+                        break;
+                    case SEND_MESSAGE_GROUP:
+                        response = handleSendMessageGroup(jsonObject);
+                        break;
+
+                    case FIND_USERS_CONNECTED_GROUP:
+                        response = handleFindUsersConnectedGroup(jsonObject);
+                        break;
+
+                    case FIND_USERS_DISCONNECTED_GROUP:
+                        response = handleFindUsersDisconnectedGroup(jsonObject);
+                        break;
+                    case DELETE_GROUP:
+                        response = handleDeleteGroup(jsonObject);
+                        break;
+                    case EXIT_GROUP:
+                        response = handleExitGroup(jsonObject);
+                        break;
+                    case GET_USERS_GROUP:
+                        response = handlegetMembersGroup(jsonObject);
+                        break;
+                    case GET_USERS_NOT_IN_GROUP:
+                        response = handlegetMembersNotInGroup(jsonObject);
+                        break;
+                    case GET_ALL_GROUPS_REQUESTS:
+                        response = handleGetAllGroupsRequests(jsonObject);
+                        break;
+                    case ADD_USER_TO_GROUP:
+                        response = handleAddUserToGroup(jsonObject);
+                        break;
+                    case ACCEPT_REQUEST_GROUP:
+                        response = handleAcceptRequestGroup(jsonObject);
+                        break;
+                    case DENY_REQUEST_GROUP:
+                        response = handleDenyRequestGroup(jsonObject);
+                        break;
                     default:
                         response = handleUnknownAction();
 
@@ -264,6 +335,284 @@ public class ClientHandler implements Runnable {
 
         return RecoveryPassword2Controller.updatePassword(username, password);
 
+    }
+
+    public String handleCreateGroup(JSONObject data) throws SQLException {
+        System.out.println("Handling create group with data: " + data.toString());
+
+        // Extracción de datos del JSON
+        String groupname = data.optString("groupname");
+        String adminName = data.optString("adminId");
+        JSONArray participantIdsJson = data.optJSONArray("participantIds");
+
+        if (participantIdsJson == null || participantIdsJson.length() == 0) {
+            System.out.println("Error: No participants provided.");
+            return "-1";  // Retorna error si no hay participantes.
+        }
+
+        // Convertir JSONArray a array de int
+        int[] participantIds = new int[participantIdsJson.length()];
+        for (int i = 0; i < participantIdsJson.length(); i++) {
+            participantIds[i] = participantIdsJson.optInt(i);
+        }
+
+        // Log de los IDs de los participantes
+        System.out.println("Participant IDs: " + Arrays.toString(participantIds));
+
+        // Llamada al controlador con el nombre del admin y los IDs de los participantes
+        String response = CreateGroupController.createGroupInDatabase(adminName, groupname, participantIds);
+        System.out.println("Response from createGroupInDatabase: " + response);
+        return response;
+    }
+
+    public String handleGetAllUsersExceptSelf(JSONObject data) throws SQLException {
+        System.out.println("Handling get all users except self with data: " + data.toString());
+
+        String activeuser = data.optString("activeuser");
+
+        JSONObject responseJson = new JSONObject();
+        try {
+            List<JSONObject> allUsers = UsersController.getAllUsersExceptSelf(activeuser);
+            JSONArray result = new JSONArray(allUsers);
+
+            responseJson.put("status", "0");
+            responseJson.put("users", result);
+        } catch (Exception e) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
+            responseJson.put("status", "-1");
+            responseJson.put("error", "Error al obtener usuarios");
+        }
+
+        System.out.println("Response sent while fetch users except self" + responseJson.toString());
+        return responseJson.toString();
+    }
+
+    public String handleGetAllGroups(JSONObject data) throws SQLException {
+        System.out.println("Handling get all groups with data: " + data.toString());
+
+        String activeuser = data.optString("activeuser");
+
+        JSONObject responseJson = new JSONObject();
+        try {
+            List<JSONObject> allUsers = CreateGroupController.getAllGroups(activeuser);
+            JSONArray result = new JSONArray(allUsers);
+
+            responseJson.put("status", "0");
+            responseJson.put("groups", result);
+        } catch (Exception e) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
+            responseJson.put("status", "-1");
+            responseJson.put("error", "Error al obtener grupos");
+        }
+
+        System.out.println("Response sent while fetch groups " + responseJson.toString());
+        return responseJson.toString();
+    }
+
+    //Método que maneja la obtencion de un chat de grupos
+    private String handleFetchMessagesGroup(JSONObject jsonObject) {
+        System.out.println("Request recibida para obtener mensajes de grupo: " + jsonObject.toString());
+        try {
+            // Extrae los nombres del remitente y receptor desde el JSON
+            String idchat = jsonObject.getString("idChat");
+
+            // Llama al método que obtiene los mensajes
+            String mensajesJson = GroupChatController.obtainAllMessages(Integer.parseInt(idchat));
+
+            // Devuelve la respuesta JSON completa que incluye todos los mensajes
+            System.out.println("Mensajes del grupo: " + mensajesJson);
+            return mensajesJson;
+
+        } catch (Exception e) {
+            // Maneja cualquier excepción y retorna un error estándar
+            e.printStackTrace();
+            return "-1";
+        }
+    }
+
+    //Método para guardar un mensaje de grupo
+    private String handleSendMessageGroup(JSONObject jsonObject) {
+        try {
+            // Extrae el remitente, receptor y contenido del mensaje desde el JSON
+            String idChat = jsonObject.getString("idChat");
+            String contenido = jsonObject.getString("contenido");
+
+            // Llama al método que envía el mensaje y obtiene el resultado como un número
+            String resultado = GroupChatController.SendMessage(Integer.parseInt(idChat), contenido);
+
+            // Devuelve el número tal como lo proporciona el controlador
+            return resultado;
+
+        } catch (Exception e) {
+            // Maneja cualquier excepción y retorna un error estándar
+            e.printStackTrace();
+            return "-1";
+        }
+    }
+
+    private String handleFindUsersConnectedGroup(JSONObject jsonObject) {
+        JSONArray connectedUsers = new JSONArray();
+        GlobalClients.connectedClients.keySet().forEach(connectedUsers::put);
+        String idchat = jsonObject.getString("idChat");
+        System.out.println("Mandando a usuarios de grupo conectados: " + connectedUsers.toString());
+        String resultado = GroupChatController.getConnected(idchat, connectedUsers);
+
+        JSONArray connectedUserNames = new JSONArray(resultado);
+
+        JSONObject responseJson = new JSONObject();
+        responseJson.put("status", "0");
+        responseJson.put("message", connectedUserNames);
+
+        System.out.println("Enviando del server al cliente usuarios conectados: " + responseJson.toString());
+        return responseJson.toString();
+    }
+
+    private String handleFindUsersDisconnectedGroup(JSONObject jsonObject) {
+        JSONObject responseJson = new JSONObject();
+        String idchat = jsonObject.getString("idChat");
+        try {
+            List<String> allUsers = UsersController.getAllUsers();
+            JSONArray disconnectedUsers = new JSONArray();
+
+            for (String user : allUsers) {
+                if (!GlobalClients.connectedClients.containsKey(user)) {
+                    disconnectedUsers.put(user);
+                }
+            }
+
+            String resultado = GroupChatController.getConnected(idchat, disconnectedUsers);
+
+            JSONArray connectedUserNames = new JSONArray(resultado);
+            responseJson.put("status", "0");
+            responseJson.put("message", connectedUserNames);
+
+            System.out.println("Enviando del server al cliente usuarios conectados: " + responseJson.toString());
+            return responseJson.toString();
+
+        } catch (Exception e) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
+            responseJson.put("status", "-1");
+            responseJson.put("error", "Error al obtener usuarios desconectados");
+        }
+        return responseJson.toString();
+
+    }
+
+    private String handleDeleteGroup(JSONObject jsonObject) {
+        JSONArray connectedUsers = new JSONArray();
+        GlobalClients.connectedClients.keySet().forEach(connectedUsers::put);
+        String idChat = jsonObject.getString("idChat");
+        String idGrupo = jsonObject.getString("idGrupo");
+        System.out.println("Mandando a eliminar grupo conectados: " + jsonObject.toString());
+        GroupChatController.deleteGroup(idChat, idGrupo);
+        return "0";
+    }
+
+    private String handleExitGroup(JSONObject jsonObject) {
+        JSONArray connectedUsers = new JSONArray();
+        GlobalClients.connectedClients.keySet().forEach(connectedUsers::put);
+        String idChat = jsonObject.getString("idChat");
+        String idGrupo = jsonObject.getString("idGrupo");
+        String nombre = jsonObject.getString("nombre");
+        System.out.println("Mandando a eliminar grupo conectados: " + jsonObject.toString());
+        GroupChatController.eliminarParticipante(idChat, nombre, idGrupo);
+        return "0";
+    }
+
+    private String handleAddUserToGroup(JSONObject jsonObject) {
+        JSONArray connectedUsers = new JSONArray();
+        GlobalClients.connectedClients.keySet().forEach(connectedUsers::put);
+        String idChat = jsonObject.getString("idChat");
+        String idGrupo = jsonObject.getString("idGrupo");
+        String nombre = jsonObject.getString("nombre");
+        System.out.println("Mandando a eliminar grupo conectados: " + jsonObject.toString());
+        GroupChatController.eliminarParticipante(idChat, nombre, idGrupo);
+        return "0";
+    }
+
+    private String handleAcceptRequestGroup(JSONObject jsonObject) {
+        JSONArray connectedUsers = new JSONArray();
+        GlobalClients.connectedClients.keySet().forEach(connectedUsers::put);
+        String idSolicitud = jsonObject.getString("idSolicitud");
+        String idGrupo = jsonObject.getString("idGrupo");
+        System.out.println("Mandando aceptar solicitud de grupo: " + jsonObject.toString());
+        GroupChatController.acceptRequest(idSolicitud, idGrupo);
+        return "0";
+    }
+
+    private String handleDenyRequestGroup(JSONObject jsonObject) {
+        JSONArray connectedUsers = new JSONArray();
+        GlobalClients.connectedClients.keySet().forEach(connectedUsers::put);
+        String idSolicitud = jsonObject.getString("idSolicitud");
+        String idGrupo = jsonObject.getString("idGrupo");
+        System.out.println("Mandando rechazar solicitud de grupo: " + jsonObject.toString());
+        GroupChatController.deleteRequestById(idSolicitud, idGrupo);
+        return "0";
+    }
+
+    //Método que maneja la obtencion de un chat de grupos
+    private String handlegetMembersGroup(JSONObject jsonObject) {
+        System.out.println("Request recibida para obtener miembros de grupo: " + jsonObject.toString());
+        try {
+            // Extrae los nombres del remitente y receptor desde el JSON
+            String idchat = jsonObject.getString("idChat");
+            String nombre = jsonObject.getString("nombre");
+
+            // Llama al método que obtiene los mensajes
+            String mensajesJson = GroupChatController.obtenerUsuariosGrupoExceptoUsuario(idchat, nombre);
+
+            // Devuelve la respuesta JSON completa que incluye todos los mensajes
+            System.out.println("Miembros del grupo: " + mensajesJson);
+            return mensajesJson;
+
+        } catch (Exception e) {
+            // Maneja cualquier excepción y retorna un error estándar
+            e.printStackTrace();
+            return "-1";
+        }
+    }
+
+    //Método que maneja la obtencion de un chat de grupos
+    private String handlegetMembersNotInGroup(JSONObject jsonObject) {
+        System.out.println("Request recibida para obtener miembros de grupo: " + jsonObject.toString());
+        try {
+            // Extrae los nombres del remitente y receptor desde el JSON
+            String idchat = jsonObject.getString("idChat");
+
+            // Llama al método que obtiene los mensajes
+            String mensajesJson = GroupChatController.obtenerUsuariosFueraDelGrupo(idchat);
+
+            // Devuelve la respuesta JSON completa que incluye todos los mensajes
+            System.out.println("Miembros del grupo: " + mensajesJson);
+            return mensajesJson;
+
+        } catch (Exception e) {
+            // Maneja cualquier excepción y retorna un error estándar
+            e.printStackTrace();
+            return "-1";
+        }
+    }
+
+    public String handleGetAllGroupsRequests(JSONObject data) throws SQLException {
+        System.out.println("Handling get all groups REQUESTS with data: " + data.toString());
+
+        String activeuser = data.optString("activeuser");
+
+        JSONObject responseJson = new JSONObject();
+        try {
+            List<JSONObject> allUsers = CreateGroupController.getAllRequests(activeuser);
+            JSONArray result = new JSONArray(allUsers);
+
+            responseJson.put("status", "0");
+            responseJson.put("request", result);
+        } catch (Exception e) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
+            responseJson.put("status", "-1");
+            responseJson.put("error", "Error al obtener las solicitudes de los grupos");
+        }
+
+        System.out.println("Response sent while fetch groups requests " + responseJson.toString());
+        return responseJson.toString();
     }
 
     //Método que maneja el cierre de sesión

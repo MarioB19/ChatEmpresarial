@@ -4,17 +4,15 @@
  */
 package ChatEmpresarial.shared.utilities;
 
-
 /**
- * 
- * Clase: Enumerators
- Tipo: Catálogo
- Función: proporcionar estructuras preestablecidas para diversas acciones dentro del sistema
+ *
+ * Clase: Enumerators Tipo: Catálogo Función: proporcionar estructuras
+ * preestablecidas para diversas acciones dentro del sistema
+ *
  * @author aguil
  */
-
 public class Enumerators {
-    
+
     public enum TipoRequest {
     REGISTER("register"),
     LOGOUT("logout"),
@@ -35,21 +33,34 @@ public class Enumerators {
     SENT_INVITATION_FRIEND("sentFriendInvitation"),
     REFUSE_INVITATION_FRIEND("refFriendInvitation"),
     GET_INVITATION_FRIEND("getFriendInvitation"),
-    ACCEPT_INVITATION_FRIEND("Accepted Invitation");
+    ACCEPT_INVITATION_FRIEND("Accepted Invitation"),
+    CREATEGROUP("creategroup"),
+     GET_ALL_USERS_EXCEPT_SELF("getAllUsersExceptSelf"),
+     GET_ALL_GROUPS("getallgroups"),
+        GET_MESSAGES_GROUP("getdmessagesgroup"),
+        SEND_MESSAGE_GROUP("sendmessagegroup"),
+        FIND_USERS_CONNECTED_GROUP("findusersconnectedgroup"),
+        FIND_USERS_DISCONNECTED_GROUP("findusersdisconnectedgroup"),
+        DELETE_GROUP("deletegroup"),
+        EXIT_GROUP("exitgroup"),
+        GET_USERS_GROUP("getusersgroup"),
+        GET_USERS_NOT_IN_GROUP("getusersnotingroup"),
+        GET_ALL_GROUPS_REQUESTS("getgrouprequests"),
+        ADD_USER_TO_GROUP("addusertogroup"),
+        ACCEPT_REQUEST_GROUP("acceptrequestgroup"), 
+        DENY_REQUEST_GROUP("denyrequestgroup");
 
-    private final String actionString;
+        private final String actionString;
 
-    TipoRequest(String actionString) {
-        this.actionString = actionString;
+        TipoRequest(String actionString) {
+            this.actionString = actionString;
+        }
+
+        @Override
+        public String toString() {
+            return this.actionString;
+        }
     }
-
-    @Override
-    public String toString() {
-        return this.actionString;
-    }
-}
-
-    
 
     //Enumerador para determinar el tipo de Log a registrar
     public enum TipoLog {
@@ -103,21 +114,20 @@ public enum DescripcionAccion {
         this.descripcion = descripcion;
     }
 
-    public String getDescripcion() {
-        return descripcion;
+    
+
+       //Necesario para acceder al formato del log
+       
+
+        public String getDescripcion() {
+            return descripcion;
+        }
+
+        //Enumerador para determinar el tipo de chat
+        public enum TipoChat {
+
+        }
+
     }
-    
-    
-    //Enumerador para determinar el tipo de chat
-    
-    public enum TipoChat{
-        
-        
-    }
-    
-    
-}
-    
-    
-    
+
 }
