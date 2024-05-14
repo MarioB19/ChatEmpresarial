@@ -101,6 +101,12 @@ public class ChatFriendController {
             response.put("id_chat", idChat);
             response.put("mensajes", mensajesArray);
 
+            
+              try {
+                  con.close();
+              } catch (SQLException ex) {
+                  java.util.logging.Logger.getLogger(FriendInvitationController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+              }
             return response.toString(); // Retornar toda la respuesta como string
 
         } catch (SQLException ex) {
@@ -148,6 +154,12 @@ public class ChatFriendController {
             sqlDeleteAmistad.setInt(1, idChat);
             sqlDeleteAmistad.executeUpdate();
         }
+        
+          try {
+                  con.close();
+              } catch (SQLException ex) {
+                  java.util.logging.Logger.getLogger(FriendInvitationController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+              }
 
         return "1"; // Retornar "1" indicando éxito
 
@@ -190,7 +202,11 @@ public class ChatFriendController {
             sqlInsertMensaje.setString(4, remitente);
             sqlInsertMensaje.executeUpdate();
         }
-
+  try {
+                  con.close();
+              } catch (SQLException ex) {
+                  java.util.logging.Logger.getLogger(FriendInvitationController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+              }
         // Retornar "1" indicando éxito
         return "1";
 
@@ -279,7 +295,11 @@ public class ChatFriendController {
 
         // Convertir la lista de amigos en un JSONArray
         JSONArray friendsArray = new JSONArray(friendsList);
-
+  try {
+                  con.close();
+              } catch (SQLException ex) {
+                  java.util.logging.Logger.getLogger(FriendInvitationController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+              }
         
         return friendsArray.toString(); // Devuelve el JSON como un String
     }

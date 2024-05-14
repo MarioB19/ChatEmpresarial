@@ -41,7 +41,8 @@ public class ChatList extends JFrame {
     private DefaultTableModel modeloAmigosDesconectados = new DefaultTableModel();
     
 
-    
+    private DefaultTableModel modeloSolicitudesRecibidas = new DefaultTableModel();
+    private DefaultTableModel modeloSolicitudesEnviadas = new DefaultTableModel();
     
     
     private Timer updateTimer;
@@ -55,7 +56,7 @@ public class ChatList extends JFrame {
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
     private ArrayList<Usuario> amigosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> solicitudesAmigosEnviadas = new ArrayList<>();
-    private ArrayList<Usuario> solicitudesAmigosRecibidas = new ArrayList<>();
+   
     private ArrayList<Grupo> grupos = handleGetGroups();
     private ArrayList<SolicitudGrupo> solicitudesGrupos = handleGetRequestGroups();
 
@@ -74,6 +75,21 @@ public class ChatList extends JFrame {
     public ChatList(String username) {
      nombreUserActive = username;
        nombreUserActive = username;
+       
+    
+         modeloSolicitudesRecibidas.addColumn("nombre");
+        modeloSolicitudesRecibidas.addColumn("Agregar");
+        modeloSolicitudesRecibidas.addColumn("borrar");
+        
+         modeloAmigosConectados.addColumn("nombre");
+        modeloAmigosConectados.addColumn("borrar");
+
+            modeloAmigosDesconectados.addColumn("nombre");
+        modeloAmigosDesconectados.addColumn("borrar");
+        
+       modeloSolicitudesEnviadas.addColumn("nombre");
+        modeloSolicitudesEnviadas.addColumn("Agregar");
+        modeloSolicitudesEnviadas.addColumn("borrar");
         inicializarDatos();  // Llamada inicial para cargar datos antes de que el Timer comience
         configurarVentana();
         configurarNavegacion();
@@ -97,8 +113,6 @@ private void configurarTimer() {
 
 
 
-
-
     
     private void inicializarDatos() {
                  
@@ -112,6 +126,7 @@ private void configurarTimer() {
         // Simular obtener nombres de amigos del servidor (esto deberías adaptarlo)
         ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
         ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
+        
 
         for (String nombre : usuariosConectadosNombres) {
             if (!nombre.equals(username)) { // Evitar añadir al usuario logueado
@@ -150,6 +165,9 @@ private void configurarTimer() {
             amigosDesconectados.add(usuario);
             
      }
+        
+
+        
       
             
              actualizarListasUsuarios();
@@ -165,18 +183,20 @@ private void configurarTimer() {
     private void actualizarListasUsuarios() {
     SwingUtilities.invokeLater(() -> {
         
-        obtenerSolicitudesRecibidas();
+      //  obtenerSolicitudesRecibidas();
         
         //Elliminar datos
         modeloUsuariosConectados.setRowCount(0);
         modeloUsuariosDesconectados.setRowCount(0);
         modeloAmigosDesconectados.setRowCount(0);
         modeloAmigosConectados.setRowCount(0);
+            
         
 
         for( Usuario us : usuariosConectados)
         {
             modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
+                 modeloUsuariosConectados.fireTableDataChanged();
         }
         
         
@@ -185,6 +205,7 @@ private void configurarTimer() {
         for( Usuario us : usuariosDesconectados)
         {
             modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
+                 modeloUsuariosDesconectados.fireTableDataChanged();
         }
                 
         
@@ -198,6 +219,7 @@ private void configurarTimer() {
         for( Usuario us : amigosConectados)
         {
             modeloAmigosConectados.addRow(new Object[]{us.getNombre(), "-"});
+                  modeloAmigosConectados.fireTableDataChanged();
         }
         
         
@@ -208,42 +230,40 @@ private void configurarTimer() {
         for( Usuario us : amigosDesconectados)
         {
             modeloAmigosDesconectados.addRow(new Object[]{us.getNombre(), "-"});
+         
+              
+      modeloAmigosDesconectados.fireTableDataChanged();
         }
+        
+        modeloSolicitudesRecibidas.setColumnCount(0);
+        //Solicitudes de amistad
+        obtenerSolicitudesRecibidas();
        
         
-           //   modeloUsuariosConectados.fireTableDataChanged();
-      //  modeloUsuariosDesconectados.fireTableDataChanged();
-       // modeloAmigosConectados.fireTableDataChanged();
-       // modeloAmigosDesconectados.fireTableDataChanged();
+        for(Usuario us: SolicitudAmistadRecibida)
+        {
+        modeloSolicitudesRecibidas.addRow(new Object[]{us.getNombre(), "+","-"});
+        modeloSolicitudesRecibidas.fireTableDataChanged();
+        }
         
-     
-           
-
-         configurarNavegacion();
+         obtenerSolicitudesEnviadas();
+        //Solicitudes enviadas
+          modeloSolicitudesEnviadas.setColumnCount(0);
         
-          panelPrincipal.revalidate();
-           panelPrincipal.repaint();
-            
-           restoreVisibleCard();
-      
+        for(Usuario us: solicitudesAmigosEnviadas)
+        {
+               modeloSolicitudesEnviadas.addRow(new Object[]{us.getNombre(),"-"});
+                modeloSolicitudesEnviadas.fireTableDataChanged();
+        }
+        
+             
     });
 
         
 
 
 
-        for (int i = 1; i <= 3; i++) {
-            Usuario usuario = new Usuario();
-            usuario.setNombre("User" + i);
-
-            //  amigosConectados.add(usuario);
-            amigosDesconectados.add(usuario);
-            solicitudesAmigosEnviadas.add(usuario);
-            solicitudesAmigosRecibidas.add(usuario);
-
-            Grupo grupo = new Grupo();
-            grupo.setId_grupo(i);
-        }
+       
         
     }
     
@@ -283,13 +303,10 @@ private void configurarTimer() {
         cardLayout = new CardLayout();
         panelPrincipal.setLayout(cardLayout);
         panelPrincipal.add(crearPanelUsuarios(), "Usuarios");
-        panelPrincipal.add(crearPanelAmigos(), "Amigos");
+       panelPrincipal.add(crearPanelAmigos(), "Amigos");
         panelPrincipal.add(crearPanelGrupos(), "Grupos");
 
 
-//        btnUsuarios.addActionListener(e -> showCard("Usuarios"));
-  //      btnAmigos.addActionListener(e -> showCard("Amigos"));
-    //    btnGrupos.addActionListener(e -> showCard("Grupos"));
         btnUsuarios.addActionListener(e -> cardLayout.show(panelPrincipal, "Usuarios"));
         btnAmigos.addActionListener(e -> cardLayout.show(panelPrincipal, "Amigos"));
         btnGrupos.addActionListener(e -> cardLayout.show(panelPrincipal, "Grupos"));
@@ -355,8 +372,8 @@ private void configurarTimer() {
 
     private JPanel crearPanelUsuarios() {
     JPanel panel = new JPanel(new GridLayout(2, 1));
-    panel.add(crearListaUsuarios("Usuarios Conectados", usuariosConectados, true));
-    panel.add(crearListaUsuarios("Usuarios Desconectados", usuariosDesconectados, false));
+    panel.add(crearListaUsuarios("Usuarios Conectados", modeloUsuariosConectados, true));
+    panel.add(crearListaUsuarios("Usuarios Desconectados", modeloUsuariosDesconectados, false));
     return panel;
 }
 
@@ -366,27 +383,16 @@ private void configurarTimer() {
         
         
 
-    private JScrollPane crearListaUsuarios(String titulo, ArrayList<Usuario> usuarios, boolean estaConectado) {
+    private JScrollPane crearListaUsuarios(String titulo, DefaultTableModel model,  boolean estaConectado) {
         
-         
+           model.addColumn("nombre");
+        model.addColumn("borrar");
 
-        DefaultTableModel modelo = new DefaultTableModel()
-        {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-            // Esto hará que ninguna celda sea editable
-            return false;
-            }
-        };
+     
         
-        modelo.addColumn("nombre");
-        modelo.addColumn("borrar");
-        for(Usuario us : usuarios)
-        {
-            modelo.addRow(new Object[]{us.getNombre(), "+"});
-        }
         
-        JTable lista = new JTable(modelo);
+        
+        JTable lista = new JTable(model);
         
         lista.setTableHeader(null);
         lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
@@ -520,82 +526,29 @@ private void configurarTimer() {
     
  
 
-    private JScrollPane crearListaUsuarios(String titulo, JList<Usuario> lista, DefaultListModel<Usuario> modelo) {
-        lista.setModel(modelo);
-        lista.setCellRenderer(new UsuarioCellRenderer());
-        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lista.setLayoutOrientation(JList.VERTICAL);
-
-
-        if (titulo.equals("Usuarios Conectados")) {  // Aplica solo a la lista de usuarios conectados
-            lista.addMouseListener(new MouseAdapter() {
-                public void mouseClicked(MouseEvent evt) {
-                    JList list = (JList) evt.getSource();
-                    if (evt.getClickCount() == 2) {  // Doble clic
-                        int index = list.locationToIndex(evt.getPoint());
-                        if (index >= 0) {
-                            Usuario usuario = (Usuario) list.getModel().getElementAt(index);
-
-                            JSONObject json = new JSONObject();
-                            json.put("user1", usuario.getNombre());
-                            json.put("user2", nombreUserActive);
-                            json.put("action", TipoRequest.CREATE_CHAT_USERS);
-
-                            PersistentClient client = PersistentClient.getInstance();
-                            String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
-                            System.out.println("Server response" + serverResponse);
-
-                            new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
-                        }
-                    }
-                }
-            });
-        }
-
-        JScrollPane scrollPane = new JScrollPane(lista);
-        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
-        return scrollPane;
-    }
-
 
     private JPanel crearPanelAmigos() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
-        panel.add(crearListaAmigos("Amigos Conectados", amigosConectados, true));
-        panel.add(crearListaAmigos("Amigos Desconectados", amigosDesconectados, false));
+        panel.add(crearListaAmigos("Amigos Conectados", modeloAmigosConectados, true));
+        panel.add(crearListaAmigos("Amigos Desconectados", modeloAmigosDesconectados, false));
 
-        panel.add(crearListaSolicitudesAmigosRecibidas("Solicitudes Enviadas", solicitudesAmigosEnviadas ,true));
-        panel.add(crearListaSolicitudesAmigosEnviadas("Solicitudes Recibidas", solicitudesAmigosRecibidas ,false));
+        panel.add(crearListaSolicitudesAmigosRecibidas("Solicitudes Recibida", modeloSolicitudesRecibidas ,true));
+       panel.add(crearListaSolicitudesAmigosEnviadas("Solicitudes enviadas", modeloSolicitudesEnviadas  ,false));  //NO EXISTE EL Método
 
         return panel;
     }
 
-    private JScrollPane crearListaAmigos(String titulo, ArrayList<Usuario> amigos, boolean estaConectado) {
+    private JScrollPane crearListaAmigos(String titulo, DefaultTableModel amigos, boolean estaConectado) {
         
-        DefaultTableModel modelo = new DefaultTableModel()
-        {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-            // Esto hará que ninguna celda sea editable
-            return false;
-            }
-        };
+       
         
-        modelo.addColumn("nombre");
-        modelo.addColumn("borrar");
+       
 
-        for( Usuario us : amigos)
-        {
-            modelo.addRow(new Object[]{us.getNombre(), "-"});
-        }
         
-        JTable lista = new JTable(modelo);
+        JTable lista = new JTable(amigos);
         
         lista.setTableHeader(null);
         lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
-        
-        
-        
-        
         
         
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -629,26 +582,12 @@ private void configurarTimer() {
         return scrollPane;
     }
   
-     private JScrollPane crearListaSolicitudesAmigosRecibidas(String titulo, ArrayList<Usuario> elementos, boolean Envia) {
-DefaultTableModel modelo = new DefaultTableModel()
-        {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-            // Esto hará que ninguna celda sea editable
-            return false;
-            }
-        };
-        
-        modelo.addColumn("nombre");
-        modelo.addColumn("Agregar");
-        modelo.addColumn("borrar");
+     private JScrollPane crearListaSolicitudesAmigosRecibidas(String titulo,DefaultTableModel  elementos, boolean Envia) {
 
-        for( Usuario us : elementos)
-        {
-            modelo.addRow(new Object[]{us.getNombre(), "+","-"});
-        }
         
-        JTable lista = new JTable(modelo);
+      
+        
+        JTable lista = new JTable(elementos);
         
         lista.setTableHeader(null);
         lista.getColumn("Agregar").setCellRenderer(new ButtonRenderer());
@@ -679,16 +618,16 @@ DefaultTableModel modelo = new DefaultTableModel()
                         if (column == 1) 
                         {
                             Usuario usuario = solicitudesAmigosEnviadas.get(row);
-                            //AceptarSolicitudAmistad(usuario.getNombre());
-                            //aqui falta la funcion >:)
+                            aceptarSolicitudAmistad(usuario.getNombre());
+                           
                         }
 
                     
                         if (column == 2) 
                         {
                             Usuario usuario = solicitudesAmigosEnviadas.get(row);
-                            //RechazarSolicitudAmistad(usuario.getNombre());
-                            //aqui falta la funcion >:)
+                            cancelarSolicitudAmistad(usuario.getNombre());
+                           
                         }
                     
                 }
@@ -704,35 +643,18 @@ DefaultTableModel modelo = new DefaultTableModel()
     
     
     
-     private JScrollPane crearListaSolicitudesAmigosEnviadas(String titulo, ArrayList<Usuario> elementos, boolean Envia) {
-        DefaultTableModel modelo = new DefaultTableModel()
-        {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-            // Esto hará que ninguna celda sea editable
-            return false;
-            }
-        };
-        
-        modelo.addColumn("nombre");
-
-        modelo.addColumn("borrar");
-
-        for( Usuario us : elementos)
-        {
-            modelo.addRow(new Object[]{us.getNombre(),"-"});
-        }
-        
-        JTable lista = new JTable(modelo);
+     private JScrollPane crearListaSolicitudesAmigosEnviadas(String titulo, DefaultTableModel elementos, boolean Envia) {
+             
+        JTable lista = new JTable(elementos);
         
         lista.setTableHeader(null);
+       
         lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
         
         
         
         
-        
-        
+      
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         lista.addMouseListener(new MouseAdapter() {
@@ -874,117 +796,14 @@ DefaultTableModel modelo = new DefaultTableModel()
         return scrollPane;
     }
 
-    class UsuarioCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
+   
 
-        private JLabel lblNombre = new JLabel();
-        private JButton btnEnviarSolicitud = new JButton("+");
-
-        public UsuarioCellRenderer() {
-            setLayout(new FlowLayout(FlowLayout.LEFT));
-            add(lblNombre);
-            add(btnEnviarSolicitud);
-            btnEnviarSolicitud.setBackground(colorBotonSolicitud);
-            btnEnviarSolicitud.setForeground(colorTexto);
-
-            
-            btnEnviarSolicitud.addActionListener(e -> {
-                // Lógica para enviar solicitud
-                
-                System.out.println("Solicitud enviada a: " + lblNombre.getText());
-            });
-            
-        }
-
-        @Override
-        public Component getListCellRendererComponent(JList<? extends Usuario> list, Usuario value, int index, boolean isSelected, boolean cellHasFocus) {
-            lblNombre.setText(value.getNombre());
-            setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
-            return this;
-        }
-    }
-
-    class AmigoCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
-
-        private JLabel lblNombre = new JLabel();
-        private JButton btnEliminarAmigo = new JButton("-");
-
-        public AmigoCellRenderer() {
-            setLayout(new FlowLayout(FlowLayout.LEFT));
-            add(lblNombre);
-            add(btnEliminarAmigo);
-            btnEliminarAmigo.setBackground(colorBotonEliminar);
-            btnEliminarAmigo.setForeground(colorTexto);
-            
-            
-            btnEliminarAmigo.addActionListener(e -> {
-                // Lógica para eliminar amigo
-                System.out.println("Amigo eliminado: " + lblNombre.getText());
-            });
-            
-
-        }
-
-        @Override
-        public Component getListCellRendererComponent(JList<? extends Usuario> list, Usuario value, int index, boolean isSelected, boolean cellHasFocus) {
-            lblNombre.setText(value.getNombre());
-            setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
-            return this;
-        }
-    }
+    
 
     
     
     
-    class SolicitudesAmistadCellRenderer extends JPanel implements ListCellRenderer<Object> {
-
-        private JLabel lblNombre = new JLabel();
-        private JButton btnAceptar = new JButton("Aceptar");
-        private JButton btnRechazar = new JButton("Rechazar");
-        private JButton btnCancelar = new JButton("Cancelar");
-
-        public SolicitudesAmistadCellRenderer(boolean Envia) {
-            setLayout(new FlowLayout(FlowLayout.LEFT));
-            add(lblNombre);
-            if (!Envia) {
-                add(btnAceptar);
-                add(btnRechazar);
-                estiloBoton(btnAceptar);
-                estiloBoton(btnRechazar);
-
-                btnAceptar.addActionListener(e -> {
-                    // Lógica para aceptar la solicitud
-                    System.out.println("Solicitud aceptada para: " + lblNombre.getText());
-                });
-
-                btnRechazar.addActionListener(e -> {
-                    // Lógica para rechazar la solicitud
-                    System.out.println("Solicitud rechazada para: " + lblNombre.getText());
-                });
-            } else {
-                add(btnCancelar);
-                estiloBoton(btnCancelar);
-
-                btnCancelar.addActionListener(e -> {
-                    // Lógica para rechazar la solicitud
-                    System.out.println("Solicitud cancelada para: " + lblNombre.getText());
-
-                });
-            }
-
-        }
-
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            if (value instanceof Usuario) {
-                lblNombre.setText(((Usuario) value).getNombre());
-            } else if (value instanceof Grupo) {
-                lblNombre.setText("Grupo ID: " + ((Grupo) value).getId_grupo());
-            }
-            setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
-            return this;
-        }
-    }
-
+    
     class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
 
         private JLabel lblNombre = new JLabel();
@@ -1379,7 +1198,7 @@ DefaultTableModel modelo = new DefaultTableModel()
 
  
  
- //---------------------Metodos de control de peticiones -------------//
+ //---------------------Metodos de control de peticiones de amistad -------------//
  
  private void cancelarSolicitudAmistad(String receptor) {
     JSONObject json = new JSONObject();
@@ -1461,6 +1280,7 @@ DefaultTableModel modelo = new DefaultTableModel()
             responseObject = new JSONObject(serverResponse);
          JSONArray  receivedInvitations = responseObject.optJSONArray("message");
             // Procesar las invitaciones recibidas (JSON array)
+         SolicitudAmistadRecibida.clear();
             for (int i = 0; i < receivedInvitations.length(); i++) {
 
                 
@@ -1536,7 +1356,92 @@ private void eliminarMensajesYAmistad(String receptor) {
 }
 
  
+ private void aceptarSolicitudAmistad(String receptor)
+ {JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "ACCEPT_INVITATION_FRIEND");
+
+      // Enviar la solicitud al servidor y esperar una respuesta
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    // Procesar la respuesta del servidor
+    try {
+        JSONObject response = new JSONObject(serverResponse);
+        String status = response.getString("status");
+        String message = response.getString("message");
+        
+       switch(status) {
+    case "-2":
+        JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "-3":
+        JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "-4":
+        JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "-5":
+        JOptionPane.showMessageDialog(null, "Error al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "-6":
+        JOptionPane.showMessageDialog(null, "Error interno al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "0":
+        JOptionPane.showMessageDialog(null, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        break;
+    default:
+        JOptionPane.showMessageDialog(null, "Error desconocido.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+}
+
+        
+    }catch(Exception ex)
+    
+    {
+     
+     
+ }
+      
+     
+ }
  
+ private void obtenerSolicitudesEnviadas() {
+    JSONObject json = new JSONObject();
+    json.put("action", "GET_SEND_INVITATION_FRIEND");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+    JSONObject responseObject = new JSONObject(serverResponse);
+    String status = responseObject.getString("status");
+
+    switch (status) {
+        case "-4":
+            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Remitente no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Error al obtener las solicitudes enviadas.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JSONArray sentInvitations = responseObject.optJSONArray("message");
+            // Procesar las invitaciones enviadas (JSON array)
+            solicitudesAmigosEnviadas.clear();
+            for (int i = 0; i < sentInvitations.length(); i++) {
+                String usuario = sentInvitations.getString(i);
+                solicitudesAmigosEnviadas.add(new Usuario(usuario));
+            }
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes enviadas.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+}
+
+ 
+ //--------------------------------------------------------------------------------------//
  
  // Método para cambiar la pestaña y actualizar la variable
 private void showCard(String cardName) {

@@ -153,7 +153,7 @@ public class FriendInvitationController {
         }
 
         // Obtener los remitentes que han enviado solicitudes al receptor
-        String querySolicitudes = "SELECT id_remitente FROM solicitudes_amistad WHERE id_receptor = ?";
+        String querySolicitudes = "SELECT id_remitente FROM solicitudes_amistad WHERE id_receptor = ? && estado_solicitud=0";
         List<Integer> remitentesIds = new ArrayList<>();
 
         try (PreparedStatement sqlSolicitudes = con.prepareStatement(querySolicitudes)) {
@@ -187,7 +187,11 @@ public class FriendInvitationController {
 
     // Convertir la lista de remitentes en un JSONArray
     JSONArray remitentesArray = new JSONArray(remitentesList);
-
+              try {
+                  con.close();
+              } catch (SQLException ex) {
+                  java.util.logging.Logger.getLogger(FriendInvitationController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+              }
     return remitentesArray.toString(); // Devuelve el JSON como un String
 }
           
@@ -269,5 +273,68 @@ public class FriendInvitationController {
 }
 
           
+          //Método para obtener las solicitudes que se han enviado
+         public static String GetSentInvitations(String remitenteUsername) {
+    Conexion conexion = new Conexion(); // Instancia para obtener la conexión
+    Connection con = conexion.getCon();
+    List<String> receptoresList = new ArrayList<>();
+
+    try {
+        // Obtener el ID del remitente
+        String queryRemitente = "SELECT id_usuario FROM usuario WHERE nombre = ?";
+        int remitenteId = -1;
+        try (PreparedStatement sqlRemitente = con.prepareStatement(queryRemitente)) {
+            sqlRemitente.setString(1, remitenteUsername);
+            ResultSet rsRemitente = sqlRemitente.executeQuery();
+            if (rsRemitente.next()) {
+                remitenteId = rsRemitente.getInt("id_usuario");
+            } else {
+                return "-2"; // Retorna si el remitente no se encuentra
+            }
+        }
+
+        // Obtener los receptores a los que se han enviado solicitudes
+        String querySolicitudes = "SELECT id_receptor FROM solicitudes_amistad WHERE id_remitente = ? && estado_solicitud=0";
+        List<Integer> receptoresIds = new ArrayList<>();
+
+        try (PreparedStatement sqlSolicitudes = con.prepareStatement(querySolicitudes)) {
+            sqlSolicitudes.setInt(1, remitenteId);
+            ResultSet rsSolicitudes = sqlSolicitudes.executeQuery();
+
+            while (rsSolicitudes.next()) {
+                receptoresIds.add(rsSolicitudes.getInt("id_receptor"));
+            }
+        }
+
+        // Obtener los nombres de los receptores
+        if (!receptoresIds.isEmpty()) {
+            String ids = receptoresIds.toString().replace("[", "").replace("]", ""); // Convertir lista a cadena
+            String queryUsuarios = "SELECT nombre FROM usuario WHERE id_usuario IN (" + ids + ")";
+
+            // Ejecutar la consulta para obtener los nombres de los receptores
+            try (Statement sqlUsuarios = con.createStatement()) {
+                ResultSet rsUsuarios = sqlUsuarios.executeQuery(queryUsuarios);
+
+                while (rsUsuarios.next()) {
+                    receptoresList.add(rsUsuarios.getString("nombre"));
+                }
+            }
+        }
+
+    } catch (SQLException ex) {
+        ex.printStackTrace();
+        return "-1"; // Error en SQL
+    }
+    
+    
+      try {
+                  con.close();
+              } catch (SQLException ex) {
+                  java.util.logging.Logger.getLogger(FriendInvitationController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+              }
+
+    return new JSONArray(receptoresList).toString(); // Convertir la lista a JSON y retornar
+}
+
           
 }

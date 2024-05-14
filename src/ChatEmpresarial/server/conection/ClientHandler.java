@@ -168,7 +168,13 @@ public class ClientHandler implements Runnable {
                         response = handleAcceptFriendInvitation(clientSocket, jsonObject);
                         break;
 
-               
+                        
+                        //Obtener las invitaciones enviadas
+                        
+                    case GET_SEND_INVITATION_FRIEND:
+                        
+                        response = handleGetSentInvitations(clientSocket, jsonObject);
+                           break;
 
                     // Encontrar amigos conectados
                    
@@ -932,7 +938,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-//Método para recibir soliciudes
+//Método para aceptar soliciudes
     private String handleAcceptFriendInvitation(Socket clientSocket, JSONObject jsonObject) {
         JSONObject respuesta = new JSONObject();
         try {
@@ -1198,6 +1204,72 @@ public class ClientHandler implements Runnable {
         }
     }
 
+  
+    //Método para recibir las solicitudes que se mandaron
+    
+    private String handleGetSentInvitations(Socket clientSocket, JSONObject jsonObject) {
+    JSONObject respuesta = new JSONObject();
+    try {
+        // Identificar el nombre del remitente usando el socket
+        String remitenteUsername = IdentifyUserName(clientSocket);
+
+        if (remitenteUsername == null) {
+            respuesta.put("status", "-4");
+            respuesta.put("message", "Remitente no identificado");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar obtener solicitudes enviadas: remitente no identificado");
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return respuesta.toString();
+        }
+
+        // Llamar al método que obtiene las solicitudes de amistad enviadas
+        String sentInvitationsJson = FriendInvitationController.GetSentInvitations(remitenteUsername);
+
+        // Verificar si el resultado es un código de error
+        if (sentInvitationsJson.equals("-2")) {
+            respuesta.put("status", "-5");
+            respuesta.put("message", "Remitente no encontrado");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar obtener solicitudes enviadas: remitente " + remitenteUsername + " no encontrado");
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } else if (sentInvitationsJson.equals("-1")) {
+            respuesta.put("status", "-6");
+            respuesta.put("message", "Error al obtener solicitudes enviadas");
+        } else {
+            // Si no es un error, devolver la lista de solicitudes enviadas
+            JSONArray sentInvitationsArray = new JSONArray(sentInvitationsJson);
+            respuesta.put("status", "0");
+            respuesta.put("message", sentInvitationsArray);
+        }
+
+        return respuesta.toString();
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        respuesta.put("status", "-7");
+        respuesta.put("message", "Error interno");
+        try {
+            LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al obtener solicitudes enviadas");
+        } catch (SQLException exSql) {
+            exSql.printStackTrace();
+        }
+        return respuesta.toString();
+    }
+}
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
 //---------------------------------------------------------------------------------------------------------------------------------
     private String handleFindUsersConnected() {
         JSONArray connectedUsers = new JSONArray();

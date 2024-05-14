@@ -33,6 +33,7 @@ public class Enumerators {
     SENT_INVITATION_FRIEND("sentFriendInvitation"),
     REFUSE_INVITATION_FRIEND("refFriendInvitation"),
     GET_INVITATION_FRIEND("getFriendInvitation"),
+    GET_SEND_INVITATION_FRIEND("getSendFriendInvitation"),
     ACCEPT_INVITATION_FRIEND("Accepted Invitation"),
     CREATEGROUP("creategroup"),
      GET_ALL_USERS_EXCEPT_SELF("getAllUsersExceptSelf"),
