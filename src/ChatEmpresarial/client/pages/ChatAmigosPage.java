@@ -6,6 +6,8 @@ package ChatEmpresarial.client.pages;
 
 
 
+import ChatEmpresarial.client.conection.PersistentClient;
+import ChatEmpresarial.shared.utilities.Enumerators;
 import javax.swing.JFrame;
 import javax.swing.*;
 import java.awt.*;
@@ -16,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
 import java.sql.Timestamp;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 // Mensaje representa el contenido de cada mensaje enviado en el chat
 class Mensaje {
@@ -32,7 +36,131 @@ class Mensaje {
     }
 }
 
-public class ChatAmigosPage extends JFrame {
+public class ChatAmigosPage extends JFrame
+{
+    private JTextArea textArea;
+    private JTextField textField;
+    private String contactName;
+    private String activeUser;
+    private static final Color COLOR_FONDO = new Color(225, 245, 254);
+    private static final Color COLOR_BOTON = new Color(2, 136, 209);
+    private static final Color COLOR_TEXTO = Color.WHITE;
+    private Timer messageFetchTimer;
+
+    public ChatAmigosPage(String contactName, String activeUser) {
+        this.contactName = contactName;
+        this.activeUser = activeUser;
+        initializeUI();
+        setupMessageFetchingTimer();
+     
+    }
+
+    private void initializeUI() {
+        setTitle("Chat con " + contactName);
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
+        setLocationRelativeTo(null);
+
+        textArea = new JTextArea();
+        textArea.setEditable(false);
+        textArea.setBackground(COLOR_FONDO);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        add(scrollPane, BorderLayout.CENTER);
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BorderLayout());
+        inputPanel.setBackground(COLOR_FONDO);
+
+        textField = new JTextField();
+        textField.addActionListener(this::sendText);
+        inputPanel.add(textField, BorderLayout.CENTER);
+
+        JButton sendButton = new JButton("Enviar");
+        sendButton.setBackground(COLOR_BOTON);
+        sendButton.setForeground(COLOR_TEXTO);
+        sendButton.addActionListener(this::sendText);
+        inputPanel.add(sendButton, BorderLayout.EAST);
+
+        add(inputPanel, BorderLayout.SOUTH);
+
+        JLabel contactLabel = new JLabel("Chateando con: " + contactName, SwingConstants.CENTER);
+        contactLabel.setOpaque(true);
+        contactLabel.setBackground(COLOR_BOTON);
+        contactLabel.setForeground(COLOR_TEXTO);
+        add(contactLabel, BorderLayout.NORTH);
+
+        setVisible(true);
+    }
+
+    private void setupMessageFetchingTimer() {
+        int delay = 300; // Tiempo en milisegundos entre cada ejecución
+        messageFetchTimer = new Timer(delay, e -> fetchMessages());
+        messageFetchTimer.start();
+    }
+//Enviar mensaje de texto
+    private void sendText(ActionEvent e) {
+    String text = textField.getText();
+    if (!text.isEmpty()) {
+        textField.setText("");
+        JSONObject json = new JSONObject();
+        json.put("receptor", contactName);
+        json.put("contenido", text);
+        json.put("action", Enumerators.TipoRequest.SEND_MESSAGE_FRIEND);
+
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+        System.out.println("Server respuesta: " + serverResponse);
+        
+        if (!serverResponse.equals("-1")) {
+            textArea.append(activeUser + ": " + text + "\n");
+        } else {
+            System.err.println("Error al enviar el mensaje.");
+        }
+    }
+}
+
+  private void fetchMessages() {
+    textArea.setText(""); // Clear the text area each time we fetch messages
+    JSONObject json = new JSONObject();
+    json.put("receptor", contactName);
+    json.put("action", Enumerators.TipoRequest.GET_MESSAGE_FRIEND);
+
+    String serverResponse = PersistentClient.getInstance().sendMessageAndWaitForResponse(json.toString());
+
+    System.out.println("server response: " + serverResponse);
+    if (serverResponse == null || serverResponse.isEmpty()) {
+        System.err.println("La respuesta del servidor es nula o está vacía.");
+        return;
+    }
+
+    try {
+        JSONObject response = new JSONObject(serverResponse);
+        if (!response.has("message")) {
+            System.err.println("La respuesta del servidor no contiene la clave 'message'.");
+            return;
+        }
+        JSONArray messages = new JSONArray(response.getString("message"));
+        for (int i = 0; i < messages.length(); i++) {
+            JSONObject msg = messages.getJSONObject(i);
+            String sender = msg.getString("usuario");
+            String content = msg.getString("contenido");
+            receiveMessage(sender + ": " + content);
+        }
+    } catch (Exception e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+    }
+}
+
+public void receiveMessage(String formattedMessage) {
+    SwingUtilities.invokeLater(() -> {
+        textArea.append(formattedMessage + "\n");
+    });
+}
+
+}
+
+/*{
     private String currentUser = "UsuarioActual"; // Identificador del usuario actual
     private int idChat = 1; // Asume que este chat tiene un ID único
     private List<Mensaje> chatHistory = new ArrayList<>(); // Lista para almacenar mensajes
@@ -123,4 +251,4 @@ public class ChatAmigosPage extends JFrame {
         // Aquí podrías usar un escritor de archivos para almacenar `chatJson`
     }
     
-}
+}*/

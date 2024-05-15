@@ -6,8 +6,10 @@ import ChatEmpresarial.shared.models.Usuario;
 import ChatEmpresarial.client.pages.UsuarioFixCellRenderer;
 import ChatEmpresarial.client.pages.GroupFixCellRenderer;
 import ChatEmpresarial.shared.utilities.Functions;
-import ChatEmpresarial.client.utilities.SessionManager;
+import ChatEmpresarial.shared.models.SolicitudAmistad;
+
 import ChatEmpresarial.shared.models.SolicitudGrupo;
+
 import ChatEmpresarial.shared.utilities.Enumerators;
 import ChatEmpresarial.shared.utilities.Enumerators.TipoRequest;
 import ChatEmpresarial.shared.utilities.Functions;
@@ -18,25 +20,79 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
+
 public class ChatList extends JFrame {
 
-    private DefaultListModel<Usuario> modeloUsuariosConectados = new DefaultListModel<>();
-    private DefaultListModel<Usuario> modeloUsuariosDesconectados = new DefaultListModel<>();
-    private JList<Usuario> listaUsuariosConectados = new JList<>(modeloUsuariosConectados);
-    private JList<Usuario> listaUsuariosDesconectados = new JList<>(modeloUsuariosDesconectados);
+    
+    //Bandera de la página en que se encuentra
+    private String CurrentVisibleCard = "Usuarios";
+    
+    private DefaultTableModel modeloUsuariosConectados = new DefaultTableModel()
+     {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    private DefaultTableModel modeloUsuariosDesconectados = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    
+    private DefaultTableModel modeloAmigosConectados = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    private DefaultTableModel modeloAmigosDesconectados = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    
+
+    private DefaultTableModel modeloSolicitudesRecibidas = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    private DefaultTableModel modeloSolicitudesEnviadas = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    
+    
+    private Timer updateTimer;
 
     private String nombreUserActive;
+
+    private ArrayList<Usuario> SolicitudAmistadRecibida = new ArrayList<>();
 
     private ArrayList<Usuario> usuariosConectados = new ArrayList<>();
     private ArrayList<Usuario> usuariosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> amigosConectados = new ArrayList<>();
     private ArrayList<Usuario> amigosDesconectados = new ArrayList<>();
     private ArrayList<Usuario> solicitudesAmigosEnviadas = new ArrayList<>();
-    private ArrayList<Usuario> solicitudesAmigosRecibidas = new ArrayList<>();
+   
     private ArrayList<Grupo> grupos = handleGetGroups();
     private ArrayList<SolicitudGrupo> solicitudesGrupos = handleGetRequestGroups();
 
@@ -53,30 +109,65 @@ public class ChatList extends JFrame {
     private CardLayout cardLayout;
 
     public ChatList(String username) {
-        nombreUserActive = username;
-        inicializarDatosDePrueba();  // Llamada inicial para cargar datos antes de que el Timer comience
+     nombreUserActive = username;
+       nombreUserActive = username;
+       
+  
+       iniciarModelos();
+        inicializarDatos();  // Llamada inicial para cargar datos antes de que el Timer comience
         configurarVentana();
         configurarNavegacion();
         configurarTimer();
         grupos = handleGetGroups();
         setVisible(true);
-    }
+    
+}
+    
+private void configurarTimer() {
+    int delay = 1000; // Retraso en milisegundos (1000 ms = 1 segundo)
+    ActionListener taskPerformer = new ActionListener() {
+        public void actionPerformed(ActionEvent evt) {
+            inicializarDatos();  // Llama a tu método que actualiza los datos
+            actualizarListasUsuarios();
+        }
+    };
+    updateTimer = new Timer(delay, taskPerformer);
+    updateTimer.start();
+}
 
-    private void configurarTimer() {
-        int delay = 2000000000; // Retraso en milisegundos (1000 ms = 1 segundo)
-        ActionListener taskPerformer = new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                inicializarDatosDePrueba();  // Llama a tu método que actualiza los datos
-                actualizarListasUsuarios();
 
-            }
-        };
-        new Timer(delay, taskPerformer).start();
-    }
+private void iniciarModelos()
+{
+       modeloUsuariosConectados.addColumn("nombre");
+        modeloUsuariosConectados.addColumn("borrar");
 
-    private void inicializarDatosDePrueba() {
+        modeloUsuariosDesconectados.addColumn("nombre");
+        modeloUsuariosDesconectados.addColumn("borrar");
 
-        String username = nombreUserActive;
+        modeloAmigosConectados.addColumn("nombre");
+        modeloAmigosConectados.addColumn("borrar");
+
+        modeloAmigosDesconectados.addColumn("nombre");
+        modeloAmigosDesconectados.addColumn("borrar");
+
+        modeloSolicitudesRecibidas.addColumn("nombre");
+        modeloSolicitudesRecibidas.addColumn("Agregar");
+        modeloSolicitudesRecibidas.addColumn("borrar");
+
+        modeloSolicitudesEnviadas.addColumn("nombre");
+        modeloSolicitudesEnviadas.addColumn("borrar");
+    
+    
+}
+
+
+
+    
+    private void inicializarDatos() {
+                 
+    String username = nombreUserActive;
+
+    // Obtener los nombres de los usuarios desde el server
 
         usuariosConectados.clear();
         usuariosDesconectados.clear();
@@ -84,6 +175,7 @@ public class ChatList extends JFrame {
         // Simular obtener nombres de amigos del servidor (esto deberías adaptarlo)
         ArrayList<String> usuariosConectadosNombres = handleListUsersConectados();
         ArrayList<String> usuariosDesconectadosNombres = handleListUsersDesconectados();
+        
 
         for (String nombre : usuariosConectadosNombres) {
             if (!nombre.equals(username)) { // Evitar añadir al usuario logueado
@@ -95,42 +187,106 @@ public class ChatList extends JFrame {
             usuariosDesconectados.add(new Usuario(nombre));
         }
 
-        // Actualizar la UI después de obtener los datos
-        actualizarListasUsuarios();
 
-        // Obtener amigos de la respuesta del servidor
-        ArrayList<String> amigosNombres = handleListFriends();
+    // Actualizar la UI después de obtener los datos
+   
+    amigosConectados.clear();
+    amigosDesconectados.clear();
+    
+        
+          // Obtener amigos de la respuesta del servidor
+    ArrayList<String> amigosConectadosNombre = handleListFriendsConnected();
+    ArrayList<String> amigosDesconectadosNombre = handleListFriendsDisconnected();
 
-        // Convertir nombres a objetos `Usuario`
-        for (String nombre : amigosNombres) {
+       
+     
+            
+        for (String nombre : amigosConectadosNombre) {
             Usuario usuario = new Usuario();
             usuario.setNombre(nombre);
             amigosConectados.add(usuario);
         }
-
-        for (int i = 1; i <= 3; i++) {
+        
+   
+        for (String nombre: amigosDesconectadosNombre) {
             Usuario usuario = new Usuario();
-            usuario.setNombre("User" + i);
-
-            //  amigosConectados.add(usuario);
+            usuario.setNombre(nombre);
             amigosDesconectados.add(usuario);
-            solicitudesAmigosEnviadas.add(usuario);
-            solicitudesAmigosRecibidas.add(usuario);
+            
+     }
+        
 
-            Grupo grupo = new Grupo();
-            grupo.setId_grupo(i);
-        }
+        
+      
+            
+             actualizarListasUsuarios();
+          //  amigosConectados.add(usuario);
+           
+
+           // Grupo grupo = new Grupo();
+           // grupo.setId_grupo(i);
+           // grupos.add(grupo);
+           // solicitudesGrupos.add(grupo);
     }
-
+    
     private void actualizarListasUsuarios() {
-        SwingUtilities.invokeLater(() -> {
-            modeloUsuariosConectados.clear();
-            usuariosConectados.forEach(modeloUsuariosConectados::addElement);
+    SwingUtilities.invokeLater(() -> {
+        
+    
+            // Limpiar los modelos de las tablas
+            modeloUsuariosConectados.setRowCount(0);
+            modeloUsuariosDesconectados.setRowCount(0);
+            modeloAmigosConectados.setRowCount(0);
+            modeloAmigosDesconectados.setRowCount(0);
+            modeloSolicitudesRecibidas.setRowCount(0);
+            modeloSolicitudesEnviadas.setRowCount(0);
 
-            modeloUsuariosDesconectados.clear();
-            usuariosDesconectados.forEach(modeloUsuariosDesconectados::addElement);
+            // Añadir filas a los modelos
+            for (Usuario us : usuariosConectados) {
+                modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
+            }
+
+            for (Usuario us : usuariosDesconectados) {
+                modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
+            }
+
+            for (Usuario us : amigosConectados) {
+                modeloAmigosConectados.addRow(new Object[]{us.getNombre(), "-"});
+            }
+
+            for (Usuario us : amigosDesconectados) {
+                modeloAmigosDesconectados.addRow(new Object[]{us.getNombre(), "-"});
+            }
+
+            obtenerSolicitudesRecibidas();
+            for (Usuario us : SolicitudAmistadRecibida) {
+                modeloSolicitudesRecibidas.addRow(new Object[]{us.getNombre(), "+", "-"});
+            }
+
+            obtenerSolicitudesEnviadas();
+            for (Usuario us : solicitudesAmigosEnviadas) {
+                modeloSolicitudesEnviadas.addRow(new Object[]{us.getNombre(), "-"});
+            }
+
+            // Notificar cambios en los modelos
+            modeloUsuariosConectados.fireTableDataChanged();
+            modeloUsuariosDesconectados.fireTableDataChanged();
+            modeloAmigosConectados.fireTableDataChanged();
+            modeloAmigosDesconectados.fireTableDataChanged();
+            modeloSolicitudesRecibidas.fireTableDataChanged();
+            modeloSolicitudesEnviadas.fireTableDataChanged();
         });
+
+        
+
+
+
+       
+        
     }
+    
+
+    
 
     private void configurarVentana() {
         setTitle("Chats Empresariales");
@@ -138,6 +294,17 @@ public class ChatList extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         getContentPane().setBackground(colorFondoPrincipal);
+        
+          // Panel para cerrar sesión
+    JPanel panelCerrarSesion = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    JButton btnCerrarSesion = new JButton("Cerrar Sesión");
+    btnCerrarSesion.addActionListener(e -> cerrarSesion());
+    estiloBoton(btnCerrarSesion);  // Aplicar el estilo predefinido de los botones
+    panelCerrarSesion.add(btnCerrarSesion);
+    panelCerrarSesion.setBackground(colorBarraNavegacion);  // Usar el mismo color que la barra de navegación
+     getContentPane().add(panelCerrarSesion, BorderLayout.NORTH);
+    
+    
     }
 
     private void configurarNavegacion() {
@@ -154,13 +321,15 @@ public class ChatList extends JFrame {
         cardLayout = new CardLayout();
         panelPrincipal.setLayout(cardLayout);
         panelPrincipal.add(crearPanelUsuarios(), "Usuarios");
-        panelPrincipal.add(crearPanelAmigos(), "Amigos");
+       panelPrincipal.add(crearPanelAmigos(), "Amigos");
         panelPrincipal.add(crearPanelGrupos(), "Grupos");
+
 
         btnUsuarios.addActionListener(e -> cardLayout.show(panelPrincipal, "Usuarios"));
         btnAmigos.addActionListener(e -> cardLayout.show(panelPrincipal, "Amigos"));
         btnGrupos.addActionListener(e -> cardLayout.show(panelPrincipal, "Grupos"));
         btnCrearGrupo.addActionListener(e -> cardLayout.show(panelPrincipal, "PanelCrearGrupo"));
+
 
         estiloBoton(btnUsuarios);
         estiloBoton(btnAmigos);
@@ -179,87 +348,402 @@ public class ChatList extends JFrame {
         boton.setForeground(colorTexto);
         boton.setFocusPainted(false);
         boton.setBorderPainted(false);
+  
     }
+    
+
+    private void cerrarSesion() {
+    if (updateTimer != null) {
+        updateTimer.stop();  // Detener el Timer primero para evitar llamadas de actualización
+        updateTimer = null;
+    }
+
+    JSONObject json = new JSONObject();
+    json.put("action", TipoRequest.LOGOUT);
+    json.put("nombre", nombreUserActive);
+
+    // Asegúrate de que la instancia de cliente pueda manejar adecuadamente la reconexión
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+    System.out.println("Server Response: " + serverResponse);
+
+    if (serverResponse.equals("0")) {
+        dispose();
+        
+      client = PersistentClient.getInstance();
+     serverResponse = client.sendMessageAndWaitForResponse("init"); //inicializando comunicacion
+   
+
+        // Crear e iniciar la ventana de login
+        EventQueue.invokeLater(() -> {
+            LoginPage loginPage = new LoginPage();
+            loginPage.setVisible(true);
+        });
+    } else {
+        JOptionPane.showMessageDialog(this, "Ha ocurrido un error al cerrar sesión", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+
+
+
+
 
     private JPanel crearPanelUsuarios() {
-        JPanel panel = new JPanel(new GridLayout(2, 1));
-        panel.add(crearListaUsuarios("Usuarios Conectados", listaUsuariosConectados, modeloUsuariosConectados));
-        panel.add(crearListaUsuarios("Usuarios Desconectados", listaUsuariosDesconectados, modeloUsuariosDesconectados));
-        return panel;
-    }
+    JPanel panel = new JPanel(new GridLayout(2, 1));
+    panel.add(crearListaUsuarios("Usuarios Conectados", modeloUsuariosConectados, true));
+    panel.add(crearListaUsuarios("Usuarios Desconectados", modeloUsuariosDesconectados, false));
+    return panel;
+}
 
-    private JScrollPane crearListaUsuarios(String titulo, JList<Usuario> lista, DefaultListModel<Usuario> modelo) {
-        lista.setModel(modelo);
-        lista.setCellRenderer(new UsuarioCellRenderer());
+
+
+   
+        
+        
+
+    private JScrollPane crearListaUsuarios(String titulo, DefaultTableModel model,  boolean estaConectado) {
+        
+     
+        
+        JTable lista = new JTable(model);
+        
+        lista.setTableHeader(null);
+        lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
+        
+        
+        
+        
+        
+        
+        
+        
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lista.setLayoutOrientation(JList.VERTICAL);
+        
+        lista.addMouseListener(new MouseAdapter() {
+           
+            public void mouseClicked(MouseEvent e) {
+                
+                int column = lista.getColumnModel().getColumnIndexAtX(e.getX()); // obtiene la columna
+                int row = e.getY() / lista.getRowHeight(); // obtiene la fila
 
-        if (titulo.equals("Usuarios Conectados")) {  // Aplica solo a la lista de usuarios conectados
-            lista.addMouseListener(new MouseAdapter() {
-                public void mouseClicked(MouseEvent evt) {
-                    JList list = (JList) evt.getSource();
-                    if (evt.getClickCount() == 2) {  // Doble clic
-                        int index = list.locationToIndex(evt.getPoint());
-                        if (index >= 0) {
-                            Usuario usuario = (Usuario) list.getModel().getElementAt(index);
+                // asegurando que la fila y columna seleccionadas están dentro de la tabla
+                if (row < lista.getRowCount() && row >= 0 && column < lista.getColumnCount() && column >= 0) {
+                    Object value = lista.getValueAt(row, column);
+                    
+                    // si es un botón, realiza la acción correspondiente
+                    if(column == 0)
+                    {
+                        
+                        if (row >= 0) {
 
-                            JSONObject json = new JSONObject();
-                            json.put("user1", usuario.getNombre());
-                            json.put("user2", nombreUserActive);
-                            json.put("action", TipoRequest.CREATE_CHAT_USERS);
+                            
+                            if(estaConectado)
+                            {
+                                Usuario usuario = usuariosConectados.get(row);
 
-                            PersistentClient client = PersistentClient.getInstance();
-                            String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
-                            System.out.println("Server response" + serverResponse);
 
-                            new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+                                JSONObject json = new JSONObject();
+                                json.put("user1", usuario.getNombre());
+                                json.put("user2", nombreUserActive);
+                                json.put("action", TipoRequest.CREATE_CHAT_USERS);
+
+                                PersistentClient client = PersistentClient.getInstance();
+                                String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+                                System.out.println("Server response" + serverResponse);
+
+
+                                new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+                                
+                            }
+                            
+
                         }
+                    
                     }
+                    
+                        if (column == 1) 
+                        {
+
+                            if(estaConectado)
+                            {
+                                Usuario usuario = usuariosConectados.get(row);
+                                enviarSolicitudAmistad(usuario.getNombre());
+                            }
+                            else
+                            {
+                                Usuario usuario = usuariosDesconectados.get(row);
+                                enviarSolicitudAmistad(usuario.getNombre());
+                            }
+                            
+
+                            Usuario usuario = (Usuario) lista.getModel().getValueAt(row, 0);
+                            String nombre = usuario.getNombre();
+                            
+                            System.out.println(nombre);
+                            
+                     
+                           
+                           
+                        }
                 }
-            });
-        }
+            }
+
+        });
+        
 
         JScrollPane scrollPane = new JScrollPane(lista);
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+
         return scrollPane;
+
+        
+        /*
+    lista.setModel(modelo);
+    lista.setCellRenderer(new UsuarioCellRenderer());
+    lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    lista.setLayoutOrientation(JList.VERTICAL);
+
+    if (titulo.equals("Usuarios Conectados")) {  // Aplica solo a la lista de usuarios conectados
+        lista.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                JList list = (JList) evt.getSource();
+                if (evt.getClickCount() == 2) {  // Doble clic
+                    int index = list.locationToIndex(evt.getPoint());
+                    if (index >= 0) {
+                        Usuario usuario = (Usuario) list.getModel().getElementAt(index);
+                        
+                              JSONObject json = new JSONObject();
+                        json.put("user1", usuario.getNombre());
+                        json.put("user2", nombreUserActive);
+                        json.put("action", TipoRequest.CREATE_CHAT_USERS);
+
+                    PersistentClient client = PersistentClient.getInstance();
+                    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+                       System.out.println("Server response" + serverResponse);
+
+                        
+                        new ChatUserPage(usuario.getNombre(), nombreUserActive);  // Abrir ventana de chat
+                    }
+                }
+            }
+        });
     }
+
+    JScrollPane scrollPane = new JScrollPane(lista);
+    scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+<<<<<<< HEAD
+    */
+    
+
+}
+
+    
+    
+ 
+
 
     private JPanel crearPanelAmigos() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
-        panel.add(crearListaAmigos("Amigos Conectados", amigosConectados, true));
-        panel.add(crearListaAmigos("Amigos Desconectados", amigosDesconectados, false));
-        panel.add(crearListaSolicitudesAmigos("Solicitudes Enviadas", solicitudesAmigosEnviadas, true));
-        panel.add(crearListaSolicitudesAmigos("Solicitudes Recibidas", solicitudesAmigosRecibidas, false));
+        panel.add(crearListaAmigos("Amigos Conectados", modeloAmigosConectados, true));
+        panel.add(crearListaAmigos("Amigos Desconectados", modeloAmigosDesconectados, false));
+
+        panel.add(crearListaSolicitudesAmigosRecibidas("Solicitudes Recibida", modeloSolicitudesRecibidas ,true));
+       panel.add(crearListaSolicitudesAmigosEnviadas("Solicitudes enviadas", modeloSolicitudesEnviadas  ,false));  //NO EXISTE EL Método
+
         return panel;
     }
 
-    private JScrollPane crearListaAmigos(String titulo, ArrayList<Usuario> amigos, boolean estaConectado) {
-        DefaultListModel<Usuario> modelo = new DefaultListModel<>();
-        amigos.forEach(modelo::addElement);
+    private JScrollPane crearListaAmigos(String titulo, DefaultTableModel amigos, boolean estaConectado) {
+        
+       
+        
+       
 
-        JList<Usuario> lista = new JList<>(modelo);
-        lista.setCellRenderer(new AmigoCellRenderer());
+        
+        JTable lista = new JTable(amigos);
+        
+        lista.setTableHeader(null);
+        lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
+        
+        
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lista.setLayoutOrientation(JList.VERTICAL);
+        
+        lista.addMouseListener(new MouseAdapter() {
+           
+            public void mouseClicked(MouseEvent e) {
+                
+                int column = lista.getColumnModel().getColumnIndexAtX(e.getX()); // obtiene la columna
+                int row = e.getY() / lista.getRowHeight(); // obtiene la fila
+
+                // asegurando que la fila y columna seleccionadas están dentro de la tabla
+                if (row < lista.getRowCount() && row >= 0 && column < lista.getColumnCount() && column >= 0) {
+                    Object value = lista.getValueAt(row, column);
+                    
+                    // si es un botón, realiza la acción correspondiente
+                    if(column == 0)
+                    {
+                        
+                        if(estaConectado)
+                        {
+                            Usuario usuario = amigosConectados.get(row);
+                            ChatAmigosPage amigos = new ChatAmigosPage(usuario.getNombre(), nombreUserActive);
+                        }
+                        
+                    }
+                    if (column == 1) 
+                    {
+                        if(estaConectado)
+                        {
+                            Usuario usuario = amigosConectados.get(row);
+                            eliminarMensajesYAmistad(usuario.getNombre());
+                        }
+                        else
+                        {
+                            Usuario usuario = amigosDesconectados.get(row);
+                            eliminarMensajesYAmistad(usuario.getNombre());
+                        }
+                        
+                            
+                    }
+                }
+            }
+
+        });
+        
+
+        JScrollPane scrollPane = new JScrollPane(lista);
+        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+        return scrollPane;
+    }
+  
+     private JScrollPane crearListaSolicitudesAmigosRecibidas(String titulo,DefaultTableModel  elementos, boolean Envia) {
+
+        JTable lista = new JTable(elementos);
+        
+        lista.setTableHeader(null);
+        lista.getColumn("Agregar").setCellRenderer(new ButtonRenderer());
+        lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
+        
+        
+        
+        
+        
+        
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        lista.addMouseListener(new MouseAdapter() {
+           
+            public void mouseClicked(MouseEvent e) {
+                
+                int column = lista.getColumnModel().getColumnIndexAtX(e.getX()); // obtiene la columna
+                int row = e.getY() / lista.getRowHeight(); // obtiene la fila
+
+                // asegurando que la fila y columna seleccionadas están dentro de la tabla
+                if (row < lista.getRowCount() && row >= 0 && column < lista.getColumnCount() && column >= 0) {
+                    Object value = lista.getValueAt(row, column);
+                    
+                    // si es un botón, realiza la acción correspondiente
+                    
+                    
+                      Usuario usuario = SolicitudAmistadRecibida.get(row);
+                        if (column == 1) 
+                        {
+                          
+                            aceptarSolicitudAmistad(usuario.getNombre());
+                           
+                        }
+
+                    
+                        if (column == 2) 
+                        {
+                
+                            cancelarSolicitudAmistad(usuario.getNombre());
+                           
+                        }
+                    
+                }
+            }
+
+        });
+        
+
+        JScrollPane scrollPane = new JScrollPane(lista);
+        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
+        return scrollPane;
+    }
+    
+    
+    
+     private JScrollPane crearListaSolicitudesAmigosEnviadas(String titulo, DefaultTableModel elementos, boolean Envia) {
+             
+     
+        JTable lista = new JTable(elementos);
+        
+        lista.setTableHeader(null);
+       
+        lista.getColumn("borrar").setCellRenderer(new ButtonRenderer());
+        
+        
+        
+        
+      
+        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        lista.addMouseListener(new MouseAdapter() {
+           
+            public void mouseClicked(MouseEvent e) {
+                
+                int column = lista.getColumnModel().getColumnIndexAtX(e.getX()); // obtiene la columna
+                int row = e.getY() / lista.getRowHeight(); // obtiene la fila
+
+                // asegurando que la fila y columna seleccionadas están dentro de la tabla
+                if (row < lista.getRowCount() && row >= 0 && column < lista.getColumnCount() && column >= 0) {
+                    Object value = lista.getValueAt(row, column);
+                    
+                    // si es un botón, realiza la acción correspondiente
+                    
+                    
+                    
+                        if (column == 1) 
+                        {
+                            Usuario usuario = solicitudesAmigosEnviadas.get(row);
+                            cancelarSolicitudAmistad(usuario.getNombre());
+                            
+                        }
+
+                    
+
+                    
+                }
+            }
+
+        });
+        
 
         JScrollPane scrollPane = new JScrollPane(lista);
         scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
         return scrollPane;
     }
 
-    private JScrollPane crearListaSolicitudesAmigos(String titulo, ArrayList<Usuario> elementos, boolean Envia) {
-        DefaultListModel<Object> modelo = new DefaultListModel<>();
-        elementos.forEach(modelo::addElement);
+    
 
-        JList<Object> lista = new JList<>(modelo);
-        lista.setCellRenderer(new SolicitudesAmistadCellRenderer(Envia));
-        lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lista.setLayoutOrientation(JList.VERTICAL);
-
-        JScrollPane scrollPane = new JScrollPane(lista);
-        scrollPane.setBorder(BorderFactory.createTitledBorder(titulo));
-        return scrollPane;
+    
+    public class ButtonRenderer extends JButton implements TableCellRenderer {
+        
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            setText((value == null) ? "" : value.toString());
+            return this;
+        }
+        
     }
+
+  
+   
+    
+
+
+    
 
     private JPanel crearPanelGrupos() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -344,108 +828,14 @@ public class ChatList extends JFrame {
         return scrollPane;
     }
 
-    class UsuarioCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
+   
 
-        private JLabel lblNombre = new JLabel();
-        private JButton btnEnviarSolicitud = new JButton("+");
+    
 
-        public UsuarioCellRenderer() {
-            setLayout(new FlowLayout(FlowLayout.LEFT));
-            add(lblNombre);
-            add(btnEnviarSolicitud);
-            btnEnviarSolicitud.setBackground(colorBotonSolicitud);
-            btnEnviarSolicitud.setForeground(colorTexto);
-
-            btnEnviarSolicitud.addActionListener(e -> {
-                // Lógica para enviar solicitud
-                System.out.println("Solicitud enviada a: " + lblNombre.getText());
-            });
-        }
-
-        @Override
-        public Component getListCellRendererComponent(JList<? extends Usuario> list, Usuario value, int index, boolean isSelected, boolean cellHasFocus) {
-            lblNombre.setText(value.getNombre());
-            setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
-            return this;
-        }
-    }
-
-    class AmigoCellRenderer extends JPanel implements ListCellRenderer<Usuario> {
-
-        private JLabel lblNombre = new JLabel();
-        private JButton btnEliminarAmigo = new JButton("-");
-
-        public AmigoCellRenderer() {
-            setLayout(new FlowLayout(FlowLayout.LEFT));
-            add(lblNombre);
-            add(btnEliminarAmigo);
-            btnEliminarAmigo.setBackground(colorBotonEliminar);
-            btnEliminarAmigo.setForeground(colorTexto);
-
-            btnEliminarAmigo.addActionListener(e -> {
-                // Lógica para eliminar amigo
-                System.out.println("Amigo eliminado: " + lblNombre.getText());
-            });
-        }
-
-        @Override
-        public Component getListCellRendererComponent(JList<? extends Usuario> list, Usuario value, int index, boolean isSelected, boolean cellHasFocus) {
-            lblNombre.setText(value.getNombre());
-            setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
-            return this;
-        }
-    }
-
-    class SolicitudesAmistadCellRenderer extends JPanel implements ListCellRenderer<Object> {
-
-        private JLabel lblNombre = new JLabel();
-        private JButton btnAceptar = new JButton("Aceptar");
-        private JButton btnRechazar = new JButton("Rechazar");
-        private JButton btnCancelar = new JButton("Cancelar");
-
-        public SolicitudesAmistadCellRenderer(boolean Envia) {
-            setLayout(new FlowLayout(FlowLayout.LEFT));
-            add(lblNombre);
-            if (!Envia) {
-                add(btnAceptar);
-                add(btnRechazar);
-                estiloBoton(btnAceptar);
-                estiloBoton(btnRechazar);
-
-                btnAceptar.addActionListener(e -> {
-                    // Lógica para aceptar la solicitud
-                    System.out.println("Solicitud aceptada para: " + lblNombre.getText());
-                });
-
-                btnRechazar.addActionListener(e -> {
-                    // Lógica para rechazar la solicitud
-                    System.out.println("Solicitud rechazada para: " + lblNombre.getText());
-                });
-            } else {
-                add(btnCancelar);
-                estiloBoton(btnCancelar);
-
-                btnCancelar.addActionListener(e -> {
-                    // Lógica para rechazar la solicitud
-                    System.out.println("Solicitud cancelada para: " + lblNombre.getText());
-
-                });
-            }
-
-        }
-
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            if (value instanceof Usuario) {
-                lblNombre.setText(((Usuario) value).getNombre());
-            } else if (value instanceof Grupo) {
-                lblNombre.setText("Grupo ID: " + ((Grupo) value).getId_grupo());
-            }
-            setBackground(isSelected ? colorFondoSecundario : colorFondoPrincipal);
-            return this;
-        }
-    }
-
+    
+    
+    
+    
     class GrupoCellRenderer extends JPanel implements ListCellRenderer<Grupo> {
 
         private JLabel lblNombre = new JLabel();
@@ -493,14 +883,54 @@ public class ChatList extends JFrame {
             return this;
         }
     }
+    
+    /*
+    class ControlPanelEliminarAmigos extends JPanel 
+    {
+            
+        private JButton btnEliminarAmigo = new JButton("-");
+        private JLabel algo = new JLabel("buenas tardes");
+
+        public ControlPanelEliminarAmigos(JList<Usuario> listaUsuarios) {
+
+            setLayout(new FlowLayout());
+            btnEliminarAmigo.setBackground(colorBotonEliminar);
+            btnEliminarAmigo.setForeground(colorTexto);
+
+            // Acción del botón
+
+            btnEliminarAmigo.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Usuario usuarioSeleccionado = listaUsuarios.getSelectedValue();
+                    if (usuarioSeleccionado != null) {
+                        // Realiza la acción con el usuario seleccionado
+                        System.out.println("Eliminaste a: " + usuarioSeleccionado.getNombre());
+
+                    } else {
+                        System.out.println("No hay usuario seleccionado");
+                    }
+                }
+            });
+            add(btnEliminarAmigo);
+            add(algo);
+        }
+    }
+
+*/
+    
+    
+    
+    
 
     //---------------------
     //Métodos privados
     //-------------------
     //Método para acceder al chat de un amigo
+    /*
     private void handleChatFriendRequest(String friendUsername) {
         JSONObject json = new JSONObject();
-        json.put("friend_username", friendUsername);
+        json.put("receptor", friendUsername);
         json.put("action", "REQUEST_CHAT_FRIEND"); // Ajusta este campo con el tipo de acción correcto
 
         PersistentClient client = PersistentClient.getInstance();
@@ -517,59 +947,96 @@ public class ChatList extends JFrame {
                 break;
             default:
                 JOptionPane.showMessageDialog(null, "Chat iniciado exitosamente.", "Información", JOptionPane.INFORMATION_MESSAGE);
-                ChatAmigosPage amigos = new ChatAmigosPage();
+                ChatAmigosPage amigos = new ChatAmigosPage(usuario.getNombre(), nombreUserActive);
                 amigos.setVisible(true);
                 break;
-
         }
+        
     }
+    */
 
-    private ArrayList<String> handleListFriends() {
-        ArrayList<String> resultado = new ArrayList<>();
+    
+    //Método para solicitar el listado de amigos conectados
+    private ArrayList<String> handleListFriendsConnected() {
+    ArrayList<String> resultado = new ArrayList<>();
 
-        JSONObject json = new JSONObject();
-        json.put("action", "FIND_FRIENDS");
+    // Crear la solicitud JSON con la acción para encontrar amigos conectados
+    JSONObject json = new JSONObject();
+    json.put("action", "FIND_FRIENDS_CONNECTED");
 
-        PersistentClient client = PersistentClient.getInstance();
-        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+    // Usar el cliente persistente para enviar el mensaje
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
 
-        // Expresión regular para capturar status y friends
-        Pattern pattern = Pattern.compile("\"status\":\\s*\"(-?\\d+)\",\\s*\"message\":\\s*(\\[.*\\])");
-        Matcher matcher = pattern.matcher(serverResponse);
+    try {
+        // Parsea la respuesta directamente como un objeto JSON
+        JSONObject responseJson = new JSONObject(serverResponse);
+        int status = responseJson.getInt("status");
 
-        if (matcher.find()) {
-            // Extraer el valor de `status`
-            String statusStr = matcher.group(1).trim();
-            int status = Integer.parseInt(statusStr);
-
-            // Solo procesar si el estado es exitoso (status 0)
-            if (status == 0) {
-                // Extraer el valor de `friends`
-                String jsonFriends = matcher.group(2).trim();
-
-                // Procesar el JSON en `friends`
-                JSONArray amigosArray = new JSONArray(jsonFriends);
-                for (int i = 0; i < amigosArray.length(); i++) {
-                    String amigo = amigosArray.getString(i);
-                    resultado.add(amigo); // Añadir cada amigo a la lista de resultado
-                }
-            } else {
-                // Gestionar estados de error
-                if (status == -1) {
-                    System.err.println("Error: no se pudo identificar al usuario remitente.");
-                } else if (status == -2) {
-                    System.err.println("Error: ocurrió un error interno del servidor.");
-                } else {
-                    System.err.println("Error desconocido con el estado: " + status);
-                }
+        // Si el estado es 0, el resultado fue exitoso
+        if (status == 0) {
+            // Acceder directamente al array JSON
+            JSONArray amigosArray = responseJson.getJSONArray("message");
+            for (int i = 0; i < amigosArray.length(); i++) {
+                String amigo = amigosArray.getString(i);
+                resultado.add(amigo); // Añadir a la lista de resultado
             }
         } else {
-            System.err.println("Formato incorrecto o datos no encontrados.");
+            System.err.println("Error al obtener amigos conectados: estado " + status);
         }
-
-        return resultado; // Devuelve la lista con los nombres de amigos
+    } catch (JSONException e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
     }
 
+    return resultado; // Devuelve la lista de amigos conectados
+}
+    
+    
+    
+    //Método para obtener los métodos de amigos disconectados
+    private ArrayList<String> handleListFriendsDisconnected() {
+    ArrayList<String> resultado = new ArrayList<>();
+
+    // Crear la solicitud JSON con la acción para encontrar amigos desconectados
+    JSONObject json = new JSONObject();
+    json.put("action", "FIND_FRIENDS_DISCONNECTED");
+
+    // Usar el cliente persistente para enviar el mensaje
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    try {
+        // Parsea la respuesta directamente como un objeto JSON
+        JSONObject responseJson = new JSONObject(serverResponse);
+        int status = responseJson.getInt("status");
+
+        // Si el estado es 0, el resultado fue exitoso
+        if (status == 0) {
+            // Acceder directamente al array JSON
+            JSONArray amigosArray = responseJson.getJSONArray("message");
+            for (int i = 0; i < amigosArray.length(); i++) {
+                String amigo = amigosArray.getString(i);
+                resultado.add(amigo); // Añadir a la lista de resultado
+            }
+        } else {
+            System.err.println("Error al obtener amigos desconectados: estado " + status);
+        }
+    } catch (JSONException e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+    }
+
+    return resultado; // Devuelve la lista de amigos desconectados
+}
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
     private ArrayList<String> handleListUsersConectados() {
         ArrayList<String> resultado = new ArrayList<>();
 
@@ -760,4 +1227,273 @@ public class ChatList extends JFrame {
         return solicitudes;
     }
 
+
+
+
+ 
+ 
+ //---------------------Metodos de control de peticiones de amistad -------------//
+ 
+ private void cancelarSolicitudAmistad(String receptor) {
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "REFUSE_INVITATION_FRIEND");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+        JSONObject jsonResponse = new JSONObject(serverResponse);
+            String status = jsonResponse.getString("status");
+
+    switch (status){
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Campo 'receptor' faltante en la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-2":
+            JOptionPane.showMessageDialog(null, "Remitente o receptor no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JOptionPane.showMessageDialog(null, "Solicitud de amistad cancelada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error al cancelar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
 }
+ 
+ 
+ private void enviarSolicitudAmistad(String receptor) {
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "SENT_INVITATION_FRIEND");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+  JSONObject jsonResponse = new JSONObject(serverResponse);
+            String status = jsonResponse.getString("status");
+
+    switch (status) {
+        case "-4":
+            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Campo 'receptor' faltante en la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Error interno.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JOptionPane.showMessageDialog(null, "Solicitud de amistad enviada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error desconocido al enviar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+    
+}
+ 
+ 
+ private void obtenerSolicitudesRecibidas() {
+    JSONObject json = new JSONObject();
+    json.put("action", "GET_INVITATION_FRIEND");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+      JSONObject responseObject = new JSONObject(serverResponse);
+           String status  = responseObject.getString("status");
+
+    switch (status) {
+        case "-4":
+            JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Receptor no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Error al obtener las solicitudes recibidas.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            responseObject = new JSONObject(serverResponse);
+         JSONArray  receivedInvitations = responseObject.optJSONArray("message");
+            // Procesar las invitaciones recibidas (JSON array)
+         SolicitudAmistadRecibida.clear();
+            for (int i = 0; i < receivedInvitations.length(); i++) {
+
+                
+                String usuario = receivedInvitations.getString(i);
+                SolicitudAmistadRecibida.add(new Usuario(usuario));
+                
+                /*
+=======
+>>>>>>> 9a940de4585c2e9305bdb1e8f83166f0c3fa592a
+                JSONArray invitation = receivedInvitations.getJSONArray(i);
+                SolicitudAmistadRecibida.clear();
+                for(Object inv : invitation)
+                {
+                    SolicitudAmistadRecibida.add(new Usuario(inv.toString()));
+                }
+<<<<<<< HEAD
+                */
+
+                
+            }
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+    
+    
+    //-------------Métodos de control de Amistad --------------------- /
+    
+    
+}
+
+ 
+ 
+private void eliminarMensajesYAmistad(String receptor) {
+    // Crear un objeto JSON con la información necesaria para el servidor
+    JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "DELETE_CHAT_FRIEND");
+
+    // Enviar la solicitud al servidor y esperar una respuesta
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    // Procesar la respuesta del servidor
+    try {
+        JSONObject response = new JSONObject(serverResponse);
+        String status = response.getString("status");
+        String message = response.getString("message");
+
+        // Interpretar el resultado basado en el estado
+        switch (status) {
+            case "-4":
+                JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-5":
+                JOptionPane.showMessageDialog(null, "Error al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "-6":
+                JOptionPane.showMessageDialog(null, "Error interno al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+            case "0":
+                JOptionPane.showMessageDialog(null, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                break;
+            default:
+                JOptionPane.showMessageDialog(null, "Error desconocido.", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
+        }
+    } catch (Exception e) {
+        System.err.println("Error al analizar la respuesta del servidor: " + e.getMessage());
+        JOptionPane.showMessageDialog(null, "Error al procesar la respuesta del servidor.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+
+ 
+ private void aceptarSolicitudAmistad(String receptor)
+ {JSONObject json = new JSONObject();
+    json.put("receptor", receptor);
+    json.put("action", "ACCEPT_INVITATION_FRIEND");
+
+      // Enviar la solicitud al servidor y esperar una respuesta
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+
+    // Procesar la respuesta del servidor
+    try {
+        JSONObject response = new JSONObject(serverResponse);
+        String status = response.getString("status");
+        String message = response.getString("message");
+        
+       switch(status) {
+    case "-2":
+        JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "-3":
+        JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "-4":
+        JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "-5":
+        JOptionPane.showMessageDialog(null, "Error al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "-6":
+        JOptionPane.showMessageDialog(null, "Error interno al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+    case "0":
+        JOptionPane.showMessageDialog(null, message, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        break;
+    default:
+        JOptionPane.showMessageDialog(null, "Error desconocido.", "Error", JOptionPane.ERROR_MESSAGE);
+        break;
+}
+
+        
+    }catch(Exception ex)
+    
+    {
+     
+     
+ }
+      
+     
+ }
+ 
+ private void obtenerSolicitudesEnviadas() {
+    JSONObject json = new JSONObject();
+    json.put("action", "GET_SEND_INVITATION_FRIEND");
+
+    PersistentClient client = PersistentClient.getInstance();
+    String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+    JSONObject responseObject = new JSONObject(serverResponse);
+    String status = responseObject.getString("status");
+
+    switch (status) {
+        case "-4":
+            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-5":
+            JOptionPane.showMessageDialog(null, "Remitente no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "-6":
+            JOptionPane.showMessageDialog(null, "Error al obtener las solicitudes enviadas.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "0":
+            JSONArray sentInvitations = responseObject.optJSONArray("message");
+            // Procesar las invitaciones enviadas (JSON array)
+            solicitudesAmigosEnviadas.clear();
+            for (int i = 0; i < sentInvitations.length(); i++) {
+                String usuario = sentInvitations.getString(i);
+                solicitudesAmigosEnviadas.add(new Usuario(usuario));
+            }
+            break;
+        default:
+            JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes enviadas.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+    }
+}
+
+ 
+ //--------------------------------------------------------------------------------------//
+ 
+ // Método para cambiar la pestaña y actualizar la variable
+private void showCard(String cardName) {
+    cardLayout.show(panelPrincipal, cardName);
+    CurrentVisibleCard = cardName; // Guardar la pestaña actual
+}
+
+// Método para restaurar la pestaña después de una actualización
+private void restoreVisibleCard() {
+    cardLayout.show(panelPrincipal, CurrentVisibleCard);
+}
+ 
+ 
+ 
+
+}
+
