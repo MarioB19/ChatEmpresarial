@@ -293,18 +293,21 @@ public class GroupChatController {
         return responseJson.toString(); // Retornar el objeto JSON como una cadena de texto
     }
 
-    public static String obtenerUsuariosFueraDelGrupo(String idChat) {
+    public static String obtenerUsuariosFueraDelGrupo(String idChat, String idGrupo) {
         JSONArray usuariosFueraDelGrupo = new JSONArray();
         Conexion conexion = new Conexion(); // Instanciar para obtener la conexión
         Connection con = conexion.getCon();
 
         try {
             // Consulta para obtener los usuarios que no están en el grupo
-            String queryUsuariosFueraDelGrupo = "SELECT u.nombre FROM usuario u "
-                    + "WHERE NOT EXISTS (SELECT 1 FROM participantes p WHERE p.id_usuario = u.id_usuario AND p.id_chat = ?) "
-                    + "AND EXISTS (SELECT 1 FROM solicitudes_grupo s WHERE s.id_receptor = u.id_usuario AND s.id_grupo = ?)";
+            String queryUsuariosFueraDelGrupo = "SELECT u.nombre, u.id_usuario FROM usuario u "
+                    + "WHERE u.id_usuario NOT IN ("
+                    + "    SELECT id_receptor FROM solicitudes_grupo WHERE id_grupo = ?"
+                    + ") AND u.id_usuario NOT IN ("
+                    + "    SELECT id_usuario FROM participantes WHERE id_chat = ?"
+                    + ")";
             try (PreparedStatement sqlUsuariosFueraDelGrupo = con.prepareStatement(queryUsuariosFueraDelGrupo)) {
-                sqlUsuariosFueraDelGrupo.setInt(1, parseInt(idChat));
+                sqlUsuariosFueraDelGrupo.setInt(1, parseInt(idGrupo));
                 sqlUsuariosFueraDelGrupo.setInt(2, parseInt(idChat));
                 ResultSet rsUsuariosFueraDelGrupo = sqlUsuariosFueraDelGrupo.executeQuery();
                 while (rsUsuariosFueraDelGrupo.next()) {
@@ -420,6 +423,49 @@ public class GroupChatController {
         }
 
         return userId;
+    }
+
+    public static String agregarParticipante(String idGrupo, String idReceptor, String Remitente) {
+        // Database connection and SQL statement
+        Conexion conexion = new Conexion(); // Create a new instance to use the connection
+        Connection con = conexion.getCon();
+        PreparedStatement sql;
+        ResultSet rs;
+        System.out.println("Adding to group....");
+
+        try {
+            // 1. Retrieve the admin ID using the admin's name
+            sql = con.prepareStatement("SELECT id_usuario FROM usuario WHERE nombre = ?");
+            sql.setString(1, Remitente);
+            rs = sql.executeQuery();
+            if (!rs.next()) {
+                System.out.println("Admin not found");
+                return "-1";
+            }
+            int adminId = rs.getInt("id_usuario");
+
+            // 1. Retrieve the users ID using the name
+            sql = con.prepareStatement("SELECT id_usuario FROM usuario WHERE nombre = ?");
+            sql.setString(1, idReceptor);
+            rs = sql.executeQuery();
+            if (!rs.next()) {
+                System.out.println("Admin not found");
+                return "-1";
+            }
+            int idreceptor = rs.getInt("id_usuario");
+
+            //Añadir solicitudes
+            sql = con.prepareStatement("INSERT INTO solicitudes_grupo (id_grupo, id_receptor, id_remitente, fecha_creacion) VALUES (?, ?, ?, NOW())");
+            sql.setInt(1, Integer.valueOf(idGrupo));
+            sql.setInt(2, idreceptor);
+            sql.setInt(3, adminId);
+            sql.executeUpdate();
+
+        } catch (SQLException ex) {
+            System.out.println("Error al obtener el ID del usuario: " + ex.getMessage());
+        }
+
+        return "0";
     }
 
 }
