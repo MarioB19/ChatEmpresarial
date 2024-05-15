@@ -123,7 +123,10 @@ public class ChatFriendController {
 
     try {
         // Consulta para obtener el id del chat compartido entre remitente y receptor
-        String queryAmistad = "SELECT id_chat FROM amistad WHERE (id_remitente = ? AND id_receptor = ?) OR (id_remitente = ? AND id_receptor = ?)";
+       String queryAmistad = "SELECT a.id_chat FROM amistad a " +
+                              "INNER JOIN usuario u1 ON a.id_remitente = u1.id_usuario " +
+                              "INNER JOIN usuario u2 ON a.id_receptor = u2.id_usuario " +
+                              "WHERE (u1.nombre = ? AND u2.nombre = ?) OR (u1.nombre = ? AND u2.nombre = ?)";
         int idChat = -1;
 
         // Encontrar el id_chat
