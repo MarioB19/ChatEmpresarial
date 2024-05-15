@@ -840,7 +840,7 @@ public class ClientHandler implements Runnable {
                     respuesta.put("status", "0");
                     respuesta.put("message", "Solicitud de amistad cancelada con éxito");
                     try {
-                        LogController.insertLogStatic(DescripcionAccion.ELIMINAR_AMISTAD, remitenteUsername, receptorUsername);
+                        LogController.insertLogStatic(DescripcionAccion.RECHAZAR_SOLICIUD_AMISTAD, remitenteUsername, receptorUsername);
                     } catch (SQLException ex) {
                         ex.printStackTrace();
                     }

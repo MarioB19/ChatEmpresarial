@@ -230,7 +230,7 @@ public class FriendInvitationController {
         }
 
         // Actualizar el estado de la solicitud de amistad
-        String updateSolicitud = "UPDATE solicitud_amistad SET estado_solicitud = 1 WHERE id_remitente = ? AND id_receptor = ?";
+        String updateSolicitud = "UPDATE solicitudes_amistad SET estado_solicitud = 1 WHERE id_remitente = ? AND id_receptor = ?";
         try (PreparedStatement sqlUpdate = con.prepareStatement(updateSolicitud)) {
             sqlUpdate.setInt(1, remitenteId);
             sqlUpdate.setInt(2, receptorId);
@@ -249,10 +249,11 @@ public class FriendInvitationController {
         }
 
         // Crear una nueva relación de amistad
-        String insertAmistad = "INSERT INTO amistad (id_receptor, id_chat, estado_amistad, fecha_cracion) VALUES (?, ?, 1, NOW())";
+        String insertAmistad = "INSERT INTO amistad (id_remitente, id_receptor, id_chat, estado_amistad, fecha_creacion) VALUES (?,?, ?, 1, NOW())";
         try (PreparedStatement sqlInsertAmistad = con.prepareStatement(insertAmistad)) {
-            sqlInsertAmistad.setInt(1, receptorId);
-            sqlInsertAmistad.setInt(2, chatId);
+            sqlInsertAmistad.setInt(1, remitenteId);
+            sqlInsertAmistad.setInt(2, receptorId);
+            sqlInsertAmistad.setInt(3, chatId);
             sqlInsertAmistad.executeUpdate();
         }
 
@@ -294,7 +295,7 @@ public class FriendInvitationController {
         }
 
         // Obtener los receptores a los que se han enviado solicitudes
-        String querySolicitudes = "SELECT id_receptor FROM solicitudes_amistad WHERE id_remitente = ? && estado_solicitud=0";
+        String querySolicitudes = "SELECT id_receptor FROM solicitudes_amistad WHERE id_remitente = ? AND estado_solicitud=0";
         List<Integer> receptoresIds = new ArrayList<>();
 
         try (PreparedStatement sqlSolicitudes = con.prepareStatement(querySolicitudes)) {

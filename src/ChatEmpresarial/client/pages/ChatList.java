@@ -76,20 +76,8 @@ public class ChatList extends JFrame {
      nombreUserActive = username;
        nombreUserActive = username;
        
-    
-         modeloSolicitudesRecibidas.addColumn("nombre");
-        modeloSolicitudesRecibidas.addColumn("Agregar");
-        modeloSolicitudesRecibidas.addColumn("borrar");
-        
-         modeloAmigosConectados.addColumn("nombre");
-        modeloAmigosConectados.addColumn("borrar");
-
-            modeloAmigosDesconectados.addColumn("nombre");
-        modeloAmigosDesconectados.addColumn("borrar");
-        
-       modeloSolicitudesEnviadas.addColumn("nombre");
-        modeloSolicitudesEnviadas.addColumn("Agregar");
-        modeloSolicitudesEnviadas.addColumn("borrar");
+  
+       iniciarModelos();
         inicializarDatos();  // Llamada inicial para cargar datos antes de que el Timer comience
         configurarVentana();
         configurarNavegacion();
@@ -109,6 +97,31 @@ private void configurarTimer() {
     };
     updateTimer = new Timer(delay, taskPerformer);
     updateTimer.start();
+}
+
+
+private void iniciarModelos()
+{
+       modeloUsuariosConectados.addColumn("nombre");
+        modeloUsuariosConectados.addColumn("borrar");
+
+        modeloUsuariosDesconectados.addColumn("nombre");
+        modeloUsuariosDesconectados.addColumn("borrar");
+
+        modeloAmigosConectados.addColumn("nombre");
+        modeloAmigosConectados.addColumn("borrar");
+
+        modeloAmigosDesconectados.addColumn("nombre");
+        modeloAmigosDesconectados.addColumn("borrar");
+
+        modeloSolicitudesRecibidas.addColumn("nombre");
+        modeloSolicitudesRecibidas.addColumn("Agregar");
+        modeloSolicitudesRecibidas.addColumn("borrar");
+
+        modeloSolicitudesEnviadas.addColumn("nombre");
+        modeloSolicitudesEnviadas.addColumn("borrar");
+    
+    
 }
 
 
@@ -183,81 +196,50 @@ private void configurarTimer() {
     private void actualizarListasUsuarios() {
     SwingUtilities.invokeLater(() -> {
         
-      //  obtenerSolicitudesRecibidas();
-        
-        //Elliminar datos
-        modeloUsuariosConectados.setRowCount(0);
-        modeloUsuariosDesconectados.setRowCount(0);
-        modeloAmigosDesconectados.setRowCount(0);
-        modeloAmigosConectados.setRowCount(0);
-            
-        
+    
+            // Limpiar los modelos de las tablas
+            modeloUsuariosConectados.setRowCount(0);
+            modeloUsuariosDesconectados.setRowCount(0);
+            modeloAmigosConectados.setRowCount(0);
+            modeloAmigosDesconectados.setRowCount(0);
+            modeloSolicitudesRecibidas.setRowCount(0);
+            modeloSolicitudesEnviadas.setRowCount(0);
 
-        for( Usuario us : usuariosConectados)
-        {
-            modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
-                 modeloUsuariosConectados.fireTableDataChanged();
-        }
-        
-        
-        modeloUsuariosDesconectados.setRowCount(0);
-        
-        for( Usuario us : usuariosDesconectados)
-        {
-            modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
-                 modeloUsuariosDesconectados.fireTableDataChanged();
-        }
-                
-        
+            // Añadir filas a los modelos
+            for (Usuario us : usuariosConectados) {
+                modeloUsuariosConectados.addRow(new Object[]{us.getNombre(), "+"});
+            }
 
+            for (Usuario us : usuariosDesconectados) {
+                modeloUsuariosDesconectados.addRow(new Object[]{us.getNombre(), "+"});
+            }
 
-          
-        
-        //Amigos
-        modeloAmigosConectados.setRowCount(0);
-        
-        for( Usuario us : amigosConectados)
-        {
-            modeloAmigosConectados.addRow(new Object[]{us.getNombre(), "-"});
-                  modeloAmigosConectados.fireTableDataChanged();
-        }
-        
-        
+            for (Usuario us : amigosConectados) {
+                modeloAmigosConectados.addRow(new Object[]{us.getNombre(), "-"});
+            }
 
-       
-       modeloAmigosDesconectados.setRowCount(0);
-       
-        for( Usuario us : amigosDesconectados)
-        {
-            modeloAmigosDesconectados.addRow(new Object[]{us.getNombre(), "-"});
-         
-              
-      modeloAmigosDesconectados.fireTableDataChanged();
-        }
-        
-        modeloSolicitudesRecibidas.setColumnCount(0);
-        //Solicitudes de amistad
-        obtenerSolicitudesRecibidas();
-       
-        
-        for(Usuario us: SolicitudAmistadRecibida)
-        {
-        modeloSolicitudesRecibidas.addRow(new Object[]{us.getNombre(), "+","-"});
-        modeloSolicitudesRecibidas.fireTableDataChanged();
-        }
-        
-         obtenerSolicitudesEnviadas();
-        //Solicitudes enviadas
-          modeloSolicitudesEnviadas.setColumnCount(0);
-        
-        for(Usuario us: solicitudesAmigosEnviadas)
-        {
-               modeloSolicitudesEnviadas.addRow(new Object[]{us.getNombre(),"-"});
-                modeloSolicitudesEnviadas.fireTableDataChanged();
-        }
-        
-             
-    });
+            for (Usuario us : amigosDesconectados) {
+                modeloAmigosDesconectados.addRow(new Object[]{us.getNombre(), "-"});
+            }
+
+            obtenerSolicitudesRecibidas();
+            for (Usuario us : SolicitudAmistadRecibida) {
+                modeloSolicitudesRecibidas.addRow(new Object[]{us.getNombre(), "+", "-"});
+            }
+
+            obtenerSolicitudesEnviadas();
+            for (Usuario us : solicitudesAmigosEnviadas) {
+                modeloSolicitudesEnviadas.addRow(new Object[]{us.getNombre(), "-"});
+            }
+
+            // Notificar cambios en los modelos
+            modeloUsuariosConectados.fireTableDataChanged();
+            modeloUsuariosDesconectados.fireTableDataChanged();
+            modeloAmigosConectados.fireTableDataChanged();
+            modeloAmigosDesconectados.fireTableDataChanged();
+            modeloSolicitudesRecibidas.fireTableDataChanged();
+            modeloSolicitudesEnviadas.fireTableDataChanged();
+        });
 
         
 
@@ -385,12 +367,7 @@ private void configurarTimer() {
 
     private JScrollPane crearListaUsuarios(String titulo, DefaultTableModel model,  boolean estaConectado) {
         
-           model.addColumn("nombre");
-        model.addColumn("borrar");
-
      
-        
-        
         
         JTable lista = new JTable(model);
         
@@ -584,9 +561,6 @@ private void configurarTimer() {
   
      private JScrollPane crearListaSolicitudesAmigosRecibidas(String titulo,DefaultTableModel  elementos, boolean Envia) {
 
-        
-      
-        
         JTable lista = new JTable(elementos);
         
         lista.setTableHeader(null);
@@ -614,10 +588,10 @@ private void configurarTimer() {
                     // si es un botón, realiza la acción correspondiente
                     
                     
-                    
+                      Usuario usuario = SolicitudAmistadRecibida.get(row);
                         if (column == 1) 
                         {
-                            Usuario usuario = solicitudesAmigosEnviadas.get(row);
+                          
                             aceptarSolicitudAmistad(usuario.getNombre());
                            
                         }
@@ -625,7 +599,7 @@ private void configurarTimer() {
                     
                         if (column == 2) 
                         {
-                            Usuario usuario = solicitudesAmigosEnviadas.get(row);
+                
                             cancelarSolicitudAmistad(usuario.getNombre());
                            
                         }
@@ -645,6 +619,7 @@ private void configurarTimer() {
     
      private JScrollPane crearListaSolicitudesAmigosEnviadas(String titulo, DefaultTableModel elementos, boolean Envia) {
              
+     
         JTable lista = new JTable(elementos);
         
         lista.setTableHeader(null);
@@ -1207,8 +1182,10 @@ private void configurarTimer() {
 
     PersistentClient client = PersistentClient.getInstance();
     String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+        JSONObject jsonResponse = new JSONObject(serverResponse);
+            String status = jsonResponse.getString("status");
 
-    switch (serverResponse) {
+    switch (status){
         case "-5":
             JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
@@ -1235,8 +1212,10 @@ private void configurarTimer() {
 
     PersistentClient client = PersistentClient.getInstance();
     String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+  JSONObject jsonResponse = new JSONObject(serverResponse);
+            String status = jsonResponse.getString("status");
 
-    switch (serverResponse) {
+    switch (status) {
         case "-4":
             JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
