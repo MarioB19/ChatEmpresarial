@@ -127,13 +127,16 @@ public class GroupChatWindow extends JFrame {
         });
 
         btnAgregarMiembros.addActionListener(e -> {
+            AddMemberToGroup membersList = new AddMemberToGroup(grupo, nombreUserActive);
+            membersList.setVisible(true);
+            dispose();
         });
-        
+
         btnEditarMiembros.addActionListener(e -> {
-                MembersListToDeleteFromGroup membersList = new MembersListToDeleteFromGroup(grupo ,nombreUserActive);
-                membersList.setVisible(true);
-                dispose();
-        });        
+            MembersListToDeleteFromGroup membersList = new MembersListToDeleteFromGroup(grupo, nombreUserActive);
+            membersList.setVisible(true);
+            dispose();
+        });
         backButton.addActionListener(e -> {
             ChatList chatList = new ChatList(nombreUserActive);
             chatList.setVisible(true);

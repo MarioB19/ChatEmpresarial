@@ -79,25 +79,23 @@ public class AddMemberToGroup extends JFrame {
         this.dispose(); // Cierra esta ventana
     }
 
-    
     private void handleAddUser(Usuario user) {
         JSONObject json = new JSONObject();
-        json.put("idChat", Integer.toString(grupo.getId_chat()));
         json.put("idGrupo", Integer.toString(grupo.getId_grupo()));
-        json.put("nombre", user.getNombre());
-        json.put("admin", nombreUserActive);
+        json.put("idReceptor", user.getNombre());
+        json.put("Remitente", nombreUserActive);
         json.put("action", "ADD_USER_TO_GROUP");
 
         PersistentClient client = PersistentClient.getInstance();
         client.sendMessageAndWaitForResponse(json.toString());
     }
-    
-    
+
     private void fetchUsers() {
         userPanel.removeAll(); // Limpiar el panel antes de agregar nuevos usuarios
         try {
             JSONObject json = new JSONObject();
             json.put("idChat", Integer.toString(grupo.getId_chat()));
+            json.put("idGrupo", Integer.toString(grupo.getId_grupo()));
             json.put("nombre", nombreUserActive);
             json.put("action", "GET_USERS_NOT_IN_GROUP");
 
