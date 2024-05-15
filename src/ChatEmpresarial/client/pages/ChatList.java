@@ -396,11 +396,6 @@ private void iniciarModelos()
 }
 
 
-
-   
-        
-        
-
     private JScrollPane crearListaUsuarios(String titulo, DefaultTableModel model,  boolean estaConectado) {
         
      
@@ -538,9 +533,6 @@ private void iniciarModelos()
 }
 
     
-    
- 
-
 
     private JPanel crearPanelAmigos() {
         JPanel panel = new JPanel(new GridLayout(2, 1));
@@ -586,6 +578,11 @@ private void iniciarModelos()
                         if(estaConectado)
                         {
                             Usuario usuario = amigosConectados.get(row);
+                            ChatAmigosPage amigos = new ChatAmigosPage(usuario.getNombre(), nombreUserActive);
+                        }
+                        else
+                        {
+                             Usuario usuario = amigosDesconectados.get(row);
                             ChatAmigosPage amigos = new ChatAmigosPage(usuario.getNombre(), nombreUserActive);
                         }
                         
@@ -1244,21 +1241,22 @@ private void iniciarModelos()
         JSONObject jsonResponse = new JSONObject(serverResponse);
             String status = jsonResponse.getString("status");
 
-    switch (status){
+    
+    switch (status) {
         case "-5":
-            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Unknown sender.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
         case "-6":
-            JOptionPane.showMessageDialog(null, "Campo 'receptor' faltante en la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Missing 'receiver' field in the request.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
         case "-2":
-            JOptionPane.showMessageDialog(null, "Remitente o receptor no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Sender or receiver not found.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
         case "0":
-            JOptionPane.showMessageDialog(null, "Solicitud de amistad cancelada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Friend request successfully cancelled.", "Success", JOptionPane.INFORMATION_MESSAGE);
             break;
         default:
-            JOptionPane.showMessageDialog(null, "Error al cancelar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Error cancelling the friend request.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
     }
 }
@@ -1274,21 +1272,28 @@ private void iniciarModelos()
   JSONObject jsonResponse = new JSONObject(serverResponse);
             String status = jsonResponse.getString("status");
 
+ 
     switch (status) {
         case "-4":
-            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Sender not identified.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
         case "-5":
-            JOptionPane.showMessageDialog(null, "Campo 'receptor' faltante en la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Missing 'receiver' field in the request.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
         case "-6":
-            JOptionPane.showMessageDialog(null, "Error interno.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Internal error.", "Error", JOptionPane.ERROR_MESSAGE);
+            break;
+        case "2":
+            JOptionPane.showMessageDialog(null, "You are already friends.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            break;
+        case "1":
+            JOptionPane.showMessageDialog(null, "Friend request already sent.", "Success", JOptionPane.INFORMATION_MESSAGE);
             break;
         case "0":
-            JOptionPane.showMessageDialog(null, "Solicitud de amistad enviada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Friend request sent successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
             break;
         default:
-            JOptionPane.showMessageDialog(null, "Error desconocido al enviar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Unknown error sending the friend request.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
     }
     

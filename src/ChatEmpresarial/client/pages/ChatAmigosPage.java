@@ -17,6 +17,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.Timestamp;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,13 +49,31 @@ public class ChatAmigosPage extends JFrame
     private static final Color COLOR_TEXTO = Color.WHITE;
     private Timer messageFetchTimer;
 
+    //------------------
+    //Constructor
+    //-------------------
+    
     public ChatAmigosPage(String contactName, String activeUser) {
         this.contactName = contactName;
         this.activeUser = activeUser;
         initializeUI();
         setupMessageFetchingTimer();
-     
+        
+         this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (messageFetchTimer != null) {
+                    messageFetchTimer.stop();
+                }
+            }
+        });
     }
+     
+    
+    
+    
+    //Métodos privados
+    
 
     private void initializeUI() {
         setTitle("Chat con " + contactName);
@@ -102,7 +122,7 @@ public class ChatAmigosPage extends JFrame
     private void sendText(ActionEvent e) {
     String text = textField.getText();
     if (!text.isEmpty()) {
-        textField.setText("");
+        
         JSONObject json = new JSONObject();
         json.put("receptor", contactName);
         json.put("contenido", text);

@@ -67,6 +67,24 @@ public class FriendInvitationController {
             }
         }
 
+        // Verificar si ya existe una solicitud de amistad pendiente o una amistad
+        String checkSolicitudQuery = "SELECT estado_solicitud FROM solicitudes_amistad WHERE (id_remitente = ? AND id_receptor = ?) OR (id_remitente = ? AND id_receptor = ?)";
+        try (PreparedStatement sqlCheckSolicitud = con.prepareStatement(checkSolicitudQuery)) {
+            sqlCheckSolicitud.setInt(1, remitenteId);
+            sqlCheckSolicitud.setInt(2, receptorId);
+            sqlCheckSolicitud.setInt(3, receptorId);
+            sqlCheckSolicitud.setInt(4, remitenteId);
+            ResultSet rsCheckSolicitud = sqlCheckSolicitud.executeQuery();
+            if (rsCheckSolicitud.next()) {
+                int estadoSolicitud = rsCheckSolicitud.getInt("estado_solicitud");
+                if (estadoSolicitud == 0) {
+                    return "1"; // Ya existe una solicitud de amistad pendiente
+                } else if (estadoSolicitud == 1) {
+                    return "2"; // Ya son amigos
+                }
+            }
+        }
+
         // Añadir la solicitud de amistad
         String insertSolicitud = "INSERT INTO solicitudes_amistad (id_remitente, id_receptor, estado_solicitud, fecha_creacion) VALUES (?, ?, 0, CURRENT_TIMESTAMP)";
         try (PreparedStatement sqlSolicitud = con.prepareStatement(insertSolicitud)) {
@@ -80,6 +98,14 @@ public class FriendInvitationController {
     } catch (SQLException ex) {
         ex.printStackTrace();
         return "-1"; // Error en SQL
+    } finally {
+        try {
+            if (con != null) {
+                con.close();
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 }
         

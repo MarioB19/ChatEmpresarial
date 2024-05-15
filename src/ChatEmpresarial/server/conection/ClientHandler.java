@@ -732,72 +732,96 @@ public class ClientHandler implements Runnable {
     }
 
 //Método para enviar una solicitud de amistad 
-    private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonObject) {
-        JSONObject respuesta = new JSONObject();
-        try {
-            // Identificar el nombre del remitente
-            String remitenteUsername = IdentifyUserName(clientSocket);
+   
+private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonObject) {
+    JSONObject respuesta = new JSONObject();
+    try {
+        // Identificar el nombre del remitente
+        String remitenteUsername = IdentifyUserName(clientSocket);
 
-            if (remitenteUsername == null) {
-                respuesta.put("status", "-4");
-                respuesta.put("message", "Remitente no identificado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar enviar una solicitud de amistad: remitente no identificado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-                return respuesta.toString();
-            }
-
-            // Deserializar el JSON para obtener el nombre del receptor
-            String receptorUsername = jsonObject.optString("receptor");
-
-            // Verificar que el nombre del receptor esté presente
-            if (receptorUsername == null || receptorUsername.isEmpty()) {
-                respuesta.put("status", "-5");
-                respuesta.put("message", "Campo 'receptor' faltante en la solicitud");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar enviar una solicitud de amistad: falta el campo 'receptor'");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-                return respuesta.toString();
-            }
-
-            // Llamar al método para agregar la solicitud de amistad
-            String result = FriendInvitationController.AddInvitation(remitenteUsername, receptorUsername);
-
-            // Incluir el resultado en la respuesta
-            if (result.equals("0")) {
-                respuesta.put("status", "0");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ENVIAR_SOLICITUD_AMISTAD, remitenteUsername, receptorUsername);
-                } catch (SQLException ex) {
-
-                }
-            } else {
-                respuesta.put("status", result);
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar una solicitud de amistad de " + remitenteUsername + " a " + receptorUsername);
-                } catch (SQLException ex) {
-
-                }
-            }
-
-            return respuesta.toString();
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            respuesta.put("status", "-6");
-            respuesta.put("message", "Error interno");
+        if (remitenteUsername == null) {
+            respuesta.put("status", "-4");
+            respuesta.put("message", "Remitente no identificado");
             try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al enviar una solicitud de amistad");
-            } catch (SQLException exSql) {
-
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar enviar una solicitud de amistad: remitente no identificado");
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
             return respuesta.toString();
         }
+
+        // Deserializar el JSON para obtener el nombre del receptor
+        String receptorUsername = jsonObject.optString("receptor");
+
+        // Verificar que el nombre del receptor esté presente
+        if (receptorUsername == null || receptorUsername.isEmpty()) {
+            respuesta.put("status", "-5");
+            respuesta.put("message", "Campo 'receptor' faltante en la solicitud");
+            try {
+                LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar enviar una solicitud de amistad: falta el campo 'receptor'");
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return respuesta.toString();
+        }
+
+        // Llamar al método para agregar la solicitud de amistad
+        String result = FriendInvitationController.AddInvitation(remitenteUsername, receptorUsername);
+
+        // Incluir el resultado en la respuesta
+        switch (result) {
+            case "0":
+                respuesta.put("status", "0");
+                respuesta.put("message", "Solicitud de amistad enviada con éxito");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ENVIAR_SOLICITUD_AMISTAD, remitenteUsername, receptorUsername);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                break;
+            case "1":
+                respuesta.put("status", "1");
+                respuesta.put("message", "Ya existe una solicitud de amistad pendiente");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar una solicitud de amistad de " + remitenteUsername + " a " + receptorUsername + ": solicitud pendiente");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                break;
+            case "2":
+                respuesta.put("status", "2");
+                respuesta.put("message", "Ya son amigos");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar una solicitud de amistad de " + remitenteUsername + " a " + receptorUsername + ": ya son amigos");
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                break;
+            default:
+                respuesta.put("status", result);
+                respuesta.put("message", "Error al enviar la solicitud de amistad");
+                try {
+                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar una solicitud de amistad de " + remitenteUsername + " a " + receptorUsername);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                break;
+        }
+
+        return respuesta.toString();
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        respuesta.put("status", "-6");
+        respuesta.put("message", "Error interno");
+        try {
+            LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al enviar una solicitud de amistad");
+        } catch (SQLException exSql) {
+            exSql.printStackTrace();
+        }
+        return respuesta.toString();
     }
+}
 
     private String handleCancelFriendInvitation(Socket clientSocket, JSONObject jsonObject) {
         JSONObject respuesta = new JSONObject();
@@ -1086,9 +1110,9 @@ public class ClientHandler implements Runnable {
 //Método para mandar mensajes a otros amigos
     private String handleSendMessageFriend(Socket clientSocket, JSONObject jsonObject) {
         JSONObject respuesta = new JSONObject();
-        String receptorUsername = IdentifyUserName(clientSocket);
+        String remitenteUsername = IdentifyUserName(clientSocket);
         try {
-            if (receptorUsername == null) {
+            if (remitenteUsername == null) {
                 respuesta.put("status", "-4");
                 respuesta.put("message", "Receptor no identificado");
                 try {
@@ -1100,7 +1124,7 @@ public class ClientHandler implements Runnable {
             }
 
             // Deserializar el JSON para obtener el nombre del remitente (quien envió la solicitud)
-            String remitenteUsername = jsonObject.optString("receptor");
+            String receptorUsername = jsonObject.optString("receptor");
 
             String contenido = jsonObject.optString("contenido");
 

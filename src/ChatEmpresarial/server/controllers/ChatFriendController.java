@@ -32,7 +32,12 @@ public class ChatFriendController {
 
         try {
             // Consulta para obtener el id del chat compartido entre remitente y receptor
-            String queryAmistad = "SELECT id_chat FROM amistad WHERE (id_remitente = ? AND id_receptor = ?) OR (id_remitente = ? AND id_receptor = ?)";
+            String queryAmistad = "SELECT a.id_chat FROM amistad a " +
+                              "INNER JOIN chat c ON a.id_chat = c.id_chat " +
+                              "INNER JOIN usuario u1 ON a.id_remitente = u1.id_usuario " +
+                              "INNER JOIN usuario u2 ON a.id_receptor = u2.id_usuario " +
+                              "WHERE ((u1.nombre = ? AND u2.nombre = ?) OR (u1.nombre = ? AND u2.nombre = ?)) " +
+                              "AND c.tipo_chat = 1";
             int idChat = -1;
 
             try (PreparedStatement sqlAmistad = con.prepareStatement(queryAmistad)) {
@@ -93,10 +98,12 @@ public class ChatFriendController {
 
     try {
         // Consulta para obtener el id del chat compartido entre remitente y receptor
-       String queryAmistad = "SELECT a.id_chat FROM amistad a " +
+     String queryAmistad = "SELECT a.id_chat FROM amistad a " +
+                              "INNER JOIN chat c ON a.id_chat = c.id_chat " +
                               "INNER JOIN usuario u1 ON a.id_remitente = u1.id_usuario " +
                               "INNER JOIN usuario u2 ON a.id_receptor = u2.id_usuario " +
-                              "WHERE (u1.nombre = ? AND u2.nombre = ?) OR (u1.nombre = ? AND u2.nombre = ?)";
+                              "WHERE ((u1.nombre = ? AND u2.nombre = ?) OR (u1.nombre = ? AND u2.nombre = ?)) " +
+                              "AND c.tipo_chat = 1";
         int idChat = -1;
 
         // Encontrar el id_chat
@@ -143,14 +150,19 @@ public class ChatFriendController {
     
    }
    
-   public static String SendMessage(String remitente, String receptor, String contenido) {
+  public static String SendMessage(String remitente, String receptor, String contenido) {
     Conexion conexion = new Conexion(); // Instanciar para obtener la conexión
     Connection con = conexion.getCon();
     int idChat = -1;
 
     try {
-        // Encuentra el `id_chat` para el remitente y receptor dados
-        String queryAmistad = "SELECT id_chat FROM amistad WHERE ((id_remitente = ? AND id_receptor = ?) OR (id_remitente = ? AND id_receptor = ?)) AND tipo_chat=1";
+        // Encuentra el `id_chat` para el remitente y receptor dados y asegúrate de que pertenece a un tipo_chat=1
+    String queryAmistad = "SELECT a.id_chat FROM amistad a " +
+                              "INNER JOIN chat c ON a.id_chat = c.id_chat " +
+                              "INNER JOIN usuario u1 ON a.id_remitente = u1.id_usuario " +
+                              "INNER JOIN usuario u2 ON a.id_receptor = u2.id_usuario " +
+                              "WHERE ((u1.nombre = ? AND u2.nombre = ?) OR (u1.nombre = ? AND u2.nombre = ?)) " +
+                              "AND c.tipo_chat = 1";
         try (PreparedStatement sqlAmistad = con.prepareStatement(queryAmistad)) {
             sqlAmistad.setString(1, remitente);
             sqlAmistad.setString(2, receptor);
@@ -175,23 +187,21 @@ public class ChatFriendController {
             sqlInsertMensaje.setString(4, remitente);
             sqlInsertMensaje.executeUpdate();
         }
-  try {
-                  con.close();
-              } catch (SQLException ex) {
-                  java.util.logging.Logger.getLogger(FriendInvitationController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-              }
+
+        con.close();
         // Retornar "1" indicando éxito
         return "1";
 
     } catch (SQLException ex) {
-      
+        ex.printStackTrace();
         return "-1"; // Retornar "-1" en caso de excepción
     }
+}
     
     
     
    
-}
+
    
     public static String findFriends(String remitenteUsername) {
         Conexion conexion = new Conexion(); // Instancia para obtener la conexión
