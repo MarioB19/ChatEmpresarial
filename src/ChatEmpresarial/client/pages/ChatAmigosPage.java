@@ -98,64 +98,66 @@ public class ChatAmigosPage extends JFrame
         messageFetchTimer = new Timer(delay, e -> fetchMessages());
         messageFetchTimer.start();
     }
-
+//Enviar mensaje de texto
     private void sendText(ActionEvent e) {
-        String text = textField.getText();
-        if (!text.isEmpty()) {
-            textField.setText("");
-            JSONObject json = new JSONObject();
-            json.put("user1", activeUser);
-            json.put("user2", contactName);
-            json.put("message", text);
-            json.put("action", Enumerators.TipoRequest.SEND_MESSAGE_FRIEND);
-            
-            PersistentClient client = PersistentClient.getInstance();
-                String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
-                System.out.println("Server respuesta" + serverResponse);
+    String text = textField.getText();
+    if (!text.isEmpty()) {
+        textField.setText("");
+        JSONObject json = new JSONObject();
+        json.put("receptor", contactName);
+        json.put("contenido", text);
+        json.put("action", Enumerators.TipoRequest.SEND_MESSAGE_FRIEND);
+
+        PersistentClient client = PersistentClient.getInstance();
+        String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
+        System.out.println("Server respuesta: " + serverResponse);
+        
+        if (!serverResponse.equals("-1")) {
             textArea.append(activeUser + ": " + text + "\n");
+        } else {
+            System.err.println("Error al enviar el mensaje.");
         }
     }
+}
 
-    private void fetchMessages() {
-        textArea.setText(""); // Clear the text area each time we fetch messages
-        JSONObject json = new JSONObject();
-        json.put("user1", activeUser);
-        json.put("user2", contactName);
-        json.put("action", Enumerators.TipoRequest.GET_MESSAGE_FRIEND);
+  private void fetchMessages() {
+    textArea.setText(""); // Clear the text area each time we fetch messages
+    JSONObject json = new JSONObject();
+    json.put("receptor", contactName);
+    json.put("action", Enumerators.TipoRequest.GET_MESSAGE_FRIEND);
 
-        String serverResponse = PersistentClient.getInstance().sendMessageAndWaitForResponse(json.toString());
-        
-        System.out.println("server response" + serverResponse);
-        if (serverResponse == null || serverResponse.isEmpty()) {
-            System.err.println("La respuesta del servidor es nula o está vacía.");
+    String serverResponse = PersistentClient.getInstance().sendMessageAndWaitForResponse(json.toString());
+
+    System.out.println("server response: " + serverResponse);
+    if (serverResponse == null || serverResponse.isEmpty()) {
+        System.err.println("La respuesta del servidor es nula o está vacía.");
+        return;
+    }
+
+    try {
+        JSONObject response = new JSONObject(serverResponse);
+        if (!response.has("message")) {
+            System.err.println("La respuesta del servidor no contiene la clave 'message'.");
             return;
         }
-
-        try {
-            JSONObject response = new JSONObject(serverResponse);
-            if (!response.has("messages")) {
-                System.err.println("La respuesta del servidor no contiene la clave 'messages'.");
-                return;
-            }
-            JSONArray messages = response.getJSONArray("messages");
-            messages.forEach(msg -> {
-                if (msg instanceof String) {
-                    JSONObject messageDetails = new JSONObject((String) msg);
-                    String sender = messageDetails.getString("sender");
-                    String content = messageDetails.getString("content");
-                    receiveMessage(sender + ": " + content);
-                }
-            });
-        } catch (Exception e) {
-            System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
+        JSONArray messages = new JSONArray(response.getString("message"));
+        for (int i = 0; i < messages.length(); i++) {
+            JSONObject msg = messages.getJSONObject(i);
+            String sender = msg.getString("usuario");
+            String content = msg.getString("contenido");
+            receiveMessage(sender + ": " + content);
         }
+    } catch (Exception e) {
+        System.err.println("Error al parsear la respuesta del servidor: " + e.getMessage());
     }
+}
 
-    public void receiveMessage(String formattedMessage) {
-        SwingUtilities.invokeLater(() -> {
-            textArea.append(formattedMessage + "\n");
-        });
-    }
+public void receiveMessage(String formattedMessage) {
+    SwingUtilities.invokeLater(() -> {
+        textArea.append(formattedMessage + "\n");
+    });
+}
+
 }
 
 /*{

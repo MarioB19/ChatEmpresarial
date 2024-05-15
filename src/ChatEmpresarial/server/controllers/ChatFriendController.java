@@ -47,36 +47,9 @@ public class ChatFriendController {
                 }
             }
 
-            // Si no existe el chat, creamos uno nuevo
-            if (idChat == -1) {
-                String insertChatQuery = "INSERT INTO chat (fecha_creacion, tipo_chat) VALUES (?, 2)";
-                try (PreparedStatement sqlInsertChat = con.prepareStatement(insertChatQuery, Statement.RETURN_GENERATED_KEYS)) {
-                    sqlInsertChat.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-                    sqlInsertChat.executeUpdate();
-
-                    // Obtener el ID generado del nuevo chat
-                    ResultSet generatedKeys = sqlInsertChat.getGeneratedKeys();
-                    if (generatedKeys.next()) {
-                        idChat = generatedKeys.getInt(1);
-                    }
-                }
-
-                // Asignar el nuevo chat a la tabla amistad
-                String insertAmistadQuery = "INSERT INTO amistad (id_receptor, id_remitente, id_chat, estado_amistad, fecha_creacion) VALUES (?, ?, ?, 1, ?)";
-                try (PreparedStatement sqlInsertAmistad = con.prepareStatement(insertAmistadQuery)) {
-                    sqlInsertAmistad.setString(1, receptor);
-                    sqlInsertAmistad.setString(2, remitente);
-                    sqlInsertAmistad.setInt(3, idChat);
-                    sqlInsertAmistad.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
-                    sqlInsertAmistad.executeUpdate();
-                }
-
-                // Retornar un valor especial para indicar que se creó el chat
-                return "39";
-            }
-
+            
             // Consulta para obtener los mensajes del chat existente
-            String queryMensajes = "SELECT contenido, fecha_creacion  FROM mensaje WHERE id_chat = ? ORDER BY fecha_creacion ASC";
+            String queryMensajes = "SELECT contenido, nombre  FROM mensaje WHERE id_chat = ? ORDER BY fecha_creacion ASC";
             try (PreparedStatement sqlMensajes = con.prepareStatement(queryMensajes)) {
                 sqlMensajes.setInt(1, idChat);
                 ResultSet rsMensajes = sqlMensajes.executeQuery();
@@ -84,12 +57,12 @@ public class ChatFriendController {
                 // Recorrer los resultados de la consulta y crear objetos JSON para cada mensaje
                 while (rsMensajes.next()) {
                     String contenido = rsMensajes.getString("contenido");
-                    Timestamp fechaCreacion = rsMensajes.getTimestamp("fecha_creacion");
-                    String usuario = rsMensajes.getString("usuario");
+                   
+                    String usuario = rsMensajes.getString("nombre");
 
                     JSONObject mensajeJson = new JSONObject();
                     mensajeJson.put("contenido", contenido);
-                    mensajeJson.put("fecha_creacion", fechaCreacion.toString());
+                   
                     mensajeJson.put("usuario", usuario);
 
                     mensajesArray.put(mensajeJson); // Añadir al arreglo JSON
@@ -97,17 +70,14 @@ public class ChatFriendController {
             }
 
             // Crear un objeto JSON con el resultado
-            JSONObject response = new JSONObject();
-            response.put("id_chat", idChat);
-            response.put("mensajes", mensajesArray);
-
+           
             
               try {
                   con.close();
               } catch (SQLException ex) {
                   java.util.logging.Logger.getLogger(FriendInvitationController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
               }
-            return response.toString(); // Retornar toda la respuesta como string
+            return mensajesArray.toString(); // Retornar toda la respuesta como string
 
         } catch (SQLException ex) {
            
@@ -180,7 +150,7 @@ public class ChatFriendController {
 
     try {
         // Encuentra el `id_chat` para el remitente y receptor dados
-        String queryAmistad = "SELECT id_chat FROM amistad WHERE (id_remitente = ? AND id_receptor = ?) OR (id_remitente = ? AND id_receptor = ?)";
+        String queryAmistad = "SELECT id_chat FROM amistad WHERE ((id_remitente = ? AND id_receptor = ?) OR (id_remitente = ? AND id_receptor = ?)) AND tipo_chat=1";
         try (PreparedStatement sqlAmistad = con.prepareStatement(queryAmistad)) {
             sqlAmistad.setString(1, remitente);
             sqlAmistad.setString(2, receptor);
@@ -197,7 +167,7 @@ public class ChatFriendController {
         }
 
         // Inserta el nuevo mensaje en la tabla `mensaje`
-        String insertMensajeQuery = "INSERT INTO mensaje (id_chat, contenido, fecha_creacion, usuario) VALUES (?, ?, ?, ?)";
+        String insertMensajeQuery = "INSERT INTO mensaje (id_chat, contenido, fecha_creacion, nombre) VALUES (?, ?, ?, ?)";
         try (PreparedStatement sqlInsertMensaje = con.prepareStatement(insertMensajeQuery)) {
             sqlInsertMensaje.setInt(1, idChat);
             sqlInsertMensaje.setString(2, contenido);

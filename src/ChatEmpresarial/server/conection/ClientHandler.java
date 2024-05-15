@@ -124,7 +124,7 @@ public class ClientHandler implements Runnable {
 
              
 
-        
+        //Enviar mensaje a un amigo
                     case SEND_MESSAGE_FRIEND:
                         response = handleSendMessageFriend(clientSocket,jsonObject);
                         break;
