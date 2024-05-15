@@ -116,10 +116,12 @@ public class FriendInvitationController {
         }
 
         // Eliminar la solicitud de amistad
-        String deleteSolicitud = "DELETE FROM solicitudes_amistad WHERE id_remitente = ? AND id_receptor = ?";
+        String deleteSolicitud = "DELETE FROM solicitudes_amistad WHERE (id_remitente = ? AND id_receptor = ?) OR (id_remitente = ? AND id_receptor = ?)";
         try (PreparedStatement sqlDelete = con.prepareStatement(deleteSolicitud)) {
             sqlDelete.setInt(1, remitenteId);
             sqlDelete.setInt(2, receptorId);
+            sqlDelete.setInt(3, receptorId);
+            sqlDelete.setInt(4, remitenteId);
             sqlDelete.executeUpdate();
         }
 
