@@ -526,13 +526,13 @@ public class ClientHandler implements Runnable {
     }
 
     private String handleAddUserToGroup(JSONObject jsonObject) {
-        JSONArray connectedUsers = new JSONArray();
-        GlobalClients.connectedClients.keySet().forEach(connectedUsers::put);
-        String idChat = jsonObject.getString("idChat");
+        System.out.println("Mandando a agregar a grupo: " + jsonObject.toString());
+        System.out.println("Agregando usuario a grupo.....");
         String idGrupo = jsonObject.getString("idGrupo");
-        String nombre = jsonObject.getString("nombre");
-        System.out.println("Mandando a eliminar grupo conectados: " + jsonObject.toString());
-        GroupChatController.eliminarParticipante(idChat, nombre, idGrupo);
+        String idReceptor = jsonObject.getString("idReceptor");
+        String Remitente = jsonObject.getString("Remitente");
+        GroupChatController.agregarParticipante(idGrupo, idReceptor, Remitente);
+        System.out.println("Usuario agregado correctamente");
         return "0";
     }
 
@@ -584,9 +584,10 @@ public class ClientHandler implements Runnable {
         try {
             // Extrae los nombres del remitente y receptor desde el JSON
             String idchat = jsonObject.getString("idChat");
+            String idgrupo = jsonObject.getString("idGrupo");
 
             // Llama al método que obtiene los mensajes
-            String mensajesJson = GroupChatController.obtenerUsuariosFueraDelGrupo(idchat);
+            String mensajesJson = GroupChatController.obtenerUsuariosFueraDelGrupo(idchat, idgrupo);
 
             // Devuelve la respuesta JSON completa que incluye todos los mensajes
             System.out.println("Miembros del grupo: " + mensajesJson);
