@@ -34,15 +34,51 @@ public class ChatList extends JFrame {
     //Bandera de la página en que se encuentra
     private String CurrentVisibleCard = "Usuarios";
     
-    private DefaultTableModel modeloUsuariosConectados = new DefaultTableModel();
-    private DefaultTableModel modeloUsuariosDesconectados = new DefaultTableModel();
+    private DefaultTableModel modeloUsuariosConectados = new DefaultTableModel()
+     {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    private DefaultTableModel modeloUsuariosDesconectados = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
     
-    private DefaultTableModel modeloAmigosConectados = new DefaultTableModel();
-    private DefaultTableModel modeloAmigosDesconectados = new DefaultTableModel();
+    private DefaultTableModel modeloAmigosConectados = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    private DefaultTableModel modeloAmigosDesconectados = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
     
 
-    private DefaultTableModel modeloSolicitudesRecibidas = new DefaultTableModel();
-    private DefaultTableModel modeloSolicitudesEnviadas = new DefaultTableModel();
+    private DefaultTableModel modeloSolicitudesRecibidas = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
+    private DefaultTableModel modeloSolicitudesEnviadas = new DefaultTableModel()
+                 {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+     };
     
     
     private Timer updateTimer;
@@ -379,6 +415,8 @@ private void iniciarModelos()
         
         
         
+        
+        
         lista.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         lista.addMouseListener(new MouseAdapter() {
@@ -542,10 +580,29 @@ private void iniciarModelos()
                     Object value = lista.getValueAt(row, column);
                     
                     // si es un botón, realiza la acción correspondiente
+                    if(column == 0)
+                    {
+                        
+                        if(estaConectado)
+                        {
+                            Usuario usuario = amigosConectados.get(row);
+                            ChatAmigosPage amigos = new ChatAmigosPage(usuario.getNombre(), nombreUserActive);
+                        }
+                        
+                    }
                     if (column == 1) 
                     {
-                        Usuario usuario = amigosDesconectados.get(row);
-                        eliminarMensajesYAmistad(usuario.getNombre());
+                        if(estaConectado)
+                        {
+                            Usuario usuario = amigosConectados.get(row);
+                            eliminarMensajesYAmistad(usuario.getNombre());
+                        }
+                        else
+                        {
+                            Usuario usuario = amigosDesconectados.get(row);
+                            eliminarMensajesYAmistad(usuario.getNombre());
+                        }
+                        
                             
                     }
                 }
@@ -870,6 +927,7 @@ private void iniciarModelos()
     //Métodos privados
     //-------------------
     //Método para acceder al chat de un amigo
+    /*
     private void handleChatFriendRequest(String friendUsername) {
         JSONObject json = new JSONObject();
         json.put("receptor", friendUsername);
@@ -889,12 +947,13 @@ private void iniciarModelos()
                 break;
             default:
                 JOptionPane.showMessageDialog(null, "Chat iniciado exitosamente.", "Información", JOptionPane.INFORMATION_MESSAGE);
-                ChatAmigosPage amigos = new ChatAmigosPage();
+                ChatAmigosPage amigos = new ChatAmigosPage(usuario.getNombre(), nombreUserActive);
                 amigos.setVisible(true);
                 break;
         }
         
     }
+    */
 
     
     //Método para solicitar el listado de amigos conectados
