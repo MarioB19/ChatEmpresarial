@@ -1345,10 +1345,7 @@ private void iniciarModelos()
             break;
         default:
            
-               if(updateTimer != null){
-              updateTimer.stop();
-              }
-              updateTimer = null;
+    
     
            // JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
@@ -1469,10 +1466,7 @@ private void eliminarMensajesYAmistad(String receptor) {
             break;
         default:
             
-              if(updateTimer != null){
-              updateTimer.stop();
-              }
-              updateTimer = null;
+             
             //JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes enviadas.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
     }
