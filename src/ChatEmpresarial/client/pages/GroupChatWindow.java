@@ -189,7 +189,7 @@ public class GroupChatWindow extends JFrame {
     }
 
     private void setupMessageFetchingTimer() {
-        int delay = 5000; // Tiempo en milisegundos entre cada ejecución
+        int delay = 1000; // Tiempo en milisegundos entre cada ejecución
         messageFetchTimer = new Timer(delay, e -> fetchMessages());
         connectedUsersFetchTimer = new Timer(delay, e -> handleListUsersConectados());
         disconnectedUsersFetchTimer = new Timer(delay, e -> handleListUsersDesconectados());
