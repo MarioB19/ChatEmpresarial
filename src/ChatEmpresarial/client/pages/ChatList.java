@@ -164,6 +164,10 @@ private void iniciarModelos()
 
     
     private void inicializarDatos() {
+        
+        if(updateTimer == null){
+            return;
+        }
                  
     String username = nombreUserActive;
 
@@ -1310,12 +1314,6 @@ private void iniciarModelos()
            String status  = responseObject.getString("status");
 
     switch (status) {
-        case "-4":
-            JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
-            break;
-        case "-5":
-            JOptionPane.showMessageDialog(null, "Receptor no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
-            break;
         case "-6":
             JOptionPane.showMessageDialog(null, "Error al obtener las solicitudes recibidas.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
@@ -1346,7 +1344,13 @@ private void iniciarModelos()
             }
             break;
         default:
-            JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes.", "Error", JOptionPane.ERROR_MESSAGE);
+           
+               if(updateTimer != null){
+              updateTimer.stop();
+              }
+              updateTimer = null;
+    
+           // JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
     }
     
@@ -1376,9 +1380,7 @@ private void eliminarMensajesYAmistad(String receptor) {
 
         // Interpretar el resultado basado en el estado
         switch (status) {
-            case "-4":
-                JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
-                break;
+    
             case "-5":
                 JOptionPane.showMessageDialog(null, "Error al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
                 break;
@@ -1415,15 +1417,8 @@ private void eliminarMensajesYAmistad(String receptor) {
         String message = response.getString("message");
         
        switch(status) {
-    case "-2":
-        JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
-        break;
-    case "-3":
-        JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
-        break;
-    case "-4":
-        JOptionPane.showMessageDialog(null, "Receptor no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
-        break;
+ 
+  
     case "-5":
         JOptionPane.showMessageDialog(null, "Error al eliminar todos los mensajes y la amistad.", "Error", JOptionPane.ERROR_MESSAGE);
         break;
@@ -1459,12 +1454,7 @@ private void eliminarMensajesYAmistad(String receptor) {
     String status = responseObject.getString("status");
 
     switch (status) {
-        case "-4":
-            JOptionPane.showMessageDialog(null, "Remitente no identificado.", "Error", JOptionPane.ERROR_MESSAGE);
-            break;
-        case "-5":
-            JOptionPane.showMessageDialog(null, "Remitente no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
-            break;
+       
         case "-6":
             JOptionPane.showMessageDialog(null, "Error al obtener las solicitudes enviadas.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
@@ -1478,7 +1468,12 @@ private void eliminarMensajesYAmistad(String receptor) {
             }
             break;
         default:
-            JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes enviadas.", "Error", JOptionPane.ERROR_MESSAGE);
+            
+              if(updateTimer != null){
+              updateTimer.stop();
+              }
+              updateTimer = null;
+            //JOptionPane.showMessageDialog(null, "Error desconocido al obtener las solicitudes enviadas.", "Error", JOptionPane.ERROR_MESSAGE);
             break;
     }
 }
