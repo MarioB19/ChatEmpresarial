@@ -76,6 +76,7 @@ public class MembersListToDeleteFromGroup extends JFrame {
         GroupChatWindow chatWindow = new GroupChatWindow(grupo, nombreUserActive);
         chatWindow.setVisible(true);
         dispose();
+        timer.stop();
         this.dispose(); // Cierra esta ventana
     }
 
@@ -85,6 +86,8 @@ public class MembersListToDeleteFromGroup extends JFrame {
         json.put("idChat", Integer.toString(grupo.getId_chat()));
         json.put("idGrupo", Integer.toString(grupo.getId_grupo()));
         json.put("nombre", user.getNombre());
+           json.put("nameGroup", grupo.getNombre());
+        
         json.put("action", "EXIT_GROUP");
 
         PersistentClient client = PersistentClient.getInstance();

@@ -60,9 +60,6 @@ public class GroupRequest extends JDialog {
         btnCancelar.addActionListener(this::actionCancelar);
         panelBotones.add(btnCancelar);
 
-        btnDenegar = new JButton("Denegar");
-        btnDenegar.addActionListener(this::actionDenegar);
-        panelBotones.add(btnDenegar);
 
         getContentPane().add(panelBotones, BorderLayout.SOUTH); // Agregar el panel de botones al sur
     }
@@ -73,6 +70,8 @@ public class GroupRequest extends JDialog {
         json.put("idGrupo", Integer.toString(solicitud.getId_grupo()));
         json.put("userId", Integer.toString(solicitud.getId_receptor()));
         json.put("action", "ACCEPT_REQUEST_GROUP");
+           json.put("nameGroup", solicitud.getNombreGrupo());
+            json.put("username", nombreUserActive);
 
         PersistentClient client = PersistentClient.getInstance();
         client.sendMessageAndWaitForResponse(json.toString());
@@ -89,7 +88,9 @@ public class GroupRequest extends JDialog {
         json.put("idGrupo", Integer.toString(solicitud.getId_grupo()));
         json.put("userId", Integer.toString(solicitud.getId_receptor()));
         json.put("action", "DENY_REQUEST_GROUP");
-
+        json.put("nameGroup", solicitud.getNombreGrupo());
+        json.put("username", nombreUserActive);
+            
         PersistentClient client = PersistentClient.getInstance();
         client.sendMessageAndWaitForResponse(json.toString());
         ChatList chatList = new ChatList(nombreUserActive);

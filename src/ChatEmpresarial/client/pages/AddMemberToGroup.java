@@ -76,6 +76,8 @@ public class AddMemberToGroup extends JFrame {
         GroupChatWindow chatWindow = new GroupChatWindow(grupo, nombreUserActive);
         chatWindow.setVisible(true);
         dispose();
+        timer.stop();
+        
         this.dispose(); // Cierra esta ventana
     }
 
@@ -85,6 +87,15 @@ public class AddMemberToGroup extends JFrame {
         json.put("idReceptor", user.getNombre());
         json.put("Remitente", nombreUserActive);
         json.put("action", "ADD_USER_TO_GROUP");
+         json.put("nameGroup", grupo.getNombre());
+        
+         
+         System.out.println("Info");
+        System.out.println(user.getNombre() + grupo.getNombre());
+         
+        
+       
+   
 
         PersistentClient client = PersistentClient.getInstance();
         client.sendMessageAndWaitForResponse(json.toString());

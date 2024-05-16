@@ -189,14 +189,18 @@ public class GroupChatWindow extends JFrame {
     }
 
     private void setupMessageFetchingTimer() {
-        int delay = 5000; // Tiempo en milisegundos entre cada ejecución
+        int delay = 1000; // Tiempo en milisegundos entre cada ejecución
         messageFetchTimer = new Timer(delay, e -> fetchMessages());
         connectedUsersFetchTimer = new Timer(delay, e -> handleListUsersConectados());
         disconnectedUsersFetchTimer = new Timer(delay, e -> handleListUsersDesconectados());
-
+        
         messageFetchTimer.start();
         connectedUsersFetchTimer.start();
         disconnectedUsersFetchTimer.start();
+        
+        
+
+   
     }
 
     private void sendText(ActionEvent e) {
@@ -206,6 +210,8 @@ public class GroupChatWindow extends JFrame {
             JSONObject json = new JSONObject();
             json.put("idChat", Integer.toString(grupo.getId_chat()));
             json.put("contenido", text);
+            json.put("nameGroup", grupo.getNombre());
+            json.put("username", nombreUserActive);
             json.put("action", "SEND_MESSAGE_GROUP");
 
             PersistentClient client = PersistentClient.getInstance();
@@ -325,6 +331,9 @@ public class GroupChatWindow extends JFrame {
         json.put("idChat", Integer.toString(grupo.getId_chat()));
         json.put("idGrupo", Integer.toString(grupo.getId_grupo()));
         json.put("action", "DELETE_GROUP");
+           json.put("nameGroup", grupo.getNombre());
+            json.put("username", nombreUserActive);
+        
 
         PersistentClient client = PersistentClient.getInstance();
         String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
@@ -337,7 +346,12 @@ public class GroupChatWindow extends JFrame {
         json.put("idGrupo", Integer.toString(grupo.getId_grupo()));
         json.put("nombre", nombreUserActive);
         json.put("action", "EXIT_GROUP");
-
+        json.put("nameGroup", grupo.getNombre());
+      
+        
+        
+        
+        
         PersistentClient client = PersistentClient.getInstance();
         String serverResponse = client.sendMessageAndWaitForResponse(json.toString());
     }
