@@ -77,13 +77,22 @@ public class ClientHandler implements Runnable {
 
                 switch (requestType) {
                     case REGISTER:
+                    {
                         response = handleRegister(jsonObject);
+                        String username =  jsonObject.getString("username");
+                        
+                        if(response.equals("0")){
+                             LogController.insertLogStatic(DescripcionAccion.CREAR_CUENTA,username);
+                        }
                         break;
+                        
+                    }
                         
                     case LOGOUT:
                         
-                     
-                     String username = jsonObject.getString("nombre");
+                    {
+                    String username = jsonObject.getString("nombre");
+                    LogController.insertLogStatic(DescripcionAccion.CERRAR_SESION,username);
                     response = "0"; 
                     JSONObject responseJson = new JSONObject();
                     responseJson.put("response", response);
@@ -92,9 +101,10 @@ public class ClientHandler implements Runnable {
                     handleLogout(username); 
                     return; 
                    
+                    }
                         
 
-                        
+          
                     case LOGIN:
                         response = handleLogin(jsonObject);
 
@@ -108,6 +118,10 @@ public class ClientHandler implements Runnable {
                                 GlobalClients.connectedClients.put(response, clientSocket);
                                 System.out.println("Cliente agregado: " + response + ". Total de clientes conectados ahora: " + GlobalClients.connectedClients.size());
                             }
+                             LogController.insertLogStatic(DescripcionAccion.INICIAR_SESION,response);
+                            
+                            
+
 
                             //Retona un 0, indicando que todo salio bien
                             response = "0";
@@ -119,9 +133,13 @@ public class ClientHandler implements Runnable {
                         response = handleRecoveryPassword(jsonObject);
                         break;
                     case FORGOTPSW2:
+                    {
+                              String username = jsonObject.getString("username");
+                        LogController.insertLogStatic(DescripcionAccion.MODIFICAR_CONTRASENA,username);
                         response = handleRecoveryPassword2(jsonObject);
                         break;
-
+                        
+                    }
              
 
         //Enviar mensaje a un amigo
@@ -194,18 +212,26 @@ public class ClientHandler implements Runnable {
 
 
                     case CREATEGROUP:
+                        
+            
                         response = handleCreateGroup(jsonObject);
                         break;
+                        
+                    
 
 
                       
                     case SEND_MESSAGE_CHAT_USERS:
                         System.out.println("Entra aqui");
+                        String user1 =  jsonObject.getString("user1");
+                         String user2 =  jsonObject.getString("user2");
+                        
                         response = ChatManager.sendMessage(
                                 jsonObject.getString("user1"),
                                 jsonObject.getString("user2"),
                                 jsonObject.getString("message")
                         );
+                     LogController.insertLogStatic(DescripcionAccion.ENVIAR_MENSAJE,user1,user2);
                         break;
                     case GET_MESSAGES_CHAT_USERS:
                         List<String> messages = ChatManager.getChatMessages(
@@ -226,8 +252,20 @@ public class ClientHandler implements Runnable {
                         response = handleFetchMessagesGroup(jsonObject);
                         break;
                     case SEND_MESSAGE_GROUP:
+                        
+                    {
+                        
+                          String username =  jsonObject.getString("username");
+                          String nameGroup = jsonObject.getString("nameGroup");
+                          
+                      LogController.insertLogStatic(DescripcionAccion.ENVIAR_MENSAJE,username,"el grupo " +nameGroup );
+                          
+                          
+                          
                         response = handleSendMessageGroup(jsonObject);
                         break;
+                        
+                    }
 
                     case FIND_USERS_CONNECTED_GROUP:
                         response = handleFindUsersConnectedGroup(jsonObject);
@@ -237,11 +275,28 @@ public class ClientHandler implements Runnable {
                         response = handleFindUsersDisconnectedGroup(jsonObject);
                         break;
                     case DELETE_GROUP:
+                    {
+                        
+                        
+                          String nameGroup = jsonObject.getString("nameGroup");
+                          
+                      LogController.insertLogStatic(DescripcionAccion.ELIMINAR_GRUPO,nameGroup );
+                      
+                        
                         response = handleDeleteGroup(jsonObject);
                         break;
+                        
+                    }
                     case EXIT_GROUP:
+                    {   
+                        String nombre = jsonObject.getString("nombre");
+                          String nameGroup = jsonObject.getString("nameGroup");
+                        
+                         LogController.insertLogStatic(DescripcionAccion.SALIR_GRUPO,nombre,nameGroup );
                         response = handleExitGroup(jsonObject);
                         break;
+                        
+                    }
                     case GET_USERS_GROUP:
                         response = handlegetMembersGroup(jsonObject);
                         break;
@@ -252,8 +307,23 @@ public class ClientHandler implements Runnable {
                         response = handleGetAllGroupsRequests(jsonObject);
                         break;
                     case ADD_USER_TO_GROUP:
+                    {
+                        
+                       
+                        
+                             String usernameRemitente = jsonObject.getString("Remitente");
+                          String usernameReceptor = jsonObject.getString("idReceptor");
+                            String nameGroup = jsonObject.getString("nameGroup");
+                        
+                         LogController.insertLogStatic(DescripcionAccion.ENVIAR_SOLICITUD_GRUPO,usernameRemitente,nameGroup, usernameReceptor );
+                        
                         response = handleAddUserToGroup(jsonObject);
+                        
                         break;
+                        
+                    }
+                        
+                        
                     case ACCEPT_REQUEST_GROUP:
                         response = handleAcceptRequestGroup(jsonObject);
                         break;
@@ -285,7 +355,7 @@ public class ClientHandler implements Runnable {
 
                 ChatManager.cleanUpChats();
 
-                logPage.updateLog(DescripcionAccion.CERRAR_SESION, "Conexión cerrada con cliente: " + clientSocket.getInetAddress().toString());
+               // logPage.updateLog(DescripcionAccion.CERRAR_SESION, "Conexión cerrada con cliente: " + clientSocket.getInetAddress().toString());
             } catch (IOException ex) {
                 Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("Error" + ex.getMessage());
@@ -350,6 +420,8 @@ public class ClientHandler implements Runnable {
         String groupname = data.optString("groupname");
         String adminName = data.optString("adminId");
         JSONArray participantIdsJson = data.optJSONArray("participantIds");
+        JSONArray participantNameJson = data.optJSONArray("participantNames");
+        
 
         if (participantIdsJson == null || participantIdsJson.length() == 0) {
             System.out.println("Error: No participants provided.");
@@ -361,12 +433,30 @@ public class ClientHandler implements Runnable {
         for (int i = 0; i < participantIdsJson.length(); i++) {
             participantIds[i] = participantIdsJson.optInt(i);
         }
+        
+        //Convertir JSONArray a array de String
+        String [] participantNames = new String[participantNameJson.length()];
+                    for (int i = 0; i < participantNameJson.length(); i++) {
+            participantNames[i] = participantNameJson.optString(i);
+        }
+                    
+        String result = String.join(", ", participantNames);
+                    
+                
+                    
+                    
+               
 
         // Log de los IDs de los participantes
         System.out.println("Participant IDs: " + Arrays.toString(participantIds));
 
         // Llamada al controlador con el nombre del admin y los IDs de los participantes
         String response = CreateGroupController.createGroupInDatabase(adminName, groupname, participantIds);
+        
+        LogController.insertLogStatic(DescripcionAccion.CREAR_GRUPO,adminName, groupname);
+        
+        LogController.insertLogStatic(DescripcionAccion.ENVIAR_SOLICITUD_GRUPO,adminName, groupname, result);
+        
         System.out.println("Response from createGroupInDatabase: " + response);
         return response;
     }
@@ -510,6 +600,7 @@ public class ClientHandler implements Runnable {
         String idChat = jsonObject.getString("idChat");
         String idGrupo = jsonObject.getString("idGrupo");
         System.out.println("Mandando a eliminar grupo conectados: " + jsonObject.toString());
+        
         GroupChatController.deleteGroup(idChat, idGrupo);
         return "0";
     }
@@ -520,7 +611,12 @@ public class ClientHandler implements Runnable {
         String idChat = jsonObject.getString("idChat");
         String idGrupo = jsonObject.getString("idGrupo");
         String nombre = jsonObject.getString("nombre");
+       
         System.out.println("Mandando a eliminar grupo conectados: " + jsonObject.toString());
+ 
+                          
+   
+    
         GroupChatController.eliminarParticipante(idChat, nombre, idGrupo);
         return "0";
     }
@@ -743,11 +839,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
         if (remitenteUsername == null) {
             respuesta.put("status", "-4");
             respuesta.put("message", "Remitente no identificado");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar enviar una solicitud de amistad: remitente no identificado");
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
+          
             return respuesta.toString();
         }
 
@@ -758,11 +850,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
         if (receptorUsername == null || receptorUsername.isEmpty()) {
             respuesta.put("status", "-5");
             respuesta.put("message", "Campo 'receptor' faltante en la solicitud");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar enviar una solicitud de amistad: falta el campo 'receptor'");
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
+         
             return respuesta.toString();
         }
 
@@ -783,29 +871,17 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             case "1":
                 respuesta.put("status", "1");
                 respuesta.put("message", "Ya existe una solicitud de amistad pendiente");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar una solicitud de amistad de " + remitenteUsername + " a " + receptorUsername + ": solicitud pendiente");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
                 break;
             case "2":
                 respuesta.put("status", "2");
                 respuesta.put("message", "Ya son amigos");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar una solicitud de amistad de " + remitenteUsername + " a " + receptorUsername + ": ya son amigos");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+               
                 break;
             default:
                 respuesta.put("status", result);
                 respuesta.put("message", "Error al enviar la solicitud de amistad");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar una solicitud de amistad de " + remitenteUsername + " a " + receptorUsername);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
                 break;
         }
 
@@ -815,11 +891,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
         ex.printStackTrace();
         respuesta.put("status", "-6");
         respuesta.put("message", "Error interno");
-        try {
-            LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al enviar una solicitud de amistad");
-        } catch (SQLException exSql) {
-            exSql.printStackTrace();
-        }
+     
         return respuesta.toString();
     }
 }
@@ -833,11 +905,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (receptorUsername == null) {
                 respuesta.put("status", "-5");
                 respuesta.put("message", "Remitente no identificado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar cancelar una solicitud de amistad: remitente no identificado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+           
                 return respuesta.toString();
             }
 
@@ -848,11 +916,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (receptorUsername == null || receptorUsername.isEmpty()) {
                 respuesta.put("status", "-6");
                 respuesta.put("message", "Campo 'receptor' faltante en la solicitud");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar cancelar una solicitud de amistad: falta el campo 'receptor'");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+              
                 return respuesta.toString();
             }
 
@@ -873,21 +937,13 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
                 case "-2":
                     respuesta.put("status", "-2");
                     respuesta.put("message", "Remitente o receptor no encontrado");
-                    try {
-                        LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al cancelar la solicitud de amistad: remitente o receptor no encontrado");
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                    }
+               
                     break;
                 case "-1":
                 default:
                     respuesta.put("status", "-1");
                     respuesta.put("message", "Error al cancelar la solicitud de amistad");
-                    try {
-                        LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al cancelar la solicitud de amistad entre " + remitenteUsername + " y " + receptorUsername);
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                    }
+                 
                     break;
             }
 
@@ -897,11 +953,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             ex.printStackTrace();
             respuesta.put("status", "-7");
             respuesta.put("message", "Error interno");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al cancelar la solicitud de amistad");
-            } catch (SQLException exSql) {
-                exSql.printStackTrace();
-            }
+        
             return respuesta.toString();
         }
     }
@@ -916,11 +968,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (receptorUsername == null) {
                 respuesta.put("status", "-4");
                 respuesta.put("message", "Receptor no identificado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar obtener solicitudes recibidas: receptor no identificado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
                 return respuesta.toString();
             }
 
@@ -931,11 +979,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (receivedInvitationsJson.equals("-2")) {
                 respuesta.put("status", "-5");
                 respuesta.put("message", "Receptor no encontrado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar obtener solicitudes recibidas: receptor " + receptorUsername + " no encontrado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
             } else if (receivedInvitationsJson.equals("-1")) {
                 respuesta.put("status", "-6");
                 respuesta.put("message", "Error al obtener solicitudes recibidas");
@@ -954,11 +998,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             ex.printStackTrace();
             respuesta.put("status", "-7");
             respuesta.put("message", "Error interno");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al obtener solicitudes recibidas");
-            } catch (SQLException exSql) {
-                exSql.printStackTrace();
-            }
+         
             return respuesta.toString();
         }
     }
@@ -973,11 +1013,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (receptorUsername == null) {
                 respuesta.put("status", "-4");
                 respuesta.put("message", "Receptor no identificado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
                 return respuesta.toString();
             }
 
@@ -987,11 +1023,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (remitenteUsername == null || remitenteUsername.isEmpty()) {
                 respuesta.put("status", "-5");
                 respuesta.put("message", "Campo 'receptor' faltante en la solicitud");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: falta el campo 'receptor'");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
                 return respuesta.toString();
             }
 
@@ -1012,21 +1044,13 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
                 case "-2":
                     respuesta.put("status", "-6");
                     respuesta.put("message", "Remitente o receptor no encontrado");
-                    try {
-                        LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al aceptar la solicitud de amistad: remitente o receptor no encontrado");
-                    } catch (SQLException ex) {
-
-                    }
+                   
                     break;
                 case "-1":
                 default:
                     respuesta.put("status", "-7");
                     respuesta.put("message", "Error al aceptar la solicitud de amistad");
-                    try {
-                        LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al aceptar la solicitud de amistad entre " + remitenteUsername + " y " + receptorUsername);
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                    }
+                 
                     break;
             }
 
@@ -1036,11 +1060,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             e.printStackTrace();
             respuesta.put("status", "-8");
             respuesta.put("message", "Error interno");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al aceptar una solicitud de amistad");
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
+         
             return respuesta.toString();
         }
     }
@@ -1054,11 +1074,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (receptorUsername == null) {
                 respuesta.put("status", "-4");
                 respuesta.put("message", "Receptor no identificado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
                 return respuesta.toString();
             }
 
@@ -1068,11 +1084,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (remitenteUsername.isEmpty() || receptorUsername.isEmpty()) {
                 respuesta.put("status", "-4");
                 respuesta.put("message", "Campos 'remitente' o 'receptor' faltantes");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Obtener todos los mensajes: campos 'remitente' o 'receptor' faltantes");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+              
                 return respuesta.toString();
             }
 
@@ -1082,11 +1094,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (result.equals("-1")) {
                 respuesta.put("status", "-5");
                 respuesta.put("message", "Error al obtener todos los mensajes");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al obtener todos los mensajes entre " + remitenteUsername + " y " + receptorUsername);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+              
             } else {
                 respuesta.put("status", "0");
                 respuesta.put("message", result);
@@ -1099,11 +1107,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             ex.printStackTrace();
             respuesta.put("status", "-6");
             respuesta.put("message", "Error interno al obtener todos los mensajes");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al obtener todos los mensajes");
-            } catch (SQLException exSql) {
-                exSql.printStackTrace();
-            }
+           
             return respuesta.toString();
         }
     }
@@ -1116,11 +1120,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (remitenteUsername == null) {
                 respuesta.put("status", "-4");
                 respuesta.put("message", "Receptor no identificado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+            
                 return respuesta.toString();
             }
 
@@ -1134,11 +1134,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (result.equals("-1")) {
                 respuesta.put("status", "-5");
                 respuesta.put("message", "Error al enviar el mensaje");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al enviar el mensaje de " + remitenteUsername + " a " + receptorUsername);
-                } catch (SQLException ex) {
-
-                }
+             
             } else {
                 respuesta.put("status", "0");
                 respuesta.put("message", "Mensaje enviado con éxito");
@@ -1155,11 +1151,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
 
             respuesta.put("status", "-6");
             respuesta.put("message", "Error interno al enviar el mensaje");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al enviar el mensaje");
-            } catch (SQLException exSql) {
-
-            }
+         
             return respuesta.toString();
         }
     }
@@ -1172,11 +1164,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (receptorUsername == null) {
                 respuesta.put("status", "-4");
                 respuesta.put("message", "Receptor no identificado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
                 return respuesta.toString();
             }
 
@@ -1186,11 +1174,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (remitenteUsername == null) {
                 respuesta.put("status", "-6");
                 respuesta.put("message", "Receptor no identificado");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar aceptar una solicitud de amistad: receptor no identificado");
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+             
             }
 
             // Llamar al método para eliminar todos los mensajes y la amistad
@@ -1199,11 +1183,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
             if (result.equals("-1")) {
                 respuesta.put("status", "-5");
                 respuesta.put("message", "Error al eliminar todos los mensajes y la amistad");
-                try {
-                    LogController.insertLogStatic(DescripcionAccion.ERROR, "Error al eliminar todos los mensajes y la amistad entre " + remitenteUsername + " y " + receptorUsername);
-                } catch (SQLException ex) {
-
-                }
+             
             } else {
                 respuesta.put("status", "0");
                 respuesta.put("message", "Mensajes y amistad eliminados con éxito");
@@ -1220,11 +1200,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
 
             respuesta.put("status", "-6");
             respuesta.put("message", "Error interno al eliminar todos los mensajes y la amistad");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al eliminar todos los mensajes y la amistad");
-            } catch (SQLException exSql) {
-
-            }
+          
             return respuesta.toString();
         }
     }
@@ -1241,11 +1217,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
         if (remitenteUsername == null) {
             respuesta.put("status", "-4");
             respuesta.put("message", "Remitente no identificado");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar obtener solicitudes enviadas: remitente no identificado");
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
+         
             return respuesta.toString();
         }
 
@@ -1256,11 +1228,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
         if (sentInvitationsJson.equals("-2")) {
             respuesta.put("status", "-5");
             respuesta.put("message", "Remitente no encontrado");
-            try {
-                LogController.insertLogStatic(DescripcionAccion.ERROR, "Intentar obtener solicitudes enviadas: remitente " + remitenteUsername + " no encontrado");
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
+          
         } else if (sentInvitationsJson.equals("-1")) {
             respuesta.put("status", "-6");
             respuesta.put("message", "Error al obtener solicitudes enviadas");
@@ -1277,11 +1245,7 @@ private String handleSentFriendInvitation(Socket clientSocket, JSONObject jsonOb
         ex.printStackTrace();
         respuesta.put("status", "-7");
         respuesta.put("message", "Error interno");
-        try {
-            LogController.insertLogStatic(DescripcionAccion.ERROR, "Error interno al obtener solicitudes enviadas");
-        } catch (SQLException exSql) {
-            exSql.printStackTrace();
-        }
+      
         return respuesta.toString();
     }
 }

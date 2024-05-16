@@ -43,14 +43,14 @@ public class PersistentServer {
     
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            logPage.updateLog(DescripcionAccion.SERVIDOR_INICIADO, "Servidor escuchando en el puerto " + port);
+            logPage.updateLog(DescripcionAccion.SERVIDOR_INICIADO, "" + port);
 
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Socket clientSocket = serverSocket.accept();  // Aceptar la conexión entrante
                     semaphore.acquire();  // Adquiere un permiso antes de proceder
 
-                    logPage.updateLog(DescripcionAccion.CONEXION_ACEPTADA, "Cliente conectado desde: " + clientSocket.getInetAddress());
+                   // logPage.updateLog(DescripcionAccion.CONEXION_ACEPTADA, "Cliente conectado desde: " + clientSocket.getInetAddress());
 
                     // Crear una nueva instancia de ClientHandler y enviarla al ExecutorService para manejarla en un hilo separado
                     ClientHandler handler = new ClientHandler(clientSocket, logPage, semaphore);
